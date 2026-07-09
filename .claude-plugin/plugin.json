@@ -1,0 +1,13 @@
+{
+  "name": "lp",
+  "description": "SDD (spec-driven development) com 10 skills lp:* — chunks micro revisáveis, fluxo sequencial por feature, memória autônoma, grilling anti-assunção e revisão guiada de código existente.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Luan Poppe",
+    "email": "luanpoppe.tech@gmail.com"
+  },
+  "homepage": "https://github.com/luanpoppe/sdd",
+  "repository": "https://github.com/luanpoppe/sdd",
+  "license": "MIT",
+  "keywords": ["sdd", "spec-driven-development", "workflow", "skills", "code-review"]
+}

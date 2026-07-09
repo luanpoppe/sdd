@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "sdd",
+  "description": "Marketplace do SDD lp:* — spec-driven development de Luan Poppe.",
+  "owner": {
+    "name": "Luan Poppe",
+    "email": "luanpoppe.tech@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "lp",
+      "displayName": "LP — Spec-Driven Development",
+      "description": "10 skills lp:* para SDD com chunks micro revisáveis, memória autônoma e revisão guiada de código.",
+      "source": {
+        "source": "npm",
+        "package": "@luanpoppe/sdd",
+        "version": "^1.0.0"
+      },
+      "author": { "name": "Luan Poppe" },
+      "homepage": "https://github.com/luanpoppe/sdd",
+      "repository": "https://github.com/luanpoppe/sdd",
+      "license": "MIT",
+      "category": "productivity",
+      "tags": ["sdd", "workflow", "code-review", "spec-driven"]
+    }
+  ]
+}

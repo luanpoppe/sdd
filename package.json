@@ -1,0 +1,29 @@
+{
+  "name": "@luanpoppe/sdd",
+  "version": "1.0.0",
+  "description": "SDD (spec-driven development) — plugin lp:* para Claude Code. 10 skills: chunks micro revisáveis, fluxo sequencial por feature, memória autônoma e revisão guiada de código.",
+  "license": "MIT",
+  "author": {
+    "name": "Luan Poppe",
+    "email": "luanpoppe.tech@gmail.com"
+  },
+  "homepage": "https://github.com/luanpoppe/sdd",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luanpoppe/sdd.git"
+  },
+  "bugs": {
+    "url": "https://github.com/luanpoppe/sdd/issues"
+  },
+  "keywords": ["claude-code", "sdd", "spec-driven-development", "plugin", "skills"],
+  "files": [
+    ".claude-plugin/",
+    "skills/",
+    "helpers/",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
