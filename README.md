@@ -24,6 +24,21 @@ O Claude Code checa updates no startup. Para forçar:
 
 O update compara a versão instalada com a do repo e baixa a mais recente. Novas versões saem quando o mantenedor faz bump semver no `plugin.json` + push.
 
+## Cursor (e outras ferramentas)
+
+O formato de plugin do Claude Code não é lido pelo Cursor. Use o installer cross-tool — copia as skills como comandos `/lp-<nome>` e ajusta os caminhos dos arquivos compartilhados por ferramenta:
+
+```
+npx github:luanpoppe/sdd              # detecta ~/.claude e ~/.cursor, instala em ambos
+npx github:luanpoppe/sdd --tool=cursor
+npx github:luanpoppe/sdd --tool=claude --dry-run
+```
+
+- **Cursor** → `~/.cursor/commands/lp-*.md` (+ `~/.cursor/lp-helpers/`). Invoca `/lp-review`, `/lp-new`…
+- **Claude Code** → `~/.claude/skills/lp-*/` (skills pessoais). Alternativa ao `/plugin` pra quem não quer o marketplace.
+
+> Roda via `npx github:...` sem precisar de npm publish. `--dry-run` mostra o que faria sem escrever.
+
 ## Skills
 
 | Skill | O que faz |

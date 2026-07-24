@@ -15,11 +15,18 @@
   "bugs": {
     "url": "https://github.com/luanpoppe/sdd/issues"
   },
-  "keywords": ["claude-code", "sdd", "spec-driven-development", "plugin", "skills"],
+  "keywords": ["claude-code", "cursor", "sdd", "spec-driven-development", "plugin", "skills"],
+  "bin": {
+    "sdd": "./bin/install.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
   "files": [
     ".claude-plugin/",
     "skills/",
     "helpers/",
+    "bin/",
     "README.md",
     "LICENSE"
   ],
