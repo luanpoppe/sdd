@@ -22,6 +22,8 @@ const ROOT = path.resolve(__dirname, '..');
 const SKILLS_SRC = path.join(ROOT, 'skills');
 const HELPERS_SRC = path.join(ROOT, 'helpers');
 const HOME = os.homedir();
+const PKG_VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, '.claude-plugin', 'plugin.json'), 'utf8')).version;
+const VERSION_MARKER = '.lp-version.json';
 
 // ---- args ----
 function parseArgs(argv) {
@@ -77,6 +79,18 @@ function setFrontmatterName(content, newName) {
   return content.replace(/^name:\s*.+$/m, `name: ${newName}`);
 }
 
+// ---- version marker (pra auto-update saber o que já tá instalado) ----
+function readInstalledVersion(helpersDest) {
+  const p = path.join(helpersDest, VERSION_MARKER);
+  if (!fs.existsSync(p)) return null;
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')).version; } catch { return null; }
+}
+
+function writeVersionMarker(helpersDest, actions) {
+  actions.push(['write', VERSION_MARKER, path.join(helpersDest, VERSION_MARKER),
+    JSON.stringify({ version: PKG_VERSION, updatedAt: new Date().toISOString().slice(0, 10) }, null, 2)]);
+}
+
 // ---- targets ----
 function detect(tool) {
   const targets = [];
@@ -94,8 +108,10 @@ function planClaude(skills, actions) {
   const skillsDest = path.join(HOME, '.claude', 'skills');
   const helpersDest = path.join(skillsDest, 'lp-shared');
   const helpersBase = '~/.claude/skills/lp-shared';
+  const installed = readInstalledVersion(helpersDest);
   // helpers
   copyDir(HELPERS_SRC, helpersDest, actions);
+  writeVersionMarker(helpersDest, actions);
   // skills -> lp-<name>/SKILL.md, prefixo lp- restaurado, refs absolutas
   for (const name of skills) {
     let c = readSkill(name);
@@ -103,21 +119,23 @@ function planClaude(skills, actions) {
     c = setFrontmatterName(c, `lp-${name}`);
     actions.push(['write', `lp-${name}/SKILL.md`, path.join(skillsDest, `lp-${name}`, 'SKILL.md'), c]);
   }
-  return `Claude Code → ${skillsDest} (invoca /lp-<nome>)`;
+  return { line: `Claude Code → ${skillsDest} (invoca /lp-<nome>)`, installed };
 }
 
 function planCursor(skills, actions) {
   const cmdDest = path.join(HOME, '.cursor', 'commands');
   const helpersDest = path.join(HOME, '.cursor', 'lp-helpers');
   const helpersBase = '~/.cursor/lp-helpers';
+  const installed = readInstalledVersion(helpersDest);
   copyDir(HELPERS_SRC, helpersDest, actions);
+  writeVersionMarker(helpersDest, actions);
   for (const name of skills) {
     let c = readSkill(name);
     c = rewriteHelperRefs(c, helpersBase);
     // Cursor invoca pelo nome do arquivo; mantém lp- pra evitar colisão
     actions.push(['write', `lp-${name}.md`, path.join(cmdDest, `lp-${name}.md`), c]);
   }
-  return `Cursor → ${cmdDest} (invoca /lp-<nome>)`;
+  return { line: `Cursor → ${cmdDest} (invoca /lp-<nome>)`, installed };
 }
 
 // ---- run ----
@@ -135,14 +153,19 @@ function main() {
   }
 
   const actions = [];
-  const summaries = [];
+  const plans = [];
   for (const t of targets) {
-    if (t === 'claude') summaries.push(planClaude(skills, actions));
-    if (t === 'cursor') summaries.push(planCursor(skills, actions));
+    if (t === 'claude') plans.push(planClaude(skills, actions));
+    if (t === 'cursor') plans.push(planCursor(skills, actions));
   }
 
-  process.stdout.write(`SDD lp:* — ${skills.length} skills\nAlvos: ${targets.join(', ')}\n`);
-  summaries.forEach(s => process.stdout.write(`  • ${s}\n`));
+  process.stdout.write(`SDD lp:* — versão do repo: ${PKG_VERSION} (${skills.length} skills)\nAlvos: ${targets.join(', ')}\n`);
+  plans.forEach(p => {
+    process.stdout.write(`  • ${p.line}\n`);
+    if (p.installed === null) process.stdout.write(`    (nenhuma instalação anterior encontrada — instalando do zero)\n`);
+    else if (p.installed === PKG_VERSION) process.stdout.write(`    já está na versão mais recente (${p.installed})\n`);
+    else process.stdout.write(`    atualizando: ${p.installed} → ${PKG_VERSION}\n`);
+  });
 
   if (args.dryRun) {
     process.stdout.write(`\n[dry-run] ${actions.length} arquivos seriam escritos:\n`);
