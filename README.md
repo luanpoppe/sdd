@@ -11,7 +11,7 @@ Spec-driven development em 10 skills. Chunks micro revisáveis, fluxo sequencial
 
 Pronto — as skills ficam disponíveis como `lp:init`, `lp:new`, `lp:continue`, `lp:review`, etc.
 
-> O plugin é distribuído via pacote npm [`@luanpoppe/sdd`](https://www.npmjs.com/package/@luanpoppe/sdd). O comando acima registra este repositório como marketplace; a instalação puxa o conteúdo do npm automaticamente. **É necessário que o pacote esteja publicado no npm** para o install funcionar.
+> O plugin é distribuído direto por este repositório GitHub (o próprio repo é o marketplace). Não precisa npm.
 
 ## Atualização
 
@@ -22,7 +22,7 @@ O Claude Code checa updates no startup. Para forçar:
 /plugin update lp@sdd
 ```
 
-O update compara a versão instalada com a do npm (`^1.0.0`) e baixa a mais recente. Novas versões saem quando o mantenedor publica um bump semver no npm.
+O update compara a versão instalada com a do repo e baixa a mais recente. Novas versões saem quando o mantenedor faz bump semver no `plugin.json` + push.
 
 ## Skills
 
@@ -57,16 +57,17 @@ sdd/
 
 As skills referenciam os arquivos compartilhados por caminho relativo portável (`../../helpers/...`), então funcionam em qualquer máquina onde o plugin for instalado.
 
-## Publicação (mantenedor)
+## Release (mantenedor)
 
 ```bash
-# 1. bump da versão (semver) nos dois arquivos:
-#    package.json  e  .claude-plugin/plugin.json
-# 2. publicar no npm (pacote público com escopo):
-npm publish --access public
-# 3. commitar + tag + push no GitHub:
-git add -A && git commit -m "release: vX.Y.Z" && git tag vX.Y.Z && git push --tags
+# 1. bump da versão (semver) em .claude-plugin/plugin.json
+# 2. commitar + tag + push:
+git add -A && git commit -m "release: vX.Y.Z" && git tag vX.Y.Z && git push && git push --tags
 ```
+
+O update dos usuários dispara ao ver a nova versão no `plugin.json`.
+
+> Distribuição via npm (`@luanpoppe/sdd`) fica opcional — o `package.json` já está pronto caso queira publicar depois (`npm publish --access public`) e trocar o `source` do `marketplace.json` para npm.
 
 ## Licença
 
