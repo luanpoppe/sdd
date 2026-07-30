@@ -92,16 +92,24 @@ function writeVersionMarker(helpersDest, actions) {
 }
 
 // ---- targets ----
+// Cursor lê ~/.claude/skills/ nativamente (suporte a Claude Code skills). Se
+// o Claude Code também estiver instalado, escrever SÓ lá evita que os mesmos
+// comandos apareçam duplicados no Cursor (uma vez como skill do Claude, outra
+// vez como command próprio dele). Só escrevemos em ~/.cursor/commands quando
+// o Cursor for o único alvo disponível (sem ~/.claude no sistema).
 function detect(tool) {
-  const targets = [];
+  const hasClaude = fs.existsSync(path.join(HOME, '.claude'));
+  const hasCursor = fs.existsSync(path.join(HOME, '.cursor'));
   const wantClaude = tool === 'all' || tool === 'claude';
   const wantCursor = tool === 'all' || tool === 'cursor';
-  if (wantClaude && fs.existsSync(path.join(HOME, '.claude'))) targets.push('claude');
-  if (wantCursor && fs.existsSync(path.join(HOME, '.cursor'))) targets.push('cursor');
-  // se pediu explicitamente um tool que não existe, ainda tenta (cria a pasta)
-  if (tool === 'claude' && !targets.includes('claude')) targets.push('claude');
-  if (tool === 'cursor' && !targets.includes('cursor')) targets.push('cursor');
-  return targets;
+
+  const targets = [];
+  if (wantClaude && (hasClaude || tool === 'claude')) targets.push('claude');
+
+  const claudeCoversCursor = tool === 'all' && targets.includes('claude');
+  if (wantCursor && (hasCursor || tool === 'cursor') && !claudeCoversCursor) targets.push('cursor');
+
+  return { targets, claudeCoversCursor };
 }
 
 function planClaude(skills, actions) {
@@ -120,6 +128,21 @@ function planClaude(skills, actions) {
     actions.push(['write', `lp-${name}/SKILL.md`, path.join(skillsDest, `lp-${name}`, 'SKILL.md'), c]);
   }
   return { line: `Claude Code → ${skillsDest} (invoca /lp-<nome>)`, installed };
+}
+
+// Remove lp-*.md e lp-helpers/ deixados por instalações antigas do installer
+// (antes desta versão, que sempre escrevia em ~/.cursor/commands mesmo com
+// Claude Code presente — causava os comandos duplicados no Cursor).
+function planCleanupCursorDuplicates(skills, actions) {
+  const cmdDest = path.join(HOME, '.cursor', 'commands');
+  const helpersDest = path.join(HOME, '.cursor', 'lp-helpers');
+  let found = 0;
+  for (const name of skills) {
+    const f = path.join(cmdDest, `lp-${name}.md`);
+    if (fs.existsSync(f)) { actions.push(['delete', f]); found++; }
+  }
+  if (fs.existsSync(helpersDest)) { actions.push(['deleteDir', helpersDest]); found++; }
+  return found;
 }
 
 function planCursor(skills, actions) {
@@ -149,7 +172,7 @@ function main() {
   const skills = listSkills();
   if (!skills.length) { process.stderr.write('Nenhuma skill encontrada em skills/.\n'); process.exit(1); }
 
-  const targets = detect(args.tool);
+  const { targets, claudeCoversCursor } = detect(args.tool);
   if (!targets.length) {
     process.stderr.write('Nenhuma ferramenta detectada (~/.claude ou ~/.cursor). Use --tool=claude|cursor.\n');
     process.exit(1);
@@ -169,17 +192,22 @@ function main() {
     else if (p.installed === PKG_VERSION) process.stdout.write(`    já está na versão mais recente (${p.installed})\n`);
     else process.stdout.write(`    atualizando: ${p.installed} → ${PKG_VERSION}\n`);
   });
+  if (claudeCoversCursor) {
+    const n = planCleanupCursorDuplicates(skills, actions);
+    process.stdout.write(`  • Cursor lê ~/.claude/skills/lp-* nativamente — não escrevendo em ~/.cursor/commands (evita duplicar).\n`);
+    if (n > 0) process.stdout.write(`  • Removendo ${n} arquivo(s) duplicado(s) de uma instalação antiga em ~/.cursor/commands.\n`);
+  }
 
   if (args.dryRun) {
-    process.stdout.write(`\n[dry-run] ${actions.length} arquivos seriam escritos:\n`);
+    process.stdout.write(`\n[dry-run] ${actions.length} ações seriam executadas:\n`);
     for (const a of actions) {
-      const dest = a[0] === 'write' ? a[2] : a[2];
+      const dest = (a[0] === 'delete' || a[0] === 'deleteDir') ? a[1] : a[2];
       process.stdout.write(`  ${a[0]}  ${dest}\n`);
     }
     return;
   }
 
-  let n = 0;
+  let n = 0, deleted = 0;
   for (const a of actions) {
     if (a[0] === 'copy') {
       fs.mkdirSync(path.dirname(a[2]), { recursive: true });
@@ -187,10 +215,14 @@ function main() {
     } else if (a[0] === 'write') {
       fs.mkdirSync(path.dirname(a[2]), { recursive: true });
       fs.writeFileSync(a[2], a[3]); n++;
+    } else if (a[0] === 'delete') {
+      fs.rmSync(a[1], { force: true }); deleted++;
+    } else if (a[0] === 'deleteDir') {
+      fs.rmSync(a[1], { recursive: true, force: true }); deleted++;
     }
   }
-  process.stdout.write(`\n✓ ${n} arquivos instalados.\n`);
-  if (targets.includes('cursor')) process.stdout.write('  Cursor: reinicie ou recarregue pra ver os /comandos.\n');
+  process.stdout.write(`\n✓ ${n} arquivos instalados${deleted ? `, ${deleted} removidos (duplicatas antigas)` : ''}.\n`);
+  if (targets.includes('cursor') || claudeCoversCursor) process.stdout.write('  Cursor: reinicie a janela pra ver os /comandos (só uma vez cada agora).\n');
   if (targets.includes('claude')) process.stdout.write('  Claude Code: skills já disponíveis como /lp-<nome>.\n');
 }
 

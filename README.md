@@ -26,17 +26,19 @@ O update compara a versão instalada com a do repo e baixa a mais recente. Novas
 
 ## Cursor (e outras ferramentas)
 
-O formato de plugin do Claude Code não é lido pelo Cursor. Use o installer cross-tool — copia as skills como comandos `/lp-<nome>` e ajusta os caminhos dos arquivos compartilhados por ferramenta:
+O Cursor lê `~/.claude/skills/` nativamente (suporte a skills do Claude Code) — então, se você já tem o Claude Code instalado, **uma única cópia em `~/.claude/skills/lp-*/` serve os dois**. O installer detecta isso e escreve só ali:
 
 ```
-npx github:luanpoppe/sdd              # detecta ~/.claude e ~/.cursor, instala em ambos
+npx github:luanpoppe/sdd              # detecta ~/.claude e ~/.cursor
 npx github:luanpoppe/sdd --tool=cursor
 npx github:luanpoppe/sdd --tool=claude --dry-run
 ```
 
-- **Cursor** → `~/.cursor/commands/lp-*.md` (+ `~/.cursor/lp-helpers/`). Invoca `/lp-review`, `/lp-new`…
-- **Claude Code** → `~/.claude/skills/lp-*/` (skills pessoais). Alternativa ao `/plugin` pra quem não quer o marketplace.
+- **Claude Code presente** → escreve só em `~/.claude/skills/lp-*/`; Cursor lê de lá também. Invoca `/lp-review`, `/lp-new`… nos dois.
+- **Só Cursor, sem Claude Code** → escreve em `~/.cursor/commands/lp-*.md` (+ `~/.cursor/lp-helpers/`) como fallback.
 
+> ⚠️ Não escreva nos dois lugares ao mesmo tempo — o Cursor lista o mesmo comando duas vezes (uma pela skill do Claude, outra pelo command próprio). O installer evita isso automaticamente; rodar `npx github:luanpoppe/sdd` de novo também limpa duplicatas de instalações anteriores a v1.0.2.
+>
 > Roda via `npx github:...` sem precisar de npm publish. `--dry-run` mostra o que faria sem escrever.
 
 ## Skills
