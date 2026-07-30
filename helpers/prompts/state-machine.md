@@ -81,6 +81,8 @@ Buckets: **decisão divergente** / **escopo extra** / **escopo faltante**. Propo
 
 ## Plano de revisão (após cada chunk)
 
+**UMA lista só**: todos os arquivos tocados, já na ordem de revisão (não duas listas separadas). A lista é completa — serve de manifesto pra revert também. Arquivos de baixo valor de revisão (tipos gerados, config trivial, stubs) vão para o FIM, marcados "pode pular".
+
 Formato obrigatório:
 
 ```
@@ -89,13 +91,10 @@ Formato obrigatório:
 Feature: <slug> (<i>/<total>)
 Estado da feature: <X de Y chunks concluídos>
 
-Arquivos:
-- caminho/arquivo1.ts (criado)
-- caminho/arquivo2.ts (editado, +N -M)
-
-Ordem de revisão:
-1. arquivo1.ts — <razão>; comece por aqui.
-2. arquivo2.ts — <razão>.
+Revisão (na ordem — comece pelo topo):
+1. caminho/arquivo1.ts (criado, +N) — <o que olhar>; comece por aqui.
+2. caminho/arquivo2.ts (editado, +N -M) — <o que olhar>.
+3. caminho/tipos.d.ts (criado) — tipos gerados, leitura rápida / pode pular.
 
 Validação:
 - eslint --fix: ok
@@ -104,3 +103,9 @@ Validação:
 Próximo: /lp-continue (chunk F<n>.C<m+1>) ou — se foi o último da feature — inicia a próxima feature.
 Reverter: peça "reverte o chunk F<n>.C<m>".
 ```
+
+Regras da lista:
+- **Inclua todos os arquivos mexidos** — não omita nenhum (o usuário precisa saber o que mudou pra reverter).
+- **Ordene por prioridade de revisão**: comece pelo núcleo da lógica; termine nos triviais.
+- Cada linha: `caminho (tipo de mudança, ±linhas) — o que olhar`. Nos triviais, o "o que olhar" vira "pode pular / leitura rápida".
+- Sem segunda lista. Sem repetir arquivos.

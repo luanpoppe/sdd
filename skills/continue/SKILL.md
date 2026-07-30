@@ -87,19 +87,18 @@ Coração da skill. Execute na ordem:
 
 **e) Plano de revisão obrigatório** (formato da state-machine.md):
 
+**UMA lista só** de arquivos, já na ordem de revisão (não separe "Arquivos" de "Ordem de revisão"). Inclua TODOS os arquivos tocados (serve de manifesto pra revert), ordenados por prioridade; triviais (tipos gerados, config, stubs) no FIM marcados "pode pular".
+
 ```
 ## Chunk F<n>.C<m> — <título> (em revisão)
 
 Feature: <slug> (<i>/<total>)
 Estado da feature: <X de Y chunks concluídos>
 
-Arquivos:
-- caminho/arquivo1.ts (criado)
-- caminho/arquivo2.ts (editado, +N -M)
-
-Ordem de revisão:
-1. arquivo1.ts — <razão>; comece por aqui.
-2. arquivo2.ts — <razão>.
+Revisão (na ordem — comece pelo topo):
+1. caminho/arquivo1.ts (criado, +N) — <o que olhar>; comece por aqui.
+2. caminho/arquivo2.ts (editado, +N -M) — <o que olhar>.
+3. caminho/tipos.d.ts (criado) — tipos gerados, leitura rápida / pode pular.
 
 Validação:
 - eslint --fix: ok
