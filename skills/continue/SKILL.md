@@ -29,6 +29,7 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
 4. **Pare quando** todas as ambiguidades dessa feature estão resolvidas e nada foi "tanto faz" sem follow-up.
 5. Gere `specs/<slug>/spec.md` usando `../../helpers/templates/spec.md.tpl`. **Alvo: ≤ 100 linhas**.
 6. Atualize `.sdd.yaml`: `state: awaiting-feature-tasks`, `updated`.
+6-bis. Se `flowchart: on`, atualize `flow.html` (`../../helpers/prompts/flowchart-guide.md`) — a feature saiu de "spec ainda não gerada".
 7. Imprima plano de revisão:
    ```
    Spec da feature `<slug>` criada (em revisão).
@@ -56,6 +57,7 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
 4. IDs no formato `F<n>.C<m>` onde n = índice (1-based) da feature na lista do plan.md, m = chunk dentro da feature.
 5. **Cada chunk DEVE incluir**: arquivos tocados, resumo de 1 frase, ordem de revisão, comando de validação. Na dúvida, **parta em dois**.
 6. Atualize `.sdd.yaml`: feature `tasking` → `implementing`, state global → `implementing`, `updated`.
+6-bis. Se `flowchart: on`, atualize `flow.html` (`../../helpers/prompts/flowchart-guide.md`) — **expanda a feature nos nós de componente** (um por chunk), todos `pending`.
 7. Imprima plano de revisão das tasks (lista de chunks + estimativa de tamanho de cada). Avise: *"Valide a granularidade antes de seguir. Próximo `/lp-continue` executa o chunk F<n>.C1."*
 
 ### `implementing`
@@ -67,6 +69,7 @@ Coração da skill. Execute na ordem:
 - Proponha diffs nas docs (plan.md ou specs/<slug>/spec.md ou tasks.md).
 - Pergunte: aplicar diffs / ignorar / tratar depois.
 - Aplique aprovados ANTES de codar. Mostre resumo.
+- **Divergências que persistem** (feito diferente do planejado e a doc foi ajustada) → anote para marcar o componente como `deviated` no diagrama (passo g).
 
 **b) Próximo chunk**:
 - Primeiro `[ ]` em `specs/<current_feature>/tasks.md`.
@@ -107,6 +110,8 @@ Reverter: peça "reverte o chunk F<n>.C<m>".
 ```
 
 **Pare aqui.** Não execute o próximo chunk no mesmo turno.
+
+**g) Atualizar diagrama** — se `flowchart: on` no `.sdd/config.yaml` (default), regenere `.sdd/changes/<id>/flow.html` seguindo `../../helpers/prompts/flowchart-guide.md`: marque este chunk como concluído, mova o `current` para o próximo, marque `deviated` os componentes anotados no auto-sync. Cite no plano de revisão: *"Diagrama atualizado: flow.html"*.
 
 **f-bis) Context watch** — antes de fechar o turno, siga `../../helpers/prompts/context-watch.md` usando `context_watch` do `.sdd/config.yaml`. Heurística subjetiva: na faixa de 5-10 chunks implementados nesta MESMA conversa, comece a observar. Se julgar pesada → siga o protocolo (suggest/auto/off).
 

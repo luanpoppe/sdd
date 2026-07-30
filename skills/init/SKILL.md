@@ -41,6 +41,12 @@ Faça as perguntas abaixo. Siga as diretrizes de `../../helpers/prompts/grill-sn
 
 > O agente usa uma heurística subjetiva (entre 5 e 10 chunks implementados + volume de mensagens) para detectar conversas longas. Quando dispara, tenta primeiro um comando de compactação nativo do ambiente (ex: `/compact` no Claude Code); se não houver, gera um resumo + instruções de handoff para você começar uma conversa nova.
 
+**Q5. Diagrama macro do fluxo de implementação**
+- on — gera um `flow.html` por mudança, com boxes+setas dos componentes, atualizado a cada `lp:continue` (a fazer / em andamento / feito / feito diferente). (Recomendado)
+- off — não gera diagrama.
+
+> Visão macro (Config → Controller → UseCase → Mapper/Repository…), foca no que falta. HTML autocontido, abre no navegador. Regenerável com `lp:flow`.
+
 ## 3. Criação de arquivos
 
 Crie no diretório do projeto:
@@ -81,6 +87,7 @@ format: <md|html|both>
 lang: <pt-BR|en>
 chunk_size: <micro|small|medium|large|xlarge>
 context_watch: <suggest|auto|off>
+flowchart: <on|off>
 created: <YYYY-MM-DD>
 ```
 

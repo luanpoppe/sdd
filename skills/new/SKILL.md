@@ -92,10 +92,13 @@ Revise agora .sdd/changes/<id>/plan.md. Quer ajustar algo (contexto, decisões m
 **Pare e aguarde resposta do usuário.** NÃO sugira `/lp-continue` ainda.
 
 - Se o usuário pedir ajustes: aplique no `plan.md` e/ou `.sdd.yaml` (se mudou lista/ordem de features) e pergunte de novo se está bom.
-- Quando o usuário aprovar (ex: "tá bom", "pode seguir", "ok"): aí sim imprima:
+- Quando o usuário aprovar (ex: "tá bom", "pode seguir", "ok"):
+  - Se `flowchart` no `.sdd/config.yaml` for `on` (default), **crie `flow.html`** seguindo `../../helpers/prompts/flowchart-guide.md` — nesta fase, um nó macro por feature (ainda sem chunks).
+  - Aí sim imprima:
 
   ```
   Plan.md aprovado. Próximo passo: /lp-continue (vai grillar e gerar a spec apenas da primeira feature: <slug-1>).
+  Diagrama do fluxo: .sdd/changes/<id>/flow.html (atualiza a cada /lp-continue).
   ```
 
 ## Princípios não-negociáveis
