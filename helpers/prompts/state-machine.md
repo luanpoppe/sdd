@@ -109,3 +109,7 @@ Regras da lista:
 - **Ordene por prioridade de revisão**: comece pelo núcleo da lógica; termine nos triviais.
 - Cada linha: `caminho (tipo de mudança, ±linhas) — o que olhar`. Nos triviais, o "o que olhar" vira "pode pular / leitura rápida".
 - Sem segunda lista. Sem repetir arquivos.
+
+## Perguntas/alterações durante a revisão de um chunk
+
+Enquanto um chunk está em revisão (impresso, `[~]`, não aprovado), se o usuário perguntar algo ou pedir ajuste no chunk **sem** rodar `/lp-continue`: atenda, e **re-imprima a lista de revisão atualizada no fim da resposta** para ele continuar de onde parou. Se alterou arquivos, re-rode a validação e reflita novos arquivos/±linhas na lista. Não avance de chunk sem `/lp-continue` explícito.

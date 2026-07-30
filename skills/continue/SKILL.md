@@ -108,6 +108,8 @@ Próximo: /lp-continue (próximo chunk OU início da próxima feature, se essa f
 Reverter: peça "reverte o chunk F<n>.C<m>".
 ```
 
+> Enquanto o usuário revisa: se ele perguntar algo ou pedir ajuste no chunk (sem rodar `/lp-continue`), atenda e **re-imprima a lista de revisão atualizada no fim da resposta** (ver seção "Durante a revisão de um chunk").
+
 **Pare aqui.** Não execute o próximo chunk no mesmo turno.
 
 **g) Atualizar diagrama** — se `flowchart: on` no `.sdd/config.yaml` (default), regenere `.sdd/changes/<id>/flow.html` seguindo `../../helpers/prompts/flowchart-guide.md`: marque este chunk como concluído, mova o `current` para o próximo, marque `deviated` os componentes anotados no auto-sync. Cite no plano de revisão: *"Diagrama atualizado: flow.html"*.
@@ -124,6 +126,26 @@ Reverter: peça "reverte o chunk F<n>.C<m>".
 ### `awaiting-archive`
 
 Diga ao usuário para rodar `/lp-archive`. Não faça mais nada.
+
+## Durante a revisão de um chunk (perguntas e alterações inline)
+
+Vale enquanto há um chunk **em revisão** (recém-impresso o plano, chunk `[~]`, ainda não aprovado e sem novo `/lp-continue`). Se, nesse meio, o usuário **faz uma pergunta** sobre o que foi implementado OU **pede uma alteração** no chunk — sem rodar `/lp-continue`:
+
+1. Responda a pergunta / aplique a alteração normalmente e explique o que fez.
+2. Se **alterou arquivos**: rode `npx eslint --fix` nos editados e, se o projeto exigir, os testes. A lista de arquivos pode ter mudado (novos arquivos, novos ±linhas) — reflita isso.
+3. **No FIM da resposta, re-imprima a lista de revisão atualizada**, para o usuário continuar de onde parou:
+
+   ```
+   Revisão (na ordem — continue de onde parou):
+   1. caminho/arquivo1.ts (criado, +N) — <o que olhar>.
+   2. caminho/arquivo2.ts (editado, +N -M) — <o que olhar>.
+   ...
+   ```
+
+- Se o usuário já disse quais arquivos revisou, mova o "comece por aqui" para o primeiro ainda **não** revisado (ou marque os revisados com ✓). Não force se não souber.
+- **Não avance** para o próximo chunk aqui — isso só acontece com `/lp-continue` explícito.
+- Não re-imprima o cabeçalho inteiro do plano (Feature/Estado/Validação) toda vez — só a **lista de revisão** basta, salvo se a alteração invalidou a validação (aí re-rode e mostre).
+- Se a pergunta NÃO for sobre o chunk em revisão (dúvida geral, outro assunto) → responda normal, **sem** re-imprimir a lista.
 
 ## Memória — varredura e salvamento autônomo (em qualquer fase)
 
