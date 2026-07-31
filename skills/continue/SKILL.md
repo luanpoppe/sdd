@@ -91,6 +91,8 @@ Coração da skill. Execute na ordem:
 
 **UMA lista só** de arquivos, já na ordem de revisão (não separe "Arquivos" de "Ordem de revisão"). Inclua TODOS os arquivos tocados (serve de manifesto pra revert), ordenados por prioridade; triviais (tipos gerados, config, stubs) no FIM marcados "pode pular".
 
+Cada arquivo que vale revisão leva **3 linhas curtas** — `Faz` / `Revisar` / `Conecta` (1 frase cada, concretas, sem encher linguiça). Arquivos triviais ficam em uma linha só com "pode pular".
+
 ```
 ## Chunk F<n>.C<m> — <título> (em revisão)
 
@@ -98,9 +100,18 @@ Feature: <slug> (<i>/<total>)
 Estado da feature: <X de Y chunks concluídos>
 
 Revisão (na ordem — comece pelo topo):
-1. caminho/arquivo1.ts (criado, +N) — <o que olhar>; comece por aqui.
-2. caminho/arquivo2.ts (editado, +N -M) — <o que olhar>.
-3. caminho/tipos.d.ts (criado) — tipos gerados, leitura rápida / pode pular.
+
+1. caminho/arquivo1.ts (criado, +N)
+   Faz: <o que este arquivo passou a fazer>.
+   Revisar: <no que prestar atenção / o que validar aqui>.
+   Conecta: <quem chama/usa, pra onde aponta, qual peça do fluxo>.
+
+2. caminho/arquivo2.ts (editado, +N -M)
+   Faz: <...>.
+   Revisar: <...>.
+   Conecta: <...>.
+
+3. caminho/tipos.d.ts (criado) — tipos gerados, pode pular.
 
 Validação:
 - eslint --fix: ok
@@ -109,6 +120,12 @@ Validação:
 Próximo: /lp-continue (próximo chunk OU início da próxima feature, se essa foi a última).
 Reverter: peça "reverte o chunk F<n>.C<m>".
 ```
+
+Regras das 3 linhas:
+- **Faz**: o papel do arquivo neste chunk (não repita o nome dele; diga a responsabilidade).
+- **Revisar**: o ponto de atenção real — decisão não-óbvia, borda, contrato a conferir. Não escreva "revise o código"; seja específico.
+- **Conecta**: a ligação com outros arquivos deste chunk / feature / fluxo. Aponte nomes reais (ex: "consumido por `AuthController.login()`"; "implementa a porta `UserRepository`"). Se `flowchart: on`, pode citar o nó no `flow.html`.
+- Mantenha 1 frase por linha. Se não há nada relevante em `Revisar` ou `Conecta` (arquivo isolado/trivial), colapse para one-liner "pode pular".
 
 > Enquanto o usuário revisa: se ele perguntar algo ou pedir ajuste no chunk (sem rodar `/lp-continue`), atenda e **re-imprima a lista de revisão atualizada no fim da resposta** (ver seção "Durante a revisão de um chunk").
 
@@ -135,12 +152,15 @@ Vale enquanto há um chunk **em revisão** (recém-impresso o plano, chunk `[~]`
 
 1. Responda a pergunta / aplique a alteração normalmente e explique o que fez.
 2. Se **alterou arquivos**: rode `npx eslint --fix` nos editados e, se o projeto exigir, os testes. A lista de arquivos pode ter mudado (novos arquivos, novos ±linhas) — reflita isso.
-3. **No FIM da resposta, re-imprima a lista de revisão atualizada**, para o usuário continuar de onde parou:
+3. **No FIM da resposta, re-imprima a lista de revisão atualizada** (mesmo formato de 3 linhas `Faz`/`Revisar`/`Conecta`), para o usuário continuar de onde parou:
 
    ```
    Revisão (na ordem — continue de onde parou):
-   1. caminho/arquivo1.ts (criado, +N) — <o que olhar>.
-   2. caminho/arquivo2.ts (editado, +N -M) — <o que olhar>.
+
+   1. caminho/arquivo1.ts (criado, +N)
+      Faz: <...>.
+      Revisar: <...>.
+      Conecta: <...>.
    ...
    ```
 

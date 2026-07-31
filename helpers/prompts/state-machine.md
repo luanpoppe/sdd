@@ -85,6 +85,8 @@ Buckets: **decisão divergente** / **escopo extra** / **escopo faltante**. Propo
 
 **UMA lista só**: todos os arquivos tocados, já na ordem de revisão (não duas listas separadas). A lista é completa — serve de manifesto pra revert também. Arquivos de baixo valor de revisão (tipos gerados, config trivial, stubs) vão para o FIM, marcados "pode pular".
 
+Cada arquivo que vale revisão leva **3 linhas curtas** — `Faz` / `Revisar` / `Conecta` — pra o revisor entender o papel do arquivo e como ele se encaixa no fluxo sem ter que abrir o código pra descobrir. Triviais ficam em uma linha.
+
 Formato obrigatório:
 
 ```
@@ -94,9 +96,13 @@ Feature: <slug> (<i>/<total>)
 Estado da feature: <X de Y chunks concluídos>
 
 Revisão (na ordem — comece pelo topo):
-1. caminho/arquivo1.ts (criado, +N) — <o que olhar>; comece por aqui.
-2. caminho/arquivo2.ts (editado, +N -M) — <o que olhar>.
-3. caminho/tipos.d.ts (criado) — tipos gerados, leitura rápida / pode pular.
+
+1. caminho/arquivo1.ts (criado, +N)
+   Faz: <o que este arquivo passou a fazer>.
+   Revisar: <no que prestar atenção / o que validar aqui>.
+   Conecta: <quem chama/usa, pra onde aponta, qual peça do fluxo>.
+
+2. caminho/tipos.d.ts (criado) — tipos gerados, pode pular.
 
 Validação:
 - eslint --fix: ok
@@ -109,7 +115,8 @@ Reverter: peça "reverte o chunk F<n>.C<m>".
 Regras da lista:
 - **Inclua todos os arquivos mexidos** — não omita nenhum (o usuário precisa saber o que mudou pra reverter).
 - **Ordene por prioridade de revisão**: comece pelo núcleo da lógica; termine nos triviais.
-- Cada linha: `caminho (tipo de mudança, ±linhas) — o que olhar`. Nos triviais, o "o que olhar" vira "pode pular / leitura rápida".
+- **Faz / Revisar / Conecta**: 1 frase concreta cada. `Revisar` aponta o ponto de atenção real (não "revise o código"); `Conecta` cita nomes reais de arquivos/funções/portas do fluxo.
+- Triviais (tipos gerados, config, stub) colapsam para uma linha só com "pode pular".
 - Sem segunda lista. Sem repetir arquivos.
 
 ## Perguntas/alterações durante a revisão de um chunk
