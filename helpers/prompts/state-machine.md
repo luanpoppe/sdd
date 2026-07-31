@@ -48,6 +48,8 @@ A **ordem da lista** define a ordem de execução. Não embaralhar.
 
 > **Não existe `tasks.md` global.** Cada feature tem seu próprio `specs/<slug>/tasks.md`.
 
+> **Formato das docs segue `format` do config.** `plan`, `spec` e `tasks`: com `format: both` ou `html`, gere sempre o par `.md` + `.html` (o `.html` espelha o `.md`, usando `.sdd/assets/styles.css`). Nunca gere só `.md` quando o config pede html.
+
 ## Transições
 
 | Estado | Gatilho | Ação | Próximo |

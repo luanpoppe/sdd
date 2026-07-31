@@ -28,6 +28,7 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
    - Dependências de outras features (já feitas, futuras, externas).
 4. **Pare quando** todas as ambiguidades dessa feature estão resolvidas e nada foi "tanto faz" sem follow-up.
 5. Gere `specs/<slug>/spec.md` usando `../../helpers/templates/spec.md.tpl`. **Alvo: ≤ 100 linhas**.
+5-bis. **Respeite o `format` do `.sdd/config.yaml`**: se `format` ∈ {html, both}, gere também `specs/<slug>/spec.html` espelhando o conteúdo do `.md` (use `.sdd/assets/styles.css`; se não existir, copie de `../../helpers/templates/styles.css`). Confira o padrão das specs anteriores da mesma mudança e mantenha consistência.
 6. Atualize `.sdd.yaml`: `state: awaiting-feature-tasks`, `updated`.
 6-bis. Se `flowchart: on`, atualize `flow.html` (`../../helpers/prompts/flowchart-guide.md`) — a feature saiu de "spec ainda não gerada".
 7. Imprima plano de revisão:
@@ -56,6 +57,7 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
    - `xlarge`: até 10 arquivos OU ~700-1000 linhas.
 4. IDs no formato `F<n>.C<m>` onde n = índice (1-based) da feature na lista do plan.md, m = chunk dentro da feature.
 5. **Cada chunk DEVE incluir**: arquivos tocados, resumo de 1 frase, ordem de revisão, comando de validação. Na dúvida, **parta em dois**.
+5-bis. **Respeite o `format`**: se `format` ∈ {html, both}, gere também `specs/<current_feature>/tasks.html` espelhando o `.md` (use `.sdd/assets/styles.css`). Mantenha o padrão das tasks anteriores da mudança.
 6. Atualize `.sdd.yaml`: feature `tasking` → `implementing`, state global → `implementing`, `updated`.
 6-bis. Se `flowchart: on`, atualize `flow.html` (`../../helpers/prompts/flowchart-guide.md`) — **expanda a feature nos nós de componente** (um por chunk), todos `pending`.
 7. Imprima plano de revisão das tasks (lista de chunks + estimativa de tamanho de cada). Avise: *"Valide a granularidade antes de seguir. Próximo `/lp-continue` executa o chunk F<n>.C1."*
@@ -162,5 +164,6 @@ Antes de fechar o turno, **revise a conversa** procurando sinais de preferência
 2. **Um passo por invocação.** Mesmo que o usuário peça "faz tudo", redirecione: "no SDD, cada passo é um `/lp-continue` para que você possa revisar".
 3. **Grilling agressivo na criação da spec**, mínimo na criação das tasks (se a spec resolveu as dúvidas).
 4. **Auto-sync antes de implementar.** Nunca codifique sobre docs desatualizadas.
+4-bis. **Respeite o `format` em TODA doc gerada.** `format: both` ou `html` → spec e tasks saem em `.md` E `.html`, não só `.md`. Antes de fechar o passo, confira o `format` e o padrão das docs anteriores da mudança.
 5. **Plano de revisão sempre.** Sem exceções.
 6. **Não leia specs de outras features** que ainda não foram processadas — elas não existem.
