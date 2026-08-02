@@ -14,6 +14,7 @@
 
 - [ ] **Arquivos**: `{{file_1}}`, `{{file_2}}`
 - [ ] **Faz**: {{chunk_1_summary}}
+- [ ] **Depende de**: nenhum   <!-- IDs de chunks que precisam vir antes (ex: F1.C1) ou "nenhum". Usado pelo modo paralelo. -->
 - [ ] **Ordem de revisão**: 1) `{{file_1}}` (define o contrato) → 2) `{{file_2}}` (consome)
 - [ ] **Validação**: `npx eslint --fix {{file_1}} {{file_2}}` + teste relevante
 

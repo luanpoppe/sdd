@@ -56,7 +56,7 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
    - `large`: até 7 arquivos OU ~450-600 linhas.
    - `xlarge`: até 10 arquivos OU ~700-1000 linhas.
 4. IDs no formato `F<n>.C<m>` onde n = índice (1-based) da feature na lista do plan.md, m = chunk dentro da feature.
-5. **Cada chunk DEVE incluir**: arquivos tocados, resumo de 1 frase, ordem de revisão, comando de validação. Na dúvida, **parta em dois**.
+5. **Cada chunk DEVE incluir**: arquivos tocados, resumo de 1 frase, **`Depende de:`** (IDs de chunks que precisam vir antes, ou "nenhum" — habilita o modo paralelo a saber o que é independente), ordem de revisão, comando de validação. Na dúvida, **parta em dois**.
 5-bis. **Respeite o `format`**: se `format` ∈ {html, both}, gere também `specs/<current_feature>/tasks.html` espelhando o `.md` (use `.sdd/assets/styles.css`). Mantenha o padrão das tasks anteriores da mudança.
 6. Atualize `.sdd.yaml`: feature `tasking` → `implementing`, state global → `implementing`, `updated`.
 6-bis. Se `flowchart: on`, atualize `flow.html` (`../../helpers/prompts/flowchart-guide.md`) — **expanda a feature nos nós de componente** (um por chunk), todos `pending`.
@@ -73,7 +73,12 @@ Coração da skill. Execute na ordem:
 - Aplique aprovados ANTES de codar. Mostre resumo.
 - **Divergências que persistem** (feito diferente do planejado e a doc foi ajustada) → anote para marcar o componente como `deviated` no diagrama (passo g).
 
-**b) Próximo chunk**:
+**b0) Modo de execução (só na 1ª vez que a feature entra em `implementing`)**:
+- Determine sequencial vs paralelo seguindo `../../helpers/prompts/parallel-guide.md` ("Quando ativar"): `parallel: on` no config → paralelo; senão pergunte uma vez (default sequencial em não/silêncio).
+- **Paralelo** → siga o `parallel-guide.md` (ondas de chunks independentes, um subagente por chunk, plano de revisão combinado) no lugar dos passos b/c/e abaixo; d/g continuam na conversa principal. Uma onda por `lp:continue`.
+- **Sequencial** (padrão) → siga b/c/d/e normalmente, um chunk por vez.
+
+**b) Próximo chunk** (modo sequencial):
 - Primeiro `[ ]` em `specs/<current_feature>/tasks.md`.
 - Marque-o como em andamento (opcional: troque para `[~]` apenas no final).
 

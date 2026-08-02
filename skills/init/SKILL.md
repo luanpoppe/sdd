@@ -89,10 +89,11 @@ chunk_size: <micro|small|medium|large|xlarge>
 context_watch: <suggest|auto|off>
 flowchart: <on|off>
 implementer: subagent   # subagent (padrão): lp:continue delega a implementação do chunk a um subagente | main: a conversa principal implementa
+parallel: off           # off (padrão): um chunk por vez | on: chunks independentes rodam em paralelo (um subagente cada). Ligar com lp:parallel.
 created: <YYYY-MM-DD>
 ```
 
-> **`implementer` NÃO é perguntado no grill** — sempre gravado como `subagent`. Quem quiser que a conversa principal implemente troca manualmente para `main` no `.sdd/config.yaml`.
+> **`implementer` e `parallel` NÃO são perguntados no grill** — gravados como `subagent` e `off`. `implementer: main` faz a conversa principal implementar. `parallel: on` (ou `lp:parallel`) liga o modo paralelo; mesmo com `off`, o `lp:continue` pergunta uma vez antes do 1º chunk se você quer paralelizar.
 
 Se `format` ∈ {html, both}: copie `../../helpers/templates/styles.css` para `.sdd/assets/styles.css` e pergunte se o usuário quer ajustar o esquema de cores (caso sim, faça um mini-grill sobre cor primária/fundo e edite o CSS).
 
