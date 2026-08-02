@@ -77,11 +77,22 @@ Coração da skill. Execute na ordem:
 - Primeiro `[ ]` em `specs/<current_feature>/tasks.md`.
 - Marque-o como em andamento (opcional: troque para `[~]` apenas no final).
 
-**c) Executar APENAS este chunk**:
-- Respeite `chunk_size`. Se o chunk como descrito vai exceder, **pare e divida em sub-chunks** atualizando o tasks.md antes de codar.
-- Faça as edições.
-- Rode `npx eslint --fix <arquivos editados>` (apenas neles).
-- Se o projeto exige (ver CLAUDE.md do projeto), rode os testes.
+**c) Executar APENAS este chunk** — quem codifica depende de `implementer` no `.sdd/config.yaml` (default `subagent` se o campo não existir):
+
+- Respeite `chunk_size`. Se o chunk como descrito vai exceder, **pare e divida em sub-chunks** atualizando o tasks.md antes de codar (isso é decisão da conversa principal, mesmo no modo subagente).
+
+- **`implementer: subagent` (padrão)** — a conversa principal **delega a implementação a um subagente** e apenas orquestra:
+  1. Lance UM subagente (Task/Agent do ambiente) com escopo restrito a ESTE chunk. Passe: o chunk do `tasks.md` (arquivos, "Faz", ordem, validação), a spec da feature, `plan.md`, as preferências de código do projeto (CLAUDE.md/regras) e a instrução de rodar `npx eslint --fix` nos arquivos editados + testes se o projeto exigir.
+  2. Instrua o subagente a **retornar um relatório estruturado** (não prosa longa): para cada arquivo — caminho, criado/editado, ±linhas, `Faz` (papel), `Revisar` (ponto de atenção), `Conecta` (ligações reais); mais o resultado da validação (eslint/testes). É esse relatório que alimenta o plano de revisão (passo e).
+  3. A conversa principal **não reimplementa** — confere o relatório, e se algo veio fora do escopo do chunk ou contra as docs, trata como divergência (auto-sync) antes de seguir.
+  4. **Fallback**: se o ambiente não suporta lançar subagente, caia para o modo `main` e avise no plano de revisão (*"implementado no agente principal — subagente indisponível neste ambiente"*).
+
+- **`implementer: main`** — a conversa principal faz as edições diretamente (comportamento clássico):
+  - Faça as edições.
+  - Rode `npx eslint --fix <arquivos editados>` (apenas neles).
+  - Se o projeto exige (ver CLAUDE.md do projeto), rode os testes.
+
+> Em ambos os modos, os passos **a) auto-sync**, **d) marcar/registrar**, **e) plano de revisão** e **g) diagrama** são sempre da conversa principal — o subagente só codifica o chunk e reporta.
 
 **d) Marcar + registrar**:
 - tasks.md: marque **TODOS os checkboxes do chunk** (`Arquivos`, `Faz`, `Ordem de revisão`, `Validação` e quaisquer outros) de `[ ]` → `[~]`. Não marque só o primeiro item — todo bullet `[ ]` do chunk concluído deve virar `[~]`. Conte quantos checkboxes o chunk tem ANTES de editar e confirme que esse mesmo número virou `[~]` DEPOIS.

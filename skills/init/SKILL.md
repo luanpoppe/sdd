@@ -88,8 +88,11 @@ lang: <pt-BR|en>
 chunk_size: <micro|small|medium|large|xlarge>
 context_watch: <suggest|auto|off>
 flowchart: <on|off>
+implementer: subagent   # subagent (padrão): lp:continue delega a implementação do chunk a um subagente | main: a conversa principal implementa
 created: <YYYY-MM-DD>
 ```
+
+> **`implementer` NÃO é perguntado no grill** — sempre gravado como `subagent`. Quem quiser que a conversa principal implemente troca manualmente para `main` no `.sdd/config.yaml`.
 
 Se `format` ∈ {html, both}: copie `../../helpers/templates/styles.css` para `.sdd/assets/styles.css` e pergunte se o usuário quer ajustar o esquema de cores (caso sim, faça um mini-grill sobre cor primária/fundo e edite o CSS).
 
