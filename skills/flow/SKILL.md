@@ -17,6 +17,7 @@ Você está gerando/atualizando o diagrama macro da implementação da mudança 
 Siga `../../helpers/prompts/flowchart-guide.md` para montar o `flow.html` a partir do estado atual (features do plan, chunks dos tasks.md existentes, status pelos checkboxes + `current_chunk`, desvios conhecidos).
 
 - Regenere o `<main>` inteiro. Não remende nós.
+- Cada nó já implementado (`done`/`current`/`deviated`) vira clicável, com um bloco de detalhe no `.detail-panel` da feature (o que faz + dados fluindo + trecho ilustrativo). Conteúdo vem da spec/tasks — **não leia o código-fonte**. Veja o guia.
 - Salve em `.sdd/changes/<id>/flow.html`.
 
 ## 2. Reportar

@@ -49,7 +49,7 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 | `lp:new` | Abre uma nova mudança com grill anti-assunção; gera `plan.md` + `flow.html`. |
 | `lp:continue` | Avança 1 passo do fluxo (spec → revisão → tasks → chunks). Implementa via subagente. |
 | `lp:review` | Revisão guiada de código existente (walkthrough do fluxo real). |
-| `lp:flow` | Gera/regenera o diagrama macro (`flow.html`) do fluxo de implementação. |
+| `lp:flow` | Gera/regenera o diagrama macro (`flow.html`); nós implementados são clicáveis e abrem detalhe (o que faz + dados + trecho). |
 | `lp:parallel` | Liga/desliga o modo paralelo (chunks independentes, um subagente cada). |
 | `lp:auto-update` | Atualiza as skills para a versão mais recente do GitHub. |
 | `lp:explain` | Gera explicação em HTML de um tópico. |
