@@ -6,6 +6,14 @@
   <link rel="stylesheet" href="../../../../assets/styles.css">
 </head>
 <body>
+  <aside class="toc">
+    <p class="toc-title">Chunks</p>
+    <ol>
+      <!-- Uma entrada por chunk, na ordem. Ex: -->
+      <li><a href="#F1-C1">F1.C1 — {{chunk_title}}</a></li>
+    </ol>
+  </aside>
+
   <header class="lp-header">
     <p class="lp-breadcrumb"><a href="../../plan.html">{{change_id}}</a> / specs / <strong>{{feature_slug}}</strong> / tasks</p>
     <h1>Tasks: {{feature_slug}}</h1>
@@ -15,9 +23,9 @@
   <main class="lp-main">
     <!-- Espelha o tasks.md. Um bloco por chunk, na ordem. Reflita o status: pendente / em revisão / concluído. -->
 
-    <!-- Exemplo de um chunk: -->
-    <section class="lp-chunk" data-chunk="F1.C1" data-status="pending">
-      <h2>F1.C1 — {{chunk_title}} <span class="lp-status">[pendente]</span></h2>
+    <!-- Exemplo de um chunk (cada chunk é um <details class="lp-sec" open> colapsável): -->
+    <details class="lp-sec lp-chunk" id="F1-C1" data-chunk="F1.C1" data-status="pending" open>
+      <summary><h2>F1.C1 — {{chunk_title}} <span class="lp-status">[pendente]</span></h2></summary>
       <ul class="lp-chunk-meta">
         <li><strong>Arquivos:</strong> <code>a.ts</code>, <code>b.ts</code></li>
         <li><strong>Depende de:</strong> nenhum</li>
@@ -25,7 +33,7 @@
       </ul>
       <p><strong>Faz:</strong> {{chunk_summary}}</p>
       <p><strong>Validação:</strong> <code>{{validation_cmd}}</code></p>
-    </section>
+    </details>
     <!-- data-status: pending | in-review | done — espelha os checkboxes do .md -->
   </main>
 

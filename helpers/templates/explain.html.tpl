@@ -24,27 +24,27 @@
 
   <main class="lp-main">
 
-    <!-- LP-SECTION:overview -->
-    <section id="overview" data-section="overview">
-      <h2>Visão geral</h2>
+    <!-- LP-SECTION:overview — cada seção é um <details> colapsável -->
+    <details class="lp-sec" id="overview" data-section="overview" open>
+      <summary><h2>Visão geral</h2></summary>
       <p>{{overview}}</p>
-    </section>
+    </details>
 
     <!-- LP-SECTION:detalhes -->
-    <section id="detalhes" data-section="detalhes">
-      <h2>Detalhes</h2>
+    <details class="lp-sec" id="detalhes" data-section="detalhes" open>
+      <summary><h2>Detalhes</h2></summary>
       <!-- Novas respostas acumuladas pelo lp:explain entram aqui, em subsections com id próprio:
            <h3 id="detalhes-<slug-do-topico>">Título</h3>
            E uma entrada espelhada deve ir no <aside.toc> aninhada sob "Detalhes". -->
-    </section>
+    </details>
 
     <!-- LP-SECTION:perguntas -->
-    <section id="perguntas" data-section="perguntas">
-      <h2>Perguntas registradas</h2>
+    <details class="lp-sec" id="perguntas" data-section="perguntas" open>
+      <summary><h2>Perguntas registradas</h2></summary>
       <ol class="lp-questions">
         <!-- Cada pergunta vira <li> com data-asked-at. -->
       </ol>
-    </section>
+    </details>
 
   </main>
 

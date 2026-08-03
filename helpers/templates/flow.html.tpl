@@ -45,14 +45,19 @@
 
     main { max-width: 900px; margin: 0 auto; }
 
-    /* Grupo = feature (swimlane) */
+    /* Grupo = feature (swimlane) — <details> colapsável */
     .feature { border: 1px solid var(--line); border-radius: 10px; background: var(--card);
-      margin-bottom: 1.5rem; padding: 1rem 1.25rem 1.5rem; }
-    .feature > h2 { font-size: 1rem; margin: 0 0 1rem; display: flex; align-items: center; gap: .5rem; }
+      margin-bottom: 1.5rem; padding: 0 1.25rem; }
+    .feature[open] { padding-bottom: 1.5rem; }
+    .feature > summary { font-size: 1rem; font-weight: 600; cursor: pointer; list-style: none;
+      display: flex; align-items: center; gap: .5rem; padding: 1rem 0; user-select: none; }
+    .feature > summary::-webkit-details-marker { display: none; }
+    .feature > summary::before { content: "▸"; color: var(--accent); font-size: .8rem; transition: transform .15s; }
+    .feature[open] > summary::before { transform: rotate(90deg); }
     .feature .tag { font-size: .7rem; padding: .1rem .5rem; border-radius: 20px; border: 1px solid; }
-    .feature.done > h2 .tag     { background: var(--done-bg);     border-color: var(--done-bd);     color: var(--done-fg); }
-    .feature.current > h2 .tag  { background: var(--current-bg);  border-color: var(--current-bd);  color: var(--current-fg); }
-    .feature.pending > h2 .tag  { background: var(--pending-bg);  border-color: var(--pending-bd);  color: var(--pending-fg); }
+    .feature.done > summary .tag     { background: var(--done-bg);     border-color: var(--done-bd);     color: var(--done-fg); }
+    .feature.current > summary .tag  { background: var(--current-bg);  border-color: var(--current-bd);  color: var(--current-fg); }
+    .feature.pending > summary .tag  { background: var(--pending-bg);  border-color: var(--pending-bd);  color: var(--pending-fg); }
 
     /* Fluxo vertical de stages, com conectores */
     .flow { display: flex; flex-direction: column; align-items: center; }
@@ -96,14 +101,14 @@
 
   <main>
     <!--
-      Uma <section class="feature ..."> por feature do plan.md, na ordem de execução.
+      Um <details class="feature ..." open> por feature do plan.md, na ordem de execução (colapsável).
       Classe da feature: done | current | pending.
       Dentro, o fluxo em .stage (cada stage = 1+ nós paralelos), separados por .connector.
 
       Exemplo de uma feature já com tasks.md (expandida em componentes):
     -->
-    <section class="feature current">
-      <h2>1. auth-endpoint <span class="tag">em andamento · 2/4</span></h2>
+    <details class="feature current" open>
+      <summary>1. auth-endpoint <span class="tag">em andamento · 2/4</span></summary>
       <div class="flow">
         <div class="stage">
           <div class="node done"><div class="name">Config</div><div class="sub">F1.C1 · SecurityConfig</div><span class="badge">✓</span></div>
@@ -123,17 +128,17 @@
           <div class="node pending"><div class="name">Repository</div><div class="sub">F1.C4 · UserRepository</div></div>
         </div>
       </div>
-    </section>
+    </details>
 
     <!-- Feature ainda sem tasks.md: um único nó macro representando a feature inteira. -->
-    <section class="feature pending">
-      <h2>2. refresh-token <span class="tag">a fazer</span></h2>
+    <details class="feature pending" open>
+      <summary>2. refresh-token <span class="tag">a fazer</span></summary>
       <div class="flow">
         <div class="stage">
           <div class="node pending"><div class="name">refresh-token</div><div class="sub">spec ainda não gerada</div></div>
         </div>
       </div>
-    </section>
+    </details>
   </main>
 
   <footer>

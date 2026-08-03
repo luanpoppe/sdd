@@ -6,6 +6,16 @@
   <link rel="stylesheet" href="../../assets/styles.css">
 </head>
 <body>
+  <aside class="toc">
+    <p class="toc-title">Índice</p>
+    <ol>
+      <li><a href="#contexto">Contexto</a></li>
+      <li><a href="#decisoes">Decisões macro</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#escopo">Escopo</a></li>
+    </ol>
+  </aside>
+
   <header class="lp-header">
     <p class="lp-breadcrumb"><strong>{{change_id}}</strong> / plan</p>
     <h1>{{title}}</h1>
@@ -13,30 +23,30 @@
   </header>
 
   <main class="lp-main">
-    <!-- Espelha o plan.md. Preencha as seções abaixo com o MESMO conteúdo do .md. -->
+    <!-- Espelha o plan.md. Cada seção é um <details class="lp-sec" open> colapsável. -->
 
-    <section id="contexto">
-      <h2>Contexto</h2>
+    <details class="lp-sec" id="contexto" open>
+      <summary><h2>Contexto</h2></summary>
       <p>{{contexto}}</p>
-    </section>
+    </details>
 
-    <section id="decisoes">
-      <h2>Decisões macro</h2>
+    <details class="lp-sec" id="decisoes" open>
+      <summary><h2>Decisões macro</h2></summary>
       <ul><!-- <li> por decisão --></ul>
-    </section>
+    </details>
 
-    <section id="features">
-      <h2>Features (executadas sequencialmente)</h2>
+    <details class="lp-sec" id="features" open>
+      <summary><h2>Features (executadas sequencialmente)</h2></summary>
       <ol>
         <!-- <li><strong>slug</strong> — resumo de 1 frase.</li> por feature, na ordem -->
       </ol>
-    </section>
+    </details>
 
-    <section id="escopo">
-      <h2>Escopo</h2>
+    <details class="lp-sec" id="escopo" open>
+      <summary><h2>Escopo</h2></summary>
       <p><strong>Dentro:</strong> …</p>
       <p><strong>Fora:</strong> …</p>
-    </section>
+    </details>
   </main>
 
   <footer class="lp-footer">

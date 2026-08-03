@@ -43,7 +43,7 @@ Regras para gerar/atualizar `.sdd/changes/<id>/flow.html`: um diagrama **macro**
 - `done` — todos os chunks concluídos.
 - `current` — contém o `current_chunk`, ou é a `current_feature`.
 - `pending` — ainda não começou.
-- Tag do `<h2>`: "concluído", "em andamento · X/Y", ou "a fazer". X/Y = chunks feitos / total da feature.
+- Cada feature é um `<details class="feature ..." open>` colapsável; o cabeçalho fica no `<summary>` com a tag ("concluído", "em andamento · X/Y", "a fazer"). X/Y = chunks feitos / total da feature.
 
 ## Cabeçalho e progresso
 
