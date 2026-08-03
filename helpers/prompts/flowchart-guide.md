@@ -31,9 +31,11 @@ Regras para gerar/atualizar `.sdd/changes/<id>/flow.html`: um diagrama **macro**
 
 ## Status de cada nó
 
-- `pending` — chunk com checkbox `[ ]` (ou feature sem spec).
-- `current` — o `current_chunk` do `.sdd.yaml` (badge ►). No máximo um por vez.
-- `done` — chunk `[~]` ou `[x]` (badge ✓, levemente esmaecido).
+> Um chunk = um bloco `### F<n>.C<m>` no `tasks.md` (que tem VÁRIOS checkboxes). O status do chunk vem do conjunto dos seus checkboxes, não de um só.
+
+- `pending` — chunk que ainda tem algum `[ ]` (ou feature sem spec).
+- `current` — o `current_chunk` do `.sdd.yaml` (badge ►). No modo paralelo pode haver mais de um (os da onda atual).
+- `done` — chunk com todos os checkboxes `[~]`/`[x]` (badge ✓, levemente esmaecido).
 - `deviated` — componente onde o **auto-sync** (passo a do `implementing`) registrou "decisão divergente" — algo foi feito diferente do planejado. Sub-texto curto dizendo o quê (ex: "usou JWT stateless, não sessão"). Um nó pode ser `done` E `deviated` — nesse caso use a classe `deviated` (vermelho vence, com badge ✓).
 
 ## Classe da feature (swimlane)

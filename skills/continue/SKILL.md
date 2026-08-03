@@ -12,6 +12,7 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
   - Nenhuma: imprima `"Nenhuma mudança ativa. Comece com /lp-new <id>."` e pare.
   - Mais de uma: prefira `state: implementing`; em empate, pergunte qual.
 - Leia `.sdd.yaml`, `plan.md`, e os arquivos da **feature ativa atualmente** (se houver `current_feature`): `specs/<current_feature>/spec.md` e `tasks.md` se existirem.
+- **Leia `in_review`**: se preenchido, há um chunk aguardando revisão (pode ser de uma conversa anterior). Uma invocação normal de `/lp-continue` significa que o usuário **aprovou** essa revisão → limpe `in_review` (`null`) e siga para o próximo chunk/onda. Perguntas/ajustes sem `/lp-continue` caem na seção "Durante a revisão de um chunk".
 - **NÃO leia specs de outras features** — elas podem nem existir ainda.
 - **Carregue a memória**: leia `.sdd/memory.md` (ou `.sdd/memory-map.md` se existir; nesse caso, leia também os arquivos de tema que parecem relevantes pelo título da feature ativa). Siga `../../helpers/prompts/memory-guide.md`.
 
@@ -28,7 +29,7 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
    - Dependências de outras features (já feitas, futuras, externas).
 4. **Pare quando** todas as ambiguidades dessa feature estão resolvidas e nada foi "tanto faz" sem follow-up.
 5. Gere `specs/<slug>/spec.md` usando `../../helpers/templates/spec.md.tpl`. **Alvo: ≤ 100 linhas**.
-5-bis. **Respeite o `format` do `.sdd/config.yaml`**: se `format` ∈ {html, both}, gere também `specs/<slug>/spec.html` espelhando o conteúdo do `.md` (use `.sdd/assets/styles.css`; se não existir, copie de `../../helpers/templates/styles.css`). Confira o padrão das specs anteriores da mesma mudança e mantenha consistência.
+5-bis. **Respeite o `format` do `.sdd/config.yaml`**: se `format` ∈ {html, both}, gere também `specs/<slug>/spec.html` usando `../../helpers/templates/spec.html.tpl` (espelha o `.md`). Garanta `.sdd/assets/styles.css` (copie de `../../helpers/templates/styles.css` se faltar).
 6. Atualize `.sdd.yaml`: `state: awaiting-feature-tasks`, `updated`.
 6-bis. Se `flowchart: on`, atualize `flow.html` (`../../helpers/prompts/flowchart-guide.md`) — a feature saiu de "spec ainda não gerada".
 7. Imprima plano de revisão:
@@ -57,7 +58,7 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
    - `xlarge`: até 10 arquivos OU ~700-1000 linhas.
 4. IDs no formato `F<n>.C<m>` onde n = índice (1-based) da feature na lista do plan.md, m = chunk dentro da feature.
 5. **Cada chunk DEVE incluir**: arquivos tocados, resumo de 1 frase, **`Depende de:`** (IDs de chunks que precisam vir antes, ou "nenhum" — habilita o modo paralelo a saber o que é independente), ordem de revisão, comando de validação. Na dúvida, **parta em dois**.
-5-bis. **Respeite o `format`**: se `format` ∈ {html, both}, gere também `specs/<current_feature>/tasks.html` espelhando o `.md` (use `.sdd/assets/styles.css`). Mantenha o padrão das tasks anteriores da mudança.
+5-bis. **Respeite o `format`**: se `format` ∈ {html, both}, gere também `specs/<current_feature>/tasks.html` usando `../../helpers/templates/tasks.html.tpl` (espelha o `.md`, um bloco por chunk com `data-status`). Atualize o status no `.html` a cada chunk implementado.
 6. Atualize `.sdd.yaml`: feature `tasking` → `implementing`, state global → `implementing`, `updated`.
 6-bis. Se `flowchart: on`, atualize `flow.html` (`../../helpers/prompts/flowchart-guide.md`) — **expanda a feature nos nós de componente** (um por chunk), todos `pending`.
 7. Imprima plano de revisão das tasks (lista de chunks + estimativa de tamanho de cada). Avise: *"Valide a granularidade antes de seguir. Próximo `/lp-continue` executa o chunk F<n>.C1."*
@@ -87,23 +88,32 @@ Coração da skill. Execute na ordem:
 - Respeite `chunk_size`. Se o chunk como descrito vai exceder, **pare e divida em sub-chunks** atualizando o tasks.md antes de codar (isso é decisão da conversa principal, mesmo no modo subagente).
 
 - **`implementer: subagent` (padrão)** — a conversa principal **delega a implementação a um subagente** e apenas orquestra:
-  1. Lance UM subagente (Task/Agent do ambiente) com escopo restrito a ESTE chunk. Passe: o chunk do `tasks.md` (arquivos, "Faz", ordem, validação), a spec da feature, `plan.md`, as preferências de código do projeto (CLAUDE.md/regras) e a instrução de rodar `npx eslint --fix` nos arquivos editados + testes se o projeto exigir.
-  2. Instrua o subagente a **retornar um relatório estruturado** (não prosa longa): para cada arquivo — caminho, criado/editado, ±linhas, `Faz` (papel), `Revisar` (ponto de atenção), `Conecta` (ligações reais); mais o resultado da validação (eslint/testes). É esse relatório que alimenta o plano de revisão (passo e).
+  1. Lance UM subagente (Task/Agent do ambiente) com escopo restrito a ESTE chunk. Passe: o chunk do `tasks.md` (arquivos, "Faz", ordem, `Validação`), a spec da feature, `plan.md`, as preferências de código do projeto (CLAUDE.md/regras) e a instrução de rodar o **comando de validação do projeto** (o do campo `Validação` do chunk / CLAUDE.md — lint/format/test da stack real, **não assuma eslint**) nos arquivos editados + testes se o projeto exigir.
+  2. Instrua o subagente a **retornar um relatório estruturado** (não prosa longa): para cada arquivo — caminho, criado/editado, ±linhas, `Faz` (papel), `Revisar` (ponto de atenção), `Conecta` (ligações reais); mais o resultado da validação. É esse relatório que alimenta o plano de revisão (passo g).
   3. A conversa principal **não reimplementa** — confere o relatório, e se algo veio fora do escopo do chunk ou contra as docs, trata como divergência (auto-sync) antes de seguir.
   4. **Fallback**: se o ambiente não suporta lançar subagente, caia para o modo `main` e avise no plano de revisão (*"implementado no agente principal — subagente indisponível neste ambiente"*).
 
 - **`implementer: main`** — a conversa principal faz as edições diretamente (comportamento clássico):
   - Faça as edições.
-  - Rode `npx eslint --fix <arquivos editados>` (apenas neles).
+  - Rode o **comando de validação do projeto** (campo `Validação` do chunk / CLAUDE.md — lint/format da stack real, **não assuma eslint**) apenas nos arquivos editados.
   - Se o projeto exige (ver CLAUDE.md do projeto), rode os testes.
 
-> Em ambos os modos, os passos **a) auto-sync**, **d) marcar/registrar**, **e) plano de revisão** e **g) diagrama** são sempre da conversa principal — o subagente só codifica o chunk e reporta.
+> Em ambos os modos, os passos **a) auto-sync**, **d) marcar/registrar**, **e) diagrama**, **f) transição** e **g) plano de revisão** são sempre da conversa principal — o subagente só codifica o chunk e reporta. Execute d→e→f→g→h **nesta ordem**, e só então "Pare aqui".
 
 **d) Marcar + registrar**:
-- tasks.md: marque **TODOS os checkboxes do chunk** (`Arquivos`, `Faz`, `Ordem de revisão`, `Validação` e quaisquer outros) de `[ ]` → `[~]`. Não marque só o primeiro item — todo bullet `[ ]` do chunk concluído deve virar `[~]`. Conte quantos checkboxes o chunk tem ANTES de editar e confirme que esse mesmo número virou `[~]` DEPOIS.
+- tasks.md: marque os checkboxes do chunk (`Faz` e `Validação`) de `[ ]` → `[~]`. Os demais itens do chunk (`Arquivos`, `Depende de`, `Ordem de revisão`) são metadados em bullet simples, não checkboxes — não precisa marcar. Se o chunk tiver outros checkboxes, marque todos.
 - `.sdd.yaml`: `current_chunk: "F<n>.C<m>"`, `updated`.
 
-**e) Plano de revisão obrigatório** (formato da state-machine.md):
+**e) Atualizar diagrama** — se `flowchart: on` no `.sdd/config.yaml` (default), regenere `.sdd/changes/<id>/flow.html` seguindo `../../helpers/prompts/flowchart-guide.md`: marque este chunk como concluído, mova o `current` para o próximo, marque `deviated` os componentes anotados no auto-sync. Cite no plano de revisão: *"Diagrama atualizado: flow.html"*.
+
+**f) Transição "feature concluída"**:
+- Se todos os chunks da `current_feature` estão `[~]`/`[x]`:
+  - Marque a feature como `done` no `.sdd.yaml`. Limpe `current_feature` e `current_chunk`.
+  - Se há próxima feature `pending`: `state: awaiting-feature-spec`. Imprima: *"Feature `<X>` concluída (em revisão). Próximo `/lp-continue` inicia a feature `<Y>` (spec)."*
+  - Senão: `state: awaiting-archive`. Sugira `/lp-archive`.
+- O resultado desta transição define a linha "Próximo:" do plano de revisão (passo g).
+
+**g) Plano de revisão obrigatório** (formato da state-machine.md):
 
 **UMA lista só** de arquivos, já na ordem de revisão (não separe "Arquivos" de "Ordem de revisão"). Inclua TODOS os arquivos tocados (serve de manifesto pra revert), ordenados por prioridade; triviais (tipos gerados, config, stubs) no FIM marcados "pode pular".
 
@@ -145,18 +155,18 @@ Regras das 3 linhas:
 
 > Enquanto o usuário revisa: se ele perguntar algo ou pedir ajuste no chunk (sem rodar `/lp-continue`), atenda e **re-imprima a lista de revisão atualizada no fim da resposta** (ver seção "Durante a revisão de um chunk").
 
+**g-bis) Persistir estado de revisão** (sobrevive à compactação de contexto): grave no `.sdd.yaml` da mudança:
+```yaml
+in_review:
+  chunks: ["F<n>.C<m>"]        # no paralelo, os IDs da onda
+  files: ["caminho/arquivo1.ts", ...]   # a lista, na ordem de revisão
+  updated: <YYYY-MM-DD>
+```
+Assim, mesmo que a conversa reinicie, o próximo turno sabe qual chunk está em revisão e consegue re-imprimir a lista. Ao aprovar (próximo `/lp-continue`) ou reverter, limpe `in_review`.
+
+**h) Context watch** — por último, antes de fechar o turno, siga `../../helpers/prompts/context-watch.md` usando `context_watch` do `.sdd/config.yaml`. Heurística: na faixa de 5-10 chunks implementados nesta MESMA conversa, comece a observar. Se julgar pesada → siga o protocolo (suggest/auto/off).
+
 **Pare aqui.** Não execute o próximo chunk no mesmo turno.
-
-**g) Atualizar diagrama** — se `flowchart: on` no `.sdd/config.yaml` (default), regenere `.sdd/changes/<id>/flow.html` seguindo `../../helpers/prompts/flowchart-guide.md`: marque este chunk como concluído, mova o `current` para o próximo, marque `deviated` os componentes anotados no auto-sync. Cite no plano de revisão: *"Diagrama atualizado: flow.html"*.
-
-**f-bis) Context watch** — antes de fechar o turno, siga `../../helpers/prompts/context-watch.md` usando `context_watch` do `.sdd/config.yaml`. Heurística subjetiva: na faixa de 5-10 chunks implementados nesta MESMA conversa, comece a observar. Se julgar pesada → siga o protocolo (suggest/auto/off).
-
-**f) Transição "feature concluída"**:
-- Se todos os chunks da `current_feature` estão `[~]`/`[x]`:
-  - Marque a feature como `done` no `.sdd.yaml`.
-  - Limpe `current_feature` e `current_chunk`.
-  - Se há próxima feature `pending`: `state: awaiting-feature-spec`. Imprima: *"Feature `<X>` concluída (em revisão). Próximo `/lp-continue` inicia a feature `<Y>` (spec)."*
-  - Senão: `state: awaiting-archive`. Sugira `/lp-archive`.
 
 ### `awaiting-archive`
 
@@ -164,10 +174,10 @@ Diga ao usuário para rodar `/lp-archive`. Não faça mais nada.
 
 ## Durante a revisão de um chunk (perguntas e alterações inline)
 
-Vale enquanto há um chunk **em revisão** (recém-impresso o plano, chunk `[~]`, ainda não aprovado e sem novo `/lp-continue`). Se, nesse meio, o usuário **faz uma pergunta** sobre o que foi implementado OU **pede uma alteração** no chunk — sem rodar `/lp-continue`:
+Vale enquanto há um chunk **em revisão**. A fonte de verdade é o `in_review` no `.sdd.yaml` (preenchido no passo g-bis) — ele sobrevive a reinício/compactação da conversa. Se `in_review` está preenchido (ou o plano foi recém-impresso neste chat) e o usuário **faz uma pergunta** sobre o que foi implementado OU **pede uma alteração** no chunk — sem rodar `/lp-continue`:
 
 1. Responda a pergunta / aplique a alteração normalmente e explique o que fez.
-2. Se **alterou arquivos**: rode `npx eslint --fix` nos editados e, se o projeto exigir, os testes. A lista de arquivos pode ter mudado (novos arquivos, novos ±linhas) — reflita isso.
+2. Se **alterou arquivos**: rode o comando de validação do projeto (não assuma eslint) nos editados e, se o projeto exigir, os testes. A lista pode ter mudado (novos arquivos, novos ±linhas) — reflita isso e atualize `in_review.files`.
 3. **No FIM da resposta, re-imprima a lista de revisão atualizada** (mesmo formato de 3 linhas `Faz`/`Revisar`/`Conecta`), para o usuário continuar de onde parou:
 
    ```

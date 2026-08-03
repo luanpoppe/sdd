@@ -22,7 +22,7 @@ features:
     ...
 current_feature: <slug ou null>
 current_chunk: <ref tipo "F1.C2" ou null>
-last_review_plan: <texto curto ou null>
+in_review: <null | {chunks: [ids], files: [paths na ordem], updated: data}>  # chunk(s) aguardando revisão do usuário; persiste entre turnos/compactação
 ```
 
 A **ordem da lista** define a ordem de execução. Não embaralhar.

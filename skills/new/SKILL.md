@@ -33,7 +33,7 @@ chunk_size: <copiado>
 features: []
 current_feature: null
 current_chunk: null
-last_review_plan: null
+in_review: null
 ```
 
 ## 3. Grill (estilo grill-me — UMA PERGUNTA POR VEZ)
@@ -64,7 +64,7 @@ Preencha:
 - **Features** — lista numerada com SLUG + TÍTULO + 1 frase. Nada mais. Se você está tentado a escrever mais por feature, PARE — isso vai para a spec dela.
 - **Escopo** — dentro/fora em listas curtas.
 
-Se `format` ∈ {html, both}, gere também `plan.html` espelhando o conteúdo.
+Se `format` ∈ {html, both}, gere também `plan.html` usando `../../helpers/templates/plan.html.tpl` (espelha o `.md`; garanta que `.sdd/assets/styles.css` exista).
 
 ## 5. Atualizar `.sdd.yaml`
 

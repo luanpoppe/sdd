@@ -12,11 +12,17 @@
 
 ### F<n>.C1 — {{chunk_1_title}}
 
-- [ ] **Arquivos**: `{{file_1}}`, `{{file_2}}`
+Metadados (bullets, não checkboxes):
+- **Arquivos**: `{{file_1}}`, `{{file_2}}`
+- **Depende de**: nenhum   <!-- IDs de chunks que precisam vir antes (ex: F1.C1) ou "nenhum". Usado pelo modo paralelo. -->
+- **Ordem de revisão**: 1) `{{file_1}}` (define o contrato) → 2) `{{file_2}}` (consome)
+
+Passos (checkboxes — marcados `[~]` ao implementar):
 - [ ] **Faz**: {{chunk_1_summary}}
-- [ ] **Depende de**: nenhum   <!-- IDs de chunks que precisam vir antes (ex: F1.C1) ou "nenhum". Usado pelo modo paralelo. -->
-- [ ] **Ordem de revisão**: 1) `{{file_1}}` (define o contrato) → 2) `{{file_2}}` (consome)
-- [ ] **Validação**: `npx eslint --fix {{file_1}} {{file_2}}` + teste relevante
+- [ ] **Validação**: `{{validation_cmd}}`   <!-- comando de lint/format/test do PROJETO (ver CLAUDE.md/config); ex JS: `npx eslint --fix ...` · Java: `mvn -q compile` · Python: `ruff check --fix ...`. Não assuma eslint. -->
+
+<!-- Chunk = este bloco ### F<n>.C<m>. Está "concluído" quando os checkboxes Faz+Validação estão [~]/[x]. -->
+
 
 ### F<n>.C2 — ...
 

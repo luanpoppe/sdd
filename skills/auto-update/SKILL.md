@@ -10,10 +10,10 @@ Você está checando/atualizando a instalação do plugin `lp:*` a partir do rep
 Execute via Bash (ou PowerShell, conforme o SO):
 
 ```
-npx -y github:luanpoppe/sdd@latest --tool=all
+npx -y github:luanpoppe/sdd --tool=all
 ```
 
-- `npx github:...` sempre clona o HEAD atual do branch padrão do repo público — não há cache de versão antiga para limpar.
+- `npx github:luanpoppe/sdd` sempre clona o HEAD atual do branch padrão do repo público — não há cache de versão antiga para limpar. (Para fixar um branch: `github:luanpoppe/sdd#main`. **Não** use `@latest` — não é sintaxe válida de spec `github:`.)
 - `--tool=all` detecta `~/.claude` e `~/.cursor` e atualiza os que existirem. Se o usuário só usa uma ferramenta, use `--tool=claude` ou `--tool=cursor`.
 - Se quiser só checar sem escrever nada, rode primeiro com `--dry-run`.
 

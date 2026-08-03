@@ -17,7 +17,7 @@
   </aside>
 
   <header class="lp-header">
-    <p class="lp-breadcrumb"><a href="../../plan.md">{{change_id}}</a> / explain / <strong>{{theme}}</strong></p>
+    <p class="lp-breadcrumb"><a href="../plan.md">{{change_id}}</a> / explain / <strong>{{theme}}</strong></p>
     <h1>{{theme}}</h1>
     <p class="lp-meta">Iniciado em {{created}} · última atualização {{updated}}</p>
   </header>

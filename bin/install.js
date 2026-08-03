@@ -25,6 +25,8 @@ const HOME = os.homedir();
 const PKG_VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, '.claude-plugin', 'plugin.json'), 'utf8')).version;
 const VERSION_MARKER = '.lp-version.json';
 
+const VALID_TOOLS = ['all', 'claude', 'cursor'];
+
 // ---- args ----
 function parseArgs(argv) {
   const out = { tool: 'all', dryRun: false };
@@ -33,6 +35,7 @@ function parseArgs(argv) {
     else if (a.startsWith('--tool=')) out.tool = a.slice('--tool='.length);
     else if (a === '-h' || a === '--help') out.help = true;
   }
+  if (!VALID_TOOLS.includes(out.tool)) out.invalidTool = out.tool;
   return out;
 }
 
@@ -112,11 +115,25 @@ function detect(tool) {
   return { targets, claudeCoversCursor };
 }
 
+// Remove entradas lp-* órfãs no diretório de destino ANTES de recopiar, pra
+// que skills/helpers renomeados ou removidos numa versão nova não fiquem
+// acumulando lixo. `predicate(nome)` decide o que é do nosso namespace.
+function planPurgeOrphans(destDir, predicate, actions) {
+  if (!fs.existsSync(destDir)) return;
+  for (const entry of fs.readdirSync(destDir, { withFileTypes: true })) {
+    if (!predicate(entry.name)) continue;
+    const p = path.join(destDir, entry.name);
+    actions.push([entry.isDirectory() ? 'deleteDir' : 'delete', p]);
+  }
+}
+
 function planClaude(skills, actions) {
   const skillsDest = path.join(HOME, '.claude', 'skills');
   const helpersDest = path.join(skillsDest, 'lp-shared');
   const helpersBase = '~/.claude/skills/lp-shared';
   const installed = readInstalledVersion(helpersDest);
+  // limpa lp-* (skills lp-<nome> + lp-shared) antes de recopiar — remove órfãos
+  planPurgeOrphans(skillsDest, n => n.startsWith('lp-'), actions);
   // helpers
   copyDir(HELPERS_SRC, helpersDest, actions);
   writeVersionMarker(helpersDest, actions);
@@ -150,6 +167,9 @@ function planCursor(skills, actions) {
   const helpersDest = path.join(HOME, '.cursor', 'lp-helpers');
   const helpersBase = '~/.cursor/lp-helpers';
   const installed = readInstalledVersion(helpersDest);
+  // limpa lp-*.md órfãos + lp-helpers antes de recopiar
+  planPurgeOrphans(cmdDest, n => n.startsWith('lp-') && n.endsWith('.md'), actions);
+  if (fs.existsSync(helpersDest)) actions.push(['deleteDir', helpersDest]);
   copyDir(HELPERS_SRC, helpersDest, actions);
   writeVersionMarker(helpersDest, actions);
   for (const name of skills) {
@@ -168,6 +188,10 @@ function planCursor(skills, actions) {
 function main() {
   const args = parseArgs(process.argv);
   if (args.help) return help();
+  if (args.invalidTool) {
+    process.stderr.write(`--tool inválido: "${args.invalidTool}". Use: ${VALID_TOOLS.join(' | ')}.\n`);
+    process.exit(2);
+  }
 
   const skills = listSkills();
   if (!skills.length) { process.stderr.write('Nenhuma skill encontrada em skills/.\n'); process.exit(1); }

@@ -10,7 +10,7 @@
     {
       "name": "lp",
       "displayName": "LP — Spec-Driven Development",
-      "description": "10 skills lp:* para SDD com chunks micro revisáveis, memória autônoma e revisão guiada de código.",
+      "description": "14 skills lp:* para SDD com chunks micro revisáveis, diagrama macro, implementação por subagentes (paralelo opcional), memória autônoma e revisão guiada de código.",
       "source": "./",
       "author": { "name": "Luan Poppe" },
       "homepage": "https://github.com/luanpoppe/sdd",

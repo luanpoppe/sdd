@@ -1,6 +1,6 @@
 # SDD — `lp:*` para Claude Code
 
-Spec-driven development em 10 skills. Chunks micro revisáveis, fluxo sequencial por feature, memória autônoma, grilling anti-assunção e revisão guiada de código existente.
+Spec-driven development em 14 skills. Chunks micro revisáveis, fluxo sequencial por feature, diagrama macro da implementação, implementação por subagentes (com modo paralelo opcional), memória autônoma, grilling anti-assunção e revisão guiada de código existente.
 
 ## Instalação
 
@@ -46,15 +46,33 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 | Skill | O que faz |
 |---|---|
 | `lp:init` | Inicializa o SDD no projeto (`.sdd/config.yaml`, CSS global, preferências). |
-| `lp:new` | Abre uma nova mudança com grill anti-assunção. |
-| `lp:continue` | Avança 1 passo do fluxo (spec → revisão → tasks → chunks). |
+| `lp:new` | Abre uma nova mudança com grill anti-assunção; gera `plan.md` + `flow.html`. |
+| `lp:continue` | Avança 1 passo do fluxo (spec → revisão → tasks → chunks). Implementa via subagente. |
 | `lp:review` | Revisão guiada de código existente (walkthrough do fluxo real). |
+| `lp:flow` | Gera/regenera o diagrama macro (`flow.html`) do fluxo de implementação. |
+| `lp:parallel` | Liga/desliga o modo paralelo (chunks independentes, um subagente cada). |
+| `lp:auto-update` | Atualiza as skills para a versão mais recente do GitHub. |
 | `lp:explain` | Gera explicação em HTML de um tópico. |
 | `lp:audit` | Detecta divergência entre spec e implementação. |
 | `lp:memory` | Gerencia a memória autônoma do SDD. |
 | `lp:ask` | Pergunta pontual sobre o estado do SDD. |
+| `lp:status` | Resumo de handoff sob demanda (pra retomar em conversa nova). |
 | `lp:archive` | Arquiva uma mudança concluída. |
-| `lp:help` | Ajuda das skills `lp:*`. |
+| `lp:help` | Estado atual do SDD + próximos passos. |
+
+## Configuração (`.sdd/config.yaml`)
+
+| Campo | Valores | Padrão | O que faz |
+|---|---|---|---|
+| `format` | `md` / `html` / `both` | (grill) | Formato das docs (plan/spec/tasks). `html`/`both` gera o par `.html`. |
+| `lang` | `pt-BR` / `en` | (grill) | Idioma das docs e do grilling. |
+| `chunk_size` | `micro`…`xlarge` | `micro` | Tamanho de cada chunk de implementação. |
+| `context_watch` | `suggest` / `auto` / `off` | (grill) | Watch anti-degradação de contexto longo. |
+| `flowchart` | `on` / `off` | `on` | Gera/atualiza o `flow.html` (diagrama macro). |
+| `implementer` | `subagent` / `main` | `subagent` | Quem implementa o chunk: subagente delegado ou a conversa principal. |
+| `parallel` | `on` / `off` | `off` | Chunks independentes em paralelo (um subagente cada). Ligar com `lp:parallel`. |
+
+> `flowchart`, `implementer` e `parallel` não são perguntados no grill — vêm com o padrão e você edita quando quiser (ou usa `lp:parallel`).
 
 ## Estrutura do repositório
 
@@ -63,10 +81,11 @@ sdd/
 ├── .claude-plugin/
 │   ├── marketplace.json   # catálogo (este repo é o marketplace)
 │   └── plugin.json        # manifesto do plugin "lp"
-├── skills/                # 10 skills (dir + frontmatter name sem prefixo lp-)
+├── skills/                # 14 skills (dir + frontmatter name sem prefixo lp-)
 ├── helpers/
-│   ├── prompts/           # prompts compartilhados (grill, memória, state-machine…)
-│   └── templates/         # templates de spec/tasks/plan/explain + styles.css
+│   ├── prompts/           # prompts compartilhados (grill, memória, state-machine, flowchart, parallel…)
+│   └── templates/         # templates de spec/tasks/plan/explain/flow + styles.css
+├── bin/install.js         # installer cross-tool (npx github:luanpoppe/sdd)
 ├── package.json           # @luanpoppe/sdd (publicação npm)
 ├── LICENSE
 └── README.md
@@ -77,7 +96,7 @@ As skills referenciam os arquivos compartilhados por caminho relativo portável 
 ## Release (mantenedor)
 
 ```bash
-# 1. bump da versão (semver) em .claude-plugin/plugin.json
+# 1. bump da versão (semver) em .claude-plugin/plugin.json E em package.json (mesmo número)
 # 2. commitar + tag + push:
 git add -A && git commit -m "release: vX.Y.Z" && git tag vX.Y.Z && git push && git push --tags
 ```
