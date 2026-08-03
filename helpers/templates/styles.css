@@ -62,6 +62,12 @@ body > header, body > main, body > footer,
 body:has(aside.toc), body:has(nav.toc) {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
+  /* pinta a coluna do índice em altura cheia via background (não infla as linhas
+     do grid como um item 100vh faria). O aside em si fica sticky e curto por cima. */
+  background-image: linear-gradient(90deg,
+    var(--lp-surface) 0, var(--lp-surface) 259px,
+    var(--lp-border) 259px, var(--lp-border) 260px,
+    var(--lp-bg) 260px);
 }
 
 aside.toc, nav.toc {
@@ -72,8 +78,7 @@ aside.toc, nav.toc {
   align-self: start;
   max-height: 100vh;
   overflow-y: auto;
-  background: var(--lp-surface);
-  border-right: 1px solid var(--lp-border);
+  background: transparent;   /* o strip de fundo já dá a cor de coluna cheia */
   padding: 28px 22px;
   font-size: 13.5px;
 }
@@ -481,7 +486,7 @@ code.file-path, .file-path {
 
 @media (max-width: 980px) {
   /* telas estreitas: uma coluna, TOC escondido (lp:review tem hamburger próprio) */
-  body:has(aside.toc), body:has(nav.toc) { display: block; }
+  body:has(aside.toc), body:has(nav.toc) { display: block; background-image: none; }
   aside.toc, nav.toc { display: none; }
   body:has(aside.toc) > header, body:has(aside.toc) > main, body:has(aside.toc) > footer,
   body:has(nav.toc) > header, body:has(nav.toc) > main, body:has(nav.toc) > footer {
