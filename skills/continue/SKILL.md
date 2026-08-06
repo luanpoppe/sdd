@@ -21,8 +21,8 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
 ### `awaiting-feature-spec`
 
 1. Identifique a próxima feature na lista `features` do `.sdd.yaml` com `status: pending` (primeira em ordem). Marque-a como `speccing`, set `current_feature: <slug>`.
-2. Imprima: *"Iniciando feature `<slug>`: <summary>. Vou fazer perguntas para definir a spec — uma por vez."*
-3. **Grill profundo SÓ desta feature**, uma pergunta por vez via `AskUserQuestion`. Cubra (apenas o que não dá pra inferir do código):
+2. Imprima: *"Iniciando feature `<slug>`: <summary>. Vou fazer perguntas para definir a spec — em batches de poucas perguntas."*
+3. **Grill profundo SÓ desta feature**, em batches de até 4 perguntas independentes via `AskUserQuestion` (dependentes em batches posteriores — ver `../../helpers/prompts/grill-snippet.md`). Cubra (apenas o que não dá pra inferir do código):
    - Cenários BDD principais — pelo menos 1, geralmente 2-4. **Palavras-chave conforme `lang` do `.sdd/config.yaml`**: `pt-BR` → "Dado que / Quando / Então"; `en` → "Given / When / Then".
    - Edge cases conhecidos.
    - Contratos (tipos, schemas, eventos, endpoints) — referencie arquivos do projeto quando possível.
@@ -49,7 +49,7 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
 ### `awaiting-feature-tasks`
 
 1. Releia `specs/<current_feature>/spec.md` e `plan.md`.
-2. Grilling MÍNIMO — apenas se houver ambiguidade real sobre granularidade ou ordem de chunks. Uma pergunta por vez. Se a spec é clara, pule o grill.
+2. Grilling MÍNIMO — apenas se houver ambiguidade real sobre granularidade ou ordem de chunks. Se forem poucas e independentes, agrupe num batch. Se a spec é clara, pule o grill.
 3. Gere `specs/<current_feature>/tasks.md` usando `../../helpers/templates/tasks.md.tpl`. Respeite `chunk_size`:
    - `micro`: 1-2 arquivos OU ~50-100 linhas (default).
    - `small`: até 3 arquivos OU ~150-200 linhas.

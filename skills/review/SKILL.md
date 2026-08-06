@@ -19,7 +19,7 @@ Avance 1 chunk do review ativo seguindo a seção 4.
 
 ### Sem argumentos + nenhum review ativo → **iniciar (grill inicial)**
 
-Faça grill curto com `AskUserQuestion`, uma pergunta por vez. **NÃO assuma um tema, NÃO escolha algo do código sozinho** — sempre pergunte.
+Faça grill curto com `AskUserQuestion`. **Q1 vai sozinha primeiro** (tudo depende do tema); depois **Q2 e Q3 juntas num batch** (são independentes entre si). **NÃO assuma um tema, NÃO escolha algo do código sozinho** — sempre pergunte.
 
 **Q1. O que você quer revisar? (OBRIGATÓRIA)**
 
@@ -28,6 +28,8 @@ Pergunta direta ao usuário: *"O que você quer entender? Pode ser um fluxo, fun
 - Se você conseguir inferir 2-3 candidatos prováveis do código (módulos principais, fluxos óbvios), liste-os como opções no `AskUserQuestion`. Sempre inclua "Outro (descrever)" para resposta livre.
 - Se não tem candidatos óbvios, faça pergunta totalmente aberta sem opções pré-definidas.
 - **Espere a resposta**. Não prossiga para Q2 sem ter o tema definido.
+
+**Q2 + Q3 (mesmo batch — independentes entre si)**
 
 **Q2. Formato do walkthrough**
 - HTML acumulativo (Recomendado) — `walkthrough.html` cresce a cada chunk, usa CSS global, com links e blocos de código bem formatados.
@@ -47,7 +49,7 @@ Após o grill, vá para seção 2.
 
 ### Com argumento(s) → interpretar
 
-- Texto descrevendo tema (ex: `/lp-review como funciona o login`) → trate como resposta de Q1, pergunte Q2 e Q3 normalmente.
+- Texto descrevendo tema (ex: `/lp-review como funciona o login`) → trate como resposta de Q1, pergunte Q2 e Q3 juntas num batch.
 - `pause` / `pausar` → marca review ativo como `state: paused` e termina.
 - `end` / `encerrar` / `terminar` → marca como `state: done`. Sugere o que fazer a seguir (ler walkthrough, abrir `/lp-new` se quiser refatorar).
 - `list` / `listar` → mostra reviews em `.sdd/reviews/` com state.

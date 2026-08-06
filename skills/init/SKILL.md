@@ -14,7 +14,7 @@ Você está configurando o spec-driven development `lp:*` neste projeto. Siga es
 
 ## 2. Grill curto (use `AskUserQuestion`)
 
-Faça as perguntas abaixo. Siga as diretrizes de `../../helpers/prompts/grill-snippet.md` — uma decisão de cada vez se houver dúvida, ou todas de uma vez se forem ortogonais (formato, idioma, chunk size geralmente são).
+Faça as perguntas abaixo. Siga as diretrizes de `../../helpers/prompts/grill-snippet.md` — como formato, idioma e chunk size são independentes entre si, mande as três num único batch de `AskUserQuestion`.
 
 **Q1. Formato dos artefatos**
 - Markdown apenas (Recomendado) — diff-friendly, simples.

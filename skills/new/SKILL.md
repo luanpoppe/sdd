@@ -1,6 +1,6 @@
 ---
 name: new
-description: Inicia uma nova mudança no SDD `lp:*`. Cria `.sdd/changes/<id>/`, conduz grill agressivo (uma pergunta por vez) para resolver ambiguidades de alto nível, e gera o `plan.md` enxuto (contexto + decisões macro + LISTA de features). Não detalha features aqui — isso fica para `lp:continue`. Use quando o usuário pedir "lp:new", "nova mudança lp", ou ao iniciar qualquer trabalho novo via SDD.
+description: Inicia uma nova mudança no SDD `lp:*`. Cria `.sdd/changes/<id>/`, conduz grill agressivo (perguntas em batches de até 4 independentes) para resolver ambiguidades de alto nível, e gera o `plan.md` enxuto (contexto + decisões macro + LISTA de features). Não detalha features aqui — isso fica para `lp:continue`. Use quando o usuário pedir "lp:new", "nova mudança lp", ou ao iniciar qualquer trabalho novo via SDD.
 ---
 
 Você está iniciando uma nova mudança no SDD `lp:*`. Siga `../../helpers/prompts/grill-snippet.md` para o estilo de grilling.
@@ -36,18 +36,18 @@ current_chunk: null
 in_review: null
 ```
 
-## 3. Grill (estilo grill-me — UMA PERGUNTA POR VEZ)
+## 3. Grill (estilo grill-me — EM BATCHES de até 4 independentes)
 
-> **Crítico**: NÃO faça uma rajada de perguntas. NÃO assuma defaults. Use `AskUserQuestion` para cada decisão real, com 2-4 opções concretas + sua recomendação + trade-offs. Releia `grill-snippet.md` antes.
+> **Crítico**: NÃO assuma defaults. Use `AskUserQuestion` agrupando perguntas **independentes** (a resposta de uma não muda outra) em batches de 3-4; perguntas dependentes vão em batches posteriores. Cada pergunta com 2-4 opções concretas + sua recomendação + trade-offs. Releia `grill-snippet.md` antes.
 
 **Cubra apenas o macro.** Detalhes de cada feature SÃO responsabilidade do `lp:continue` quando aquela feature entrar em foco. Aqui você apenas:
 
 1. **Problema/objetivo** — o que essa mudança resolve? (1 pergunta, 1 frase de resposta esperada).
-2. **Restrições/decisões macro** — algo já decidido sobre stack/arquitetura/integração que afeta TODAS as features? Pergunte uma decisão por vez se houver várias.
+2. **Restrições/decisões macro** — algo já decidido sobre stack/arquitetura/integração que afeta TODAS as features? Se houver várias e forem independentes, agrupe num batch; as dependentes ficam para batch posterior.
 3. **Reúso** — explore o código (Read/Grep/Glob/Agent Explore) para identificar módulos/utilidades existentes. Confirme com o usuário em 1 pergunta o que deve ser reutilizado vs criado do zero.
 4. **Lista de features** — pergunte ao usuário quais features compõem essa mudança. Para cada uma, capture apenas: slug (kebab), título curto, 1 frase de descrição. **NÃO entre em detalhes técnicos de nenhuma feature aqui.** Se o usuário descrever uma feature em detalhe, anote o slug+frase e diga: *"Os detalhes dessa feature serão grillados quando ela for ativada via `/lp-continue`."*
 5. **Ordem de execução** — pergunte a ordem em que as features devem ser implementadas (importa, porque o fluxo é sequencial). Recomende uma ordem baseada em dependências e justifique.
-6. **Escopo dentro/fora** — uma pergunta para cada.
+6. **Escopo dentro/fora** — "dentro" e "fora" são independentes; podem ir no mesmo batch.
 
 **Pare o grill** quando:
 - Tudo acima está respondido SEM "tanto faz" pendente.
@@ -105,5 +105,5 @@ Revise agora .sdd/changes/<id>/plan.md. Quer ajustar algo (contexto, decisões m
 
 - **Não gere specs nem tasks aqui.** Isso é responsabilidade exclusiva do `lp:continue`.
 - **Não detalhe features no plan.md.** Detalhes vivem nas specs (criadas uma por vez).
-- **Uma pergunta por vez** durante o grill (exceto perguntas comprovadamente ortogonais).
+- **Perguntas em batches** de até 4 independentes durante o grill; dependentes em batches posteriores (ver `grill-snippet.md`).
 - **Plan.md curto.** Se passar de ~80 linhas, está detalhando demais — corte.
