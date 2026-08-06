@@ -11,12 +11,15 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
 - Identifique a **mudança ativa**: pasta em `.sdd/changes/` com `.sdd.yaml` `state` ≠ `archived`.
   - Nenhuma: imprima `"Nenhuma mudança ativa. Comece com /lp-new <id>."` e pare.
   - Mais de uma: prefira `state: implementing`; em empate, pergunte qual.
-- Leia `.sdd.yaml`, `plan.md`, e os arquivos da **feature ativa atualmente** (se houver `current_feature`): `specs/<current_feature>/spec.md` e `tasks.md` se existirem.
+- Leia `.sdd.yaml`. **Se `kind: bugfix`** → esta é uma mudança de bug-fix: siga `../../helpers/prompts/bugfix-machine.md` (estados `bug-proposing` → `bug-fixing`) em vez da máquina de features abaixo. O resto desta pré-checagem (in_review, memória) continua valendo; pule a leitura de `plan.md`/specs (bug-fix não os tem).
+- (fluxo normal de feature) Leia `plan.md` e os arquivos da **feature ativa atualmente** (se houver `current_feature`): `specs/<current_feature>/spec.md` e `tasks.md` se existirem.
 - **Leia `in_review`**: se preenchido, há um chunk aguardando revisão (pode ser de uma conversa anterior). Uma invocação normal de `/lp-continue` significa que o usuário **aprovou** essa revisão → limpe `in_review` (`null`) e siga para o próximo chunk/onda. Perguntas/ajustes sem `/lp-continue` caem na seção "Durante a revisão de um chunk".
 - **NÃO leia specs de outras features** — elas podem nem existir ainda.
 - **Carregue a memória**: leia `.sdd/memory.md` (ou `.sdd/memory-map.md` se existir; nesse caso, leia também os arquivos de tema que parecem relevantes pelo título da feature ativa). Siga `../../helpers/prompts/memory-guide.md`.
 
 ## 1. Despache por estado
+
+> **Bug-fix** (`kind: bugfix` no `.sdd.yaml`): não use as transições de feature abaixo. Vá para `../../helpers/prompts/bugfix-machine.md` — `bug-proposing` gera as opções de correção; `bug-fixing` reusa o motor `implementing` (seção abaixo) com tasks na raiz da mudança. O resto (plano de revisão, `in_review`, memória, context-watch) é idêntico.
 
 ### `awaiting-feature-spec`
 

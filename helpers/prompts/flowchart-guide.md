@@ -14,6 +14,10 @@ Regras para gerar/atualizar `.sdd/changes/<id>/flow.html`: um diagrama **macro**
 - **Atualizar**: no FIM de cada `lp:continue` que muda o progresso (spec gerada, tasks gerados, chunk implementado, feature concluída). Regenere o `<main>` inteiro a partir do estado atual — é barato e evita dessincronia.
 - **Sob demanda**: a skill `lp:flow` regenera e reporta o caminho.
 
+## Bug-fix (`kind: bugfix`)
+
+Numa mudança de bug-fix não há `features[]` — há uma única trilha de correção. Trate-a como **uma feature única**: uma swimlane com nome do bug (ou "correção"), nós = os chunks `C<m>` do `tasks.md` na raiz da mudança. Antes do `tasks.md` existir (estados `bug-diagnosing`/`bug-proposing`), mostre um único nó macro ("diagnóstico" / "aguardando escolha da solução"). O resto (status por checkboxes, `current_chunk`, `deviated`) é igual.
+
 ## Modelo de nós (granularidade progressiva)
 
 - **Feature SEM `tasks.md` ainda** → um único nó macro = a própria feature (nome = slug; sub = "spec ainda não gerada" ou "aguardando tasks").

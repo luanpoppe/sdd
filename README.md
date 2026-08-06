@@ -1,6 +1,6 @@
 # SDD — `lp:*` para Claude Code
 
-Spec-driven development em 14 skills. Chunks micro revisáveis, fluxo sequencial por feature, diagrama macro da implementação, implementação por subagentes (com modo paralelo opcional), memória autônoma, grilling anti-assunção e revisão guiada de código existente.
+Spec-driven development em 15 skills. Chunks micro revisáveis, fluxo sequencial por feature, fluxo enxuto de bug-fix (causa raiz → opções → correção), diagrama macro da implementação, implementação por subagentes (com modo paralelo opcional), memória autônoma, grilling anti-assunção e revisão guiada de código existente.
 
 ## Instalação
 
@@ -46,8 +46,9 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 | Skill | O que faz |
 |---|---|
 | `lp:init` | Inicializa o SDD no projeto (`.sdd/config.yaml`, CSS global, preferências). |
-| `lp:new` | Abre uma nova mudança com grill anti-assunção; gera `plan.md` + `flow.html`. |
-| `lp:continue` | Avança 1 passo do fluxo (spec → revisão → tasks → chunks). Implementa via subagente. |
+| `lp:new` | Abre uma nova mudança (do zero) com grill anti-assunção; gera `plan.md` + `flow.html`. |
+| `lp:bug-fix` | Fluxo enxuto pra corrigir bug: `diagnosis` (causa raiz) → `solutions` (opções) → correção em chunks. |
+| `lp:continue` | Avança 1 passo. Feature: spec → tasks → chunks. Bug-fix: opções → tasks → chunks. Implementa via subagente. |
 | `lp:review` | Revisão guiada de código existente (walkthrough do fluxo real). |
 | `lp:flow` | Gera/regenera o diagrama macro (`flow.html`); nós implementados são clicáveis e abrem detalhe (o que faz + dados + trecho). |
 | `lp:parallel` | Liga/desliga o modo paralelo (chunks independentes, um subagente cada). |
@@ -81,10 +82,10 @@ sdd/
 ├── .claude-plugin/
 │   ├── marketplace.json   # catálogo (este repo é o marketplace)
 │   └── plugin.json        # manifesto do plugin "lp"
-├── skills/                # 14 skills (dir + frontmatter name sem prefixo lp-)
+├── skills/                # 15 skills (dir + frontmatter name sem prefixo lp-)
 ├── helpers/
-│   ├── prompts/           # prompts compartilhados (grill, memória, state-machine, flowchart, parallel…)
-│   └── templates/         # templates de spec/tasks/plan/explain/flow + styles.css
+│   ├── prompts/           # prompts compartilhados (grill, memória, state-machine, bugfix-machine, flowchart, parallel…)
+│   └── templates/         # templates de plan/spec/tasks/explain/flow + diagnosis/solutions (bug-fix) + styles.css
 ├── bin/install.js         # installer cross-tool (npx github:luanpoppe/sdd)
 ├── package.json           # @luanpoppe/sdd (publicação npm)
 ├── LICENSE

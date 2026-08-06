@@ -10,6 +10,7 @@ Você está fechando uma mudança do SDD.
 - Identifique a mudança ativa. Se não houver: "Sem mudança ativa para arquivar." Pare.
 - Estado deve ser `awaiting-archive`, OU todas as features com `status: done` no `.sdd.yaml`.
 - Se há chunks `[ ]` em algum `specs/<slug>/tasks.md`, ou features ainda `pending`: avise quais e pergunte se deve arquivar mesmo assim ou voltar com `/lp-continue`.
+- **Se `kind: bugfix`** (ver `../../helpers/prompts/bugfix-machine.md`): não há features/specs. Verifique contra `diagnosis.md` + `solutions.md` + `tasks.md` (raiz da mudança); "concluído" = todos os chunks `C<m>` do `tasks.md` estão `[~]`/`[x]`. Se ainda há `[ ]`, avise e pergunte igual.
 
 ## 2. Verificação rigorosa (delegue para `lp-audit` se quiser)
 

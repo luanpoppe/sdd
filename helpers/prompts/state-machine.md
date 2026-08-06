@@ -2,6 +2,8 @@
 
 > Fluxo: **sequencial por feature**. Nunca gere todas as specs/tasks de uma vez. Cada feature passa por spec → tasks → implementação → revisão antes da próxima começar.
 
+> **Dois tipos de mudança.** Sem `kind` (ou `kind: feature`) = fluxo completo desta página (`lp:new` → `lp:continue`). Com **`kind: bugfix`** = fluxo enxuto de correção de bug (`lp:bug-fix` → `lp:continue`), documentado em `./bugfix-machine.md` — diagnóstico → opções → correção, sem `plan.md` nem specs por feature. O `kind` vive no `.sdd.yaml` da mudança.
+
 ## Estado por mudança (`.sdd/changes/<id>/.sdd.yaml`)
 
 ```yaml

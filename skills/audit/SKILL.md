@@ -9,6 +9,7 @@ Você está auditando a coerência entre docs e código da mudança ativa. **Nã
 
 - Identifique a mudança ativa.
 - Leia `plan.md` e o `.sdd.yaml`.
+- **Se `kind: bugfix`** (ver `../../helpers/prompts/bugfix-machine.md`): as docs são `diagnosis.md` + `solutions.md` + `tasks.md` (raiz), não `plan.md`/specs. Compare a causa raiz e a solução escolhida (`chosen_solution`) com o código implementado, usando os mesmos 3 buckets abaixo. Pule os passos específicos de feature/spec.
 - Para cada feature com `status != pending`, leia `specs/<slug>/spec.md` e `specs/<slug>/tasks.md` (se existirem).
 - Liste os arquivos referenciados nas tasks já marcadas `[x]` ou `[~]`.
 - Para cada arquivo referenciado, leia o estado atual no projeto.

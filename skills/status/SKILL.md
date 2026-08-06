@@ -12,7 +12,7 @@ Você está gerando um **resumo de handoff** da mudança ativa: o suficiente pra
 
 ## 1. Coleta
 
-- `.sdd.yaml`: `id`, `title`, `state`, `current_feature`, `current_chunk`, `in_review`, `features[]` (com status), `updated`.
+- `.sdd.yaml`: `id`, `title`, `state`, `kind`, `current_feature`, `current_chunk`, `in_review`, `features[]` (com status), `updated`. **Se `kind: bugfix`** → é um bug-fix (sem `features[]`; estados `bug-diagnosing`/`bug-proposing`/`bug-fixing`; chunks `C<m>` em `tasks.md` na raiz; solução em `chosen_solution`). Colete de `diagnosis.md`/`solutions.md`/`tasks.md` conforme a etapa. Ver `../../helpers/prompts/bugfix-machine.md`.
 - `plan.md`: contexto + decisões macro (resumir, não copiar inteiro).
 - Feature ativa: `specs/<current_feature>/tasks.md` — conte chunks **por bloco `### F<n>.C<m>`** (concluído = todos os checkboxes `[~]`/`[x]`), não por checkbox cru.
 - `in_review`: se preenchido, é o chunk/onda aguardando revisão + os arquivos.
@@ -32,6 +32,7 @@ Decisões macro que importam: <bullets curtos>
 
 Features:
   ✓ <slug> [done]   ▶ <slug> [implementing] (X/Y chunks)   ◌ <slug> [pending]
+  (bug-fix: troque esta linha pela etapa — diagnóstico / opções (escolhida: <opção>) / correção (X/Y chunks))
 
 Em revisão agora: <in_review: chunks + arquivos, ou "nada">
 Feito recentemente: <últimos 1-3 chunks concluídos>

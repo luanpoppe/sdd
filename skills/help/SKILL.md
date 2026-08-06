@@ -12,7 +12,7 @@ Você está dando ao usuário um status report do SDD. **Apenas LEITURA** — nu
 - Liste pastas em `.sdd/changes/` (mudanças ativas) e conte `.sdd/archive/`.
 - Liste reviews ativos em `.sdd/reviews/` (criados por `lp:review`), se houver, com o `state`.
 - Verifique `.sdd/memory.md` (ou `.sdd/memory-map.md`): conte entradas por seção.
-- Para cada mudança ativa: leia `.sdd.yaml` (id, title, state, current_feature, current_chunk, features[], updated).
+- Para cada mudança ativa: leia `.sdd.yaml` (id, title, state, current_feature, current_chunk, features[], updated). **Cheque `kind`**: se `kind: bugfix`, é um bug-fix (estados `bug-diagnosing`/`bug-proposing`/`bug-fixing`) — não tem `features[]`; os chunks vivem em `tasks.md` na raiz da mudança. Veja `../../helpers/prompts/bugfix-machine.md`.
 - Se há feature em `implementing` ou anterior: leia `specs/<current_feature>/tasks.md` (se existir).
   - **Conte por CHUNK, não por checkbox**: cada chunk é um bloco `### F<n>.C<m>`. Um chunk está **concluído** quando todos os seus checkboxes estão `[~]`/`[x]`; **pendente** se ainda tem `[ ]`. Reporte "X/Y chunks" = chunks concluídos / total de blocos `### F<n>.C<m>`. (NÃO conte checkboxes crus — cada chunk tem vários.)
 
@@ -45,7 +45,9 @@ Sugestões:
 4. /lp-ask <pergunta> — dúvida rápida no chat
 ```
 
-Se nenhuma mudança ativa: sugira `/lp-new <id>`.
+Para uma mudança `kind: bugfix`, adapte o bloco: em vez de "Features (sequenciais)", mostre a etapa do bug (`diagnóstico` / `opções` / `correção — X/Y chunks`), o arquivo relevante (`diagnosis.md` / `solutions.md` / `tasks.md`) e a solução escolhida se houver. Próxima ação: `/lp-continue`.
+
+Se nenhuma mudança ativa: sugira `/lp-new <id>` (implementação do zero) ou `/lp-bug-fix <id>` (corrigir um bug).
 Se `state == awaiting-archive`: sugira `/lp-archive`.
 Se `parallel=off` e a mudança está em `implementing`: mencione que dá pra acelerar com `/lp-parallel`.
 
@@ -57,8 +59,9 @@ Quando o usuário rodou `/lp-help` sem nenhum argumento, complemento o output ac
 Comandos do SDD `lp-*` (via marketplace: `lp:init`; via installer/Cursor: `/lp-init` — mesma skill):
 
   /lp-init       Setup do SDD no projeto. Cria .sdd/config.yaml.
-  /lp-new <id>   Inicia nova mudança. Grill macro + gera plan.md + flow.html.
-  /lp-continue   Avança UM passo: spec da próxima feature → tasks dela → chunks (impl por subagente).
+  /lp-new <id>   Inicia nova mudança (do zero). Grill macro + gera plan.md + flow.html.
+  /lp-bug-fix <id>  Fluxo enxuto pra corrigir bug: diagnóstico (causa raiz) → opções → correção.
+  /lp-continue   Avança UM passo. Feature: spec → tasks → chunks. Bug-fix: opções → tasks → chunks.
   /lp-status     Resumo de handoff sob demanda (estado + próximos passos, pra retomar/nova conversa).
   /lp-help       Mostra status e (sem args) este resumo.
   /lp-ask <q>    Dúvida rápida no chat sobre a mudança ativa. Não persiste nada.
@@ -71,9 +74,13 @@ Comandos do SDD `lp-*` (via marketplace: `lp:init`; via installer/Cursor: `/lp-i
   /lp-archive    Finaliza: verifica + move a mudança para .sdd/archive/<id>/.
   /lp-auto-update  Atualiza as skills para a versão mais recente do GitHub (luanpoppe/sdd).
 
-Fluxo típico:
+Fluxo típico (feature do zero):
   /lp-init → /lp-new <id> → revisa plan.md → /lp-continue (spec) → revisa →
   /lp-continue (tasks) → revisa → /lp-continue (chunks, um por vez) → ... → /lp-archive
+
+Fluxo típico (bug-fix, enxuto):
+  /lp-init → /lp-bug-fix <id> → revisa causa raiz (diagnosis) → /lp-continue (opções, escolhe uma) →
+  /lp-continue (tasks + chunks, um por vez) → ... → /lp-archive
 ```
 
 ## Princípios
