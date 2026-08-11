@@ -107,7 +107,7 @@ Coração da skill. Execute na ordem:
 - tasks.md: marque os checkboxes do chunk (`Faz` e `Validação`) de `[ ]` → `[~]`. Os demais itens do chunk (`Arquivos`, `Depende de`, `Ordem de revisão`) são metadados em bullet simples, não checkboxes — não precisa marcar. Se o chunk tiver outros checkboxes, marque todos.
 - `.sdd.yaml`: `current_chunk: "F<n>.C<m>"`, `updated`.
 
-**e) Atualizar diagrama** — se `flowchart: on` no `.sdd/config.yaml` (default), regenere `.sdd/changes/<id>/flow.html` seguindo `../../helpers/prompts/flowchart-guide.md`: marque este chunk como concluído, mova o `current` para o próximo, marque `deviated` os componentes anotados no auto-sync. Cite no plano de revisão: *"Diagrama atualizado: flow.html"*.
+**e) Atualizar diagrama** — se `flowchart: on` no `.sdd/config.yaml` (default), regenere `.sdd/changes/<id>/flow.html` seguindo `../../helpers/prompts/flowchart-guide.md`: marque este chunk como concluído, mova o `current` para o próximo, marque `deviated` os componentes anotados no auto-sync. O nó deste chunk vira clicável com um **mini-walkthrough de código real** — **reuse o relatório do subagente / o diff que você já fez neste turno** para montar o detalhe (não releia os arquivos do zero). Cite no plano de revisão: *"Diagrama atualizado: flow.html"*.
 
 **f) Transição "feature concluída"**:
 - Se todos os chunks da `current_feature` estão `[~]`/`[x]`:

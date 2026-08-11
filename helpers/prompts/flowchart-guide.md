@@ -33,26 +33,33 @@ Todo nó **já implementado** (`done`, `current` ou `deviated`) é clicável e a
 Para cada nó implementado:
 
 1. No nó, adicione a classe `has-detail`, o atributo `data-detail="F<n>.C<m>"`, `tabindex="0"` e um `<span class="hint">detalhes</span>` dentro dele.
-2. No `<div class="detail-panel" hidden>` da MESMA feature (um por feature, logo depois do `.flow`), adicione um bloco:
+2. No `<div class="detail-panel" hidden>` da MESMA feature (um por feature, logo depois do `.flow`), adicione um bloco = **mini-walkthrough do chunk, com código REAL** (estilo `lp:review`):
    ```html
    <div class="detail" data-detail-for="F<n>.C<m>" hidden>
      <h4>Componente <span class="chunk-id">F<n>.C<m> · ClassePrincipal</span></h4>
-     <p class="what">1-3 frases: o que esse chunk faz e por quê.</p>
+     <p class="what">1-2 frases: o papel deste chunk no fluxo.</p>
+     <p class="block-label">Como funciona</p>
+     <p>prosa curta explicando a lógica implementada</p>
+     <pre data-file="caminho/real/Arquivo.ext"><code>trechos REAIS decisivos do arquivo</code></pre>
+     <!-- um <pre data-file> por arquivo relevante do chunk; use <h5> por arquivo se forem vários -->
      <p class="block-label">Dados fluindo</p>
-     <div class="data">exemplo concreto: request/response, evento publicado, ou objeto transformado</div>
-     <p class="block-label">Trecho ilustrativo</p>
-     <pre><code>pseudo-código / assinatura representativa</code></pre>
+     <div class="data">exemplo real: request/response, evento, ou valor antes→depois (bug-fix)</div>
+     <p class="block-label">Conecta</p>
+     <ul><li>quem chama/usa e pra onde aponta (nomes reais)</li></ul>
      <p class="note">opcional — ex: "feito diferente: usou X em vez de Y".</p>
    </div>
    ```
 
 Conteúdo do detalhe (regras):
 
-- **Fonte = spec/tasks, NÃO o código-fonte.** `lp:flow` continua read-only e **não lê os arquivos implementados**. Baseie a explicação nos `requirements`/`contratos`/`edge cases` da spec e no resumo do chunk no `tasks.md`.
-- **Dados fluindo**: use exemplos reais dos contratos da spec (payloads, eventos, status). Mostre o que entra e o que sai daquela parte.
-- **Trecho ilustrativo**: pseudo-código ou assinatura representativa — deixe claro que é ilustrativo, não o fonte literal. Curto (≤ ~8 linhas). Escape `<`, `>`, `&` no HTML.
-- **`deviated`**: use a `<p class="note">` para dizer o que mudou em relação ao planejado (mesmo texto curto do sub-texto do nó).
-- **Macro ainda vale**: 1 bloco por chunk, não por arquivo. Nada de despejar implementação inteira.
+- **Leia o código REAL dos chunks implementados.** Para `done`/`current`/`deviated`, abra os arquivos que o chunk tocou (listados no `tasks.md`, ou o diff) e extraia os **trechos decisivos de verdade** — não pseudo-código. O objetivo é um walkthrough como o do `lp:review`: quem clica entende como aquela parte foi implementada de fato.
+  - **Barato no `lp:continue`**: o chunk acabou de ser implementado neste turno — reuse o relatório do subagente / o diff que você já tem em contexto em vez de reler tudo. No `lp:flow` avulso (sem esse contexto), aí sim leia os arquivos do chunk.
+  - Nós `pending` continuam **sem** `has-detail` (não há código ainda).
+- **Como funciona**: 1 parágrafo curto + os trechos reais. Um `<pre data-file="path">` por arquivo relevante (o `data-file` vira o nome do arquivo no topo do bloco). ≤ ~15 linhas por bloco; corte o resto com `…`. Escape `<`, `>`, `&`.
+- **Dados fluindo**: exemplo concreto e real. Em bug-fix, mostre o valor/estado **antes → depois** da correção.
+- **Conecta**: liste as ligações reais (quem chama, o que consome, qual porta implementa).
+- **`deviated`**: use `<p class="note">` para o que mudou em relação ao planejado.
+- **Macro na CAIXA, detalhe no PAINEL**: continua 1 nó/painel por chunk (não crie nós por arquivo). O painel pode ter vários arquivos, mas focado no chunk — não despeje o arquivo inteiro, só o que explica a implementação.
 
 ## Setas / ordem (stages)
 

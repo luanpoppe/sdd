@@ -102,6 +102,13 @@
     .detail .data { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: .8rem 1rem;
       font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-x: auto; }
     .detail .note { font-size: .8rem; color: var(--muted); margin-top: 1rem; font-style: italic; }
+    /* Walkthrough-rico: subtítulos de passo/arquivo, prosa e badge com o nome do arquivo no code block */
+    .detail h5 { margin: 1.2rem 0 .3rem; font-size: .9rem; font-weight: 650; color: var(--fg); }
+    .detail p { margin: .3rem 0 .6rem; }
+    .detail ul { margin: .3rem 0 .6rem; padding-left: 1.2rem; }
+    .detail ul li { margin: .15rem 0; }
+    .detail pre[data-file]::before { content: attr(data-file); display: block; font-size: .68rem;
+      color: var(--muted); font-weight: 600; margin-bottom: .5rem; }
 
     footer { max-width: 900px; margin: 2rem auto 0; font-size: .8rem; color: var(--muted); }
   </style>
@@ -138,12 +145,18 @@
           `.detail-panel` da MESMA feature.
       Nós `pending` (sem código ainda) NÃO recebem has-detail nem bloco de detalhe.
 
-      Conteúdo do bloco de detalhe (resumo/pseudo — vem da spec/tasks, NÃO de ler o código-fonte):
+      Conteúdo do bloco de detalhe = MINI-WALKTHROUGH do chunk, com CÓDIGO REAL implementado
+      (estilo do lp:review). Para chunks done/current/deviated, LEIA os arquivos realmente tocados
+      (ver flowchart-guide.md, seção "Detalhe clicável por nó") e monte:
         - <h4> componente + <span class="chunk-id">
-        - <p class="what"> 1-3 frases: o que esse chunk faz
-        - "Dados fluindo" em <div class="data"> (request/response, evento, objeto de exemplo)
-        - "Trecho ilustrativo" em <pre><code> (pseudo/assinatura, baseado na spec — não é o fonte real)
-        - <p class="note"> opcional (ex: desvio do planejado)
+        - <p class="what"> 1-2 frases: o papel deste chunk no fluxo
+        - "Como funciona": <p class="block-label">Como funciona</p> + prosa curta + um <pre data-file="caminho/real.ext"><code>…</code></pre>
+          por arquivo relevante, com os TRECHOS REAIS decisivos (não pseudo). ≤ ~15 linhas por bloco; corte o resto com "…".
+        - "Dados fluindo": <p class="block-label">Dados fluindo</p> + <div class="data"> com exemplo real (request/response, evento, ou valor antes→depois no caso de bug-fix)
+        - "Conecta": <p class="block-label">Conecta</p> + <ul> com quem chama/usa e pra onde aponta (nomes reais)
+        - <p class="note"> opcional (ex: feito diferente do planejado)
+      Escape `<` `>` `&` dentro do código. Passos longos podem usar <h5> por arquivo/etapa.
+      Bug-fix (kind:bugfix) usa o MESMO formato; IDs dos nós são C<m> (sem F<n>.).
 
       Exemplo de uma feature já com tasks.md (expandida em componentes):
     -->
@@ -173,24 +186,43 @@
       <div class="detail-panel" hidden>
         <div class="detail" data-detail-for="F1.C1" hidden>
           <h4>Config <span class="chunk-id">F1.C1 · SecurityConfig</span></h4>
-          <p class="what">Configura a cadeia de segurança: libera o endpoint de login e exige token nos demais. Base para o restante do fluxo de auth.</p>
+          <p class="what">Configura a cadeia de segurança: libera o endpoint de login e exige token no resto. Base do fluxo de auth.</p>
+          <p class="block-label">Como funciona</p>
+          <p>O filter chain deixa <code>/auth/login</code> público e passa a exigir autenticação em qualquer outra rota. Sem estado de sessão (stateless), o token vale por request.</p>
+          <pre data-file="security/SecurityConfig.java"><code>@Bean
+SecurityFilterChain chain(HttpSecurity http) throws Exception {
+    return http
+        .csrf(c -&gt; c.disable())
+        .sessionManagement(s -&gt; s.sessionCreationPolicy(STATELESS))
+        .authorizeHttpRequests(a -&gt; a
+            .requestMatchers("/auth/login").permitAll()
+            .anyRequest().authenticated())
+        .build();
+}</code></pre>
           <p class="block-label">Dados fluindo</p>
-          <div class="data">requisição sem token → 401 · requisição com Bearer válido → segue para o controller</div>
-          <p class="block-label">Trecho ilustrativo</p>
-          <pre><code>http.authorizeHttpRequests(a -&gt; a
-    .requestMatchers("/auth/login").permitAll()
-    .anyRequest().authenticated())</code></pre>
+          <div class="data">GET /me sem token → 401 · POST /auth/login → passa direto · GET /me com Bearer válido → segue pro controller</div>
+          <p class="block-label">Conecta</p>
+          <ul>
+            <li>Protege o <code>AuthController</code> (F1.C2) e todo endpoint autenticado à frente.</li>
+            <li>Habilita o filtro que lê o <code>Authorization: Bearer</code>.</li>
+          </ul>
         </div>
         <div class="detail" data-detail-for="F1.C2" hidden>
           <h4>Controller <span class="chunk-id">F1.C2 · AuthController</span></h4>
-          <p class="what">Recebe o POST de login, valida o corpo e delega ao caso de uso. Devolve o token quando as credenciais batem.</p>
-          <p class="block-label">Dados fluindo</p>
-          <div class="data">POST /auth/login { "email": "a@b.com", "senha": "***" } → 200 { "token": "eyJ..." }</div>
-          <p class="block-label">Trecho ilustrativo</p>
-          <pre><code>@PostMapping("/login")
+          <p class="what">Recebe o POST de login, valida o corpo e delega ao caso de uso; devolve o token quando as credenciais batem.</p>
+          <p class="block-label">Como funciona</p>
+          <p>Endpoint fino: valida o <code>LoginRequest</code> via Bean Validation e repassa ao <code>LoginUseCase</code>. Não tem regra de negócio aqui.</p>
+          <pre data-file="auth/AuthController.java"><code>@PostMapping("/login")
 ResponseEntity&lt;TokenResponse&gt; login(@Valid @RequestBody LoginRequest req) {
     return ResponseEntity.ok(loginUseCase.execute(req));
 }</code></pre>
+          <p class="block-label">Dados fluindo</p>
+          <div class="data">POST /auth/login { "email": "a@b.com", "senha": "***" } → 200 { "token": "eyJ..." } · credenciais erradas → 401</div>
+          <p class="block-label">Conecta</p>
+          <ul>
+            <li>Chama <code>LoginUseCase.execute()</code> (F1.C3), que ainda está pendente.</li>
+            <li>Só é alcançável porque o <code>SecurityConfig</code> (F1.C1) liberou a rota.</li>
+          </ul>
         </div>
       </div>
     </details>

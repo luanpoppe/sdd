@@ -50,7 +50,7 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 | `lp:bug-fix` | Fluxo enxuto pra corrigir bug: `diagnosis` (causa raiz) → `solutions` (opções) → correção em chunks. |
 | `lp:continue` | Avança 1 passo. Feature: spec → tasks → chunks. Bug-fix: opções → tasks → chunks. Implementa via subagente. |
 | `lp:review` | Revisão guiada de código existente (walkthrough do fluxo real). |
-| `lp:flow` | Gera/regenera o diagrama macro (`flow.html`); nós implementados são clicáveis e abrem detalhe (o que faz + dados + trecho). |
+| `lp:flow` | Gera/regenera o diagrama macro (`flow.html`); nós implementados são clicáveis e abrem um mini-walkthrough (como funciona + código real + dados + conecta). Vale pra features e bug-fix. |
 | `lp:parallel` | Liga/desliga o modo paralelo (chunks independentes, um subagente cada). |
 | `lp:auto-update` | Atualiza as skills para a versão mais recente do GitHub. |
 | `lp:explain` | Gera explicação em HTML de um tópico. |

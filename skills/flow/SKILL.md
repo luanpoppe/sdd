@@ -17,7 +17,7 @@ Você está gerando/atualizando o diagrama macro da implementação da mudança 
 Siga `../../helpers/prompts/flowchart-guide.md` para montar o `flow.html` a partir do estado atual (features do plan, chunks dos tasks.md existentes, status pelos checkboxes + `current_chunk`, desvios conhecidos).
 
 - Regenere o `<main>` inteiro. Não remende nós.
-- Cada nó já implementado (`done`/`current`/`deviated`) vira clicável, com um bloco de detalhe no `.detail-panel` da feature (o que faz + dados fluindo + trecho ilustrativo). Conteúdo vem da spec/tasks — **não leia o código-fonte**. Veja o guia.
+- Cada nó já implementado (`done`/`current`/`deviated`) vira clicável, com um **mini-walkthrough** no `.detail-panel` (como funciona + **código REAL** do chunk + dados fluindo + conecta), estilo `lp:review`. **Leia os arquivos que o chunk tocou** para extrair os trechos reais (no `lp:flow` avulso; dentro do `lp:continue`, reuse o diff/relatório do subagente já em contexto). Veja o guia.
 - Salve em `.sdd/changes/<id>/flow.html`.
 
 ## 2. Reportar
@@ -34,5 +34,5 @@ Se estiver rodando em um ambiente com navegador e o usuário pedir, ofereça abr
 
 ## Princípios
 
-- **Read-only sobre o SDD**: `lp:flow` só lê o estado e (re)escreve o `flow.html`. Nunca altera specs, tasks, código ou `.sdd.yaml`.
+- **Não muta nada**: `lp:flow` (re)escreve só o `flow.html`. Pode **ler** specs/tasks/`.sdd.yaml` e o **código-fonte dos chunks implementados** (para o walkthrough), mas nunca altera specs, tasks, código ou `.sdd.yaml`.
 - **Macro**: visão de componentes, não de linhas. Veja os princípios do `flowchart-guide.md`.
