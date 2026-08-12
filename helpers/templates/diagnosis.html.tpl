@@ -37,18 +37,18 @@
         <li><strong>Sintoma</strong>: {{sintoma}}</li>
         <li><strong>Esperado</strong>: {{esperado}}</li>
         <li><strong>Reprodução</strong>: {{passos_repro}}</li>
-        <li><strong>Ambiente/escopo</strong>: {{escopo}}</li>
+        <li><strong>Escopo</strong>: {{escopo}}</li>
       </ul>
     </details>
 
     <details class="lp-sec" id="investigacao" open>
       <summary><h2>Investigação</h2></summary>
-      <!-- <ul> com a trilha; cite arquivo:linha reais em <code>. -->
+      <!-- A EVIDÊNCIA: <ul> com a trilha "olhei X → constatei Y". Cite arquivo:linha uma vez cada, em <code>. Só o que sustenta a causa. -->
     </details>
 
     <details class="lp-sec" id="causa" open>
       <summary><h2>Causa raiz</h2></summary>
-      <!-- A causa real (não o sintoma), com ponto exato no código. -->
+      <!-- A CONCLUSÃO em 1-3 frases: ponto exato + por quê. Referencie os arquivos já citados na Investigação pelo nome curto; NÃO re-liste a trilha. Nada de propor correção (vai pro solutions.html). -->
     </details>
 
     <details class="lp-sec" id="impacto" open>

@@ -5,33 +5,34 @@
 
 ## Resumo
 
-{{resumo}}   <!-- 1-3 frases: qual é o bug, em uma linguagem que qualquer um do time entende. -->
+{{resumo}}   <!-- 1-2 frases: qual é o bug, em linguagem que qualquer um do time entende. NÃO detalhe código aqui. -->
 
 ## Sintomas e reprodução
 
-- **Sintoma observado**: {{sintoma}}   <!-- o que o usuário/sistema vê de errado -->
+- **Sintoma**: {{sintoma}}   <!-- o que se vê de errado -->
 - **Esperado**: {{esperado}}
-- **Reprodução**: {{passos_repro}}   <!-- passos mínimos, ou "não reproduzível de forma determinística" com o que se sabe -->
-- **Ambiente/escopo**: {{escopo}}   <!-- onde acontece: prod/local, versões, dados específicos -->
+- **Reprodução**: {{passos_repro}}   <!-- passos mínimos, ou "não determinística" + o que se sabe -->
+- **Escopo**: {{escopo}}   <!-- onde acontece: prod/local, desde quando, dado específico -->
 
 ## Investigação
 
-<!-- Trilha do que foi olhado até achar a causa. Cite arquivos/funções reais do projeto (path:linha). -->
-- {{passo_investigacao_1}}
-- {{passo_investigacao_2}}
+<!-- A EVIDÊNCIA: a trilha que levou à causa. Um bullet por passo, formato "olhei X → constatei Y". Cite arquivo:linha uma vez cada. Só o que sustenta a causa — não narre o código inteiro. -->
+- {{passo_1}}
+- {{passo_2}}
 
 ## Causa raiz
 
-{{causa_raiz}}   <!-- A causa REAL, não o sintoma. Aponte o ponto exato no código (arquivo:linha) e por que ele causa o bug. Se houver mais de uma causa contribuindo, liste. -->
+{{causa_raiz}}   <!-- A CONCLUSÃO em 1-3 frases: o ponto exato (arquivo:linha) e por que causa o bug. Referencie os arquivos já citados na Investigação pelo nome curto — NÃO re-liste a trilha. Se houver 2+ causas, bullets curtos. Nada de propor correção (isso é solutions.md). -->
 
 ## Impacto
 
-- **Afeta**: {{impacto}}   <!-- quem/o quê é afetado, gravidade -->
+- **Afeta**: {{impacto}}   <!-- quem/o quê + gravidade; não repita o sintoma -->
 - **Risco de não corrigir**: {{risco}}
 
 <!--
-Princípios:
-- Foco em CAUSA, não em solução (solução vive no solutions.md).
-- Se a causa não está clara, diga o que falta investigar — não invente.
-- Curto e direto: este é o fluxo enxuto de bug-fix, não uma spec completa.
+Princípios (objetividade > completude):
+- Cada seção tem UM trabalho; não repita o que já foi dito. Investigação = evidência (a trilha); Causa raiz = a conclusão curta. Não re-narre a trilha na causa.
+- Causa, NÃO solução. Nenhuma proposta de fix, refactor ou "lacunas a fechar" aqui — isso vive no solutions.md.
+- Direto ao ponto. Cabe em 1-2 telas (~40 linhas). Frases curtas; sem parágrafos redundantes.
+- Se a causa não está clara, diga o que falta investigar — não encha linguiça nem invente.
 -->

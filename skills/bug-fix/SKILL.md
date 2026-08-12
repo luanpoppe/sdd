@@ -46,7 +46,7 @@ in_review: null
    - Escopo/impacto (desde quando, quem é afetado, gravidade).
 2. **Investigue o código** (Read/Grep/Glob/Agent Explore) para rastrear do sintoma até a **causa raiz**. Cite arquivos/funções reais (`arquivo:linha`). Distinga causa de sintoma — não pare no primeiro `catch`.
    - Se a causa não ficar clara, diga o que ainda falta investigar em vez de inventar. Pode fazer mais um batch de perguntas.
-3. Gere `diagnosis.md` usando `../../helpers/templates/diagnosis.md.tpl`. **Curto** (cabe em poucas telas). Se `format` ∈ {html, both}: gere também `diagnosis.html` (`../../helpers/templates/diagnosis.html.tpl`) e garanta `.sdd/assets/styles.css` (copie de `../../helpers/templates/styles.css` se faltar).
+3. Gere `diagnosis.md` usando `../../helpers/templates/diagnosis.md.tpl`. **Objetivo e sem repetição** (cabe em 1-2 telas, ~40 linhas). Cada seção tem UM trabalho: **Investigação** = a trilha/evidência (bullets "olhei X → constatei Y", arquivo:linha uma vez cada); **Causa raiz** = a conclusão em 1-3 frases, referenciando os arquivos já citados pelo nome curto — **não re-narre a trilha** nem repita o sintoma. **Nada de propor correção** aqui (fix vai pro `solutions.md`). Se `format` ∈ {html, both}: gere também `diagnosis.html` (`../../helpers/templates/diagnosis.html.tpl`) e garanta `.sdd/assets/styles.css` (copie de `../../helpers/templates/styles.css` se faltar).
 4. Atualize `.sdd.yaml`: `title`, `state: bug-proposing`, `updated`.
 5. Imprima plano de revisão:
 
