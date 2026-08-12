@@ -8,7 +8,7 @@ Você está dando ao usuário um status report do SDD. **Apenas LEITURA** — nu
 ## 1. Coleta
 
 - Existe `.sdd/config.yaml`? Se não → "SDD não inicializado. Rode `/lp-init`." Pare.
-- Leia TODOS os campos do config: `format`, `lang`, `chunk_size`, `context_watch`, `flowchart`, `implementer`, `parallel` (trate ausentes com o default: `flowchart: on`, `implementer: subagent`, `parallel: off`).
+- Leia TODOS os campos do config: `format`, `lang`, `chunk_size`, `context_watch`, `flowchart`, `implementer`, `scribe`, `parallel` (trate ausentes com o default: `flowchart: on`, `implementer: subagent`, `scribe: subagent`, `parallel: off`).
 - Liste pastas em `.sdd/changes/` (mudanças ativas) e conte `.sdd/archive/`.
 - Liste reviews ativos em `.sdd/reviews/` (criados por `lp:review`), se houver, com o `state`.
 - Verifique `.sdd/memory.md` (ou `.sdd/memory-map.md`): conte entradas por seção.
@@ -22,7 +22,7 @@ Formato sugerido:
 
 ```
 SDD: <projeto>
-Config: format=<f> · lang=<l> · chunk_size=<c> · flowchart=<on/off> · implementer=<subagent/main> · parallel=<on/off>
+Config: format=<f> · lang=<l> · chunk_size=<c> · flowchart=<on/off> · implementer=<subagent/main> · scribe=<subagent/main> · parallel=<on/off>
 
 Mudança ativa: <id> — <title>
 Estado: <state>  ·  atualizado em <updated>

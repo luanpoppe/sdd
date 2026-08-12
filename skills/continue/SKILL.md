@@ -5,6 +5,8 @@ description: Avança UM passo no SDD `lp:*` da mudança ativa. Fluxo SEQUENCIAL 
 
 Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../helpers/prompts/state-machine.md` e o estilo de grilling em `../../helpers/prompts/grill-snippet.md`.
 
+> **Escrita de artefatos (scribe)**: com `scribe: subagent` (default no `.sdd/config.yaml`), **todas as escritas de arquivo deste passo** — docs `.md`/`.html`, `flow.html`, `.sdd.yaml`, `memory.md` — são delegadas a um **subagente escriba** numa única chamada por passo. Você (principal) decide o conteúdo e imprime o plano de revisão; o escriba só renderiza/escreve e devolve a lista de arquivos. Siga `../../helpers/prompts/scribe-guide.md`. Isto é ortogonal ao `implementer` (que delega o **código** do chunk): num passo de `implementing`, o implementer escreve o código e o escriba faz a contabilidade do SDD (marcar `tasks.md`, regenerar `flow.html`, atualizar `.sdd.yaml`). Com `scribe: main` ou sem suporte a subagente → escreva inline.
+
 ## 0. Pré-checagem
 
 - Se `.sdd/config.yaml` não existir → "Rode `/lp-init` primeiro." Pare.

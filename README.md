@@ -70,10 +70,11 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 | `chunk_size` | `micro`…`xlarge` | `micro` | Tamanho de cada chunk de implementação. |
 | `context_watch` | `suggest` / `auto` / `off` | (grill) | Watch anti-degradação de contexto longo. |
 | `flowchart` | `on` / `off` | `on` | Gera/atualiza o `flow.html` (diagrama macro). |
-| `implementer` | `subagent` / `main` | `subagent` | Quem implementa o chunk: subagente delegado ou a conversa principal. |
+| `implementer` | `subagent` / `main` | `subagent` | Quem implementa o **código** do chunk: subagente delegado ou a conversa principal. |
+| `scribe` | `subagent` / `main` | `subagent` | Quem **escreve os artefatos** do SDD (docs, `flow.html`, `.sdd.yaml`): subagente escriba (mantém o contexto principal limpo) ou inline na conversa principal. |
 | `parallel` | `on` / `off` | `off` | Chunks independentes em paralelo (um subagente cada). Ligar com `lp:parallel`. |
 
-> `flowchart`, `implementer` e `parallel` não são perguntados no grill — vêm com o padrão e você edita quando quiser (ou usa `lp:parallel`).
+> `flowchart`, `implementer`, `scribe` e `parallel` não são perguntados no grill — vêm com o padrão e você edita quando quiser (ou usa `lp:parallel`).
 
 ## Estrutura do repositório
 
@@ -84,7 +85,7 @@ sdd/
 │   └── plugin.json        # manifesto do plugin "lp"
 ├── skills/                # 15 skills (dir + frontmatter name sem prefixo lp-)
 ├── helpers/
-│   ├── prompts/           # prompts compartilhados (grill, memória, state-machine, bugfix-machine, flowchart, parallel…)
+│   ├── prompts/           # prompts compartilhados (grill, memória, state-machine, bugfix-machine, flowchart, parallel, scribe…)
 │   └── templates/         # templates de plan/spec/tasks/explain/flow + diagnosis/solutions (bug-fix) + styles.css
 ├── bin/install.js         # installer cross-tool (npx github:luanpoppe/sdd)
 ├── package.json           # @luanpoppe/sdd (publicação npm)

@@ -13,6 +13,7 @@
       --done-bd: #16a34a; --done-bg: #dcfce7; --done-fg: #166534;
       --deviated-bd: #dc2626; --deviated-bg: #fee2e2; --deviated-fg: #991b1b;
       --accent: #2563eb;
+      --tok-com: #6a737d; --tok-str: #0a7d33; --tok-num: #b3261e; --tok-kw: #8250df; --tok-typ: #0b7285; --tok-ann: #bf5b17;
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -22,6 +23,7 @@
         --done-bd: #22c55e; --done-bg: #14311f; --done-fg: #86efac;
         --deviated-bd: #ef4444; --deviated-bg: #3a1414; --deviated-fg: #fca5a5;
         --accent: #60a5fa;
+        --tok-com: #8b949e; --tok-str: #7ee787; --tok-num: #ffa657; --tok-kw: #d2a8ff; --tok-typ: #79c0ff; --tok-ann: #ffa657;
       }
     }
     * { box-sizing: border-box; }
@@ -109,6 +111,13 @@
     .detail ul li { margin: .15rem 0; }
     .detail pre[data-file]::before { content: attr(data-file); display: block; font-size: .68rem;
       color: var(--muted); font-weight: 600; margin-bottom: .5rem; }
+    /* Syntax highlight (colorização feita por um highlighter mínimo inline, offline) */
+    .detail pre .tk-com { color: var(--tok-com); font-style: italic; }
+    .detail pre .tk-str { color: var(--tok-str); }
+    .detail pre .tk-num { color: var(--tok-num); }
+    .detail pre .tk-kw  { color: var(--tok-kw); }
+    .detail pre .tk-typ { color: var(--tok-typ); }
+    .detail pre .tk-ann { color: var(--tok-ann); }
 
     footer { max-width: 900px; margin: 2rem auto 0; font-size: .8rem; color: var(--muted); }
   </style>
@@ -279,6 +288,43 @@ ResponseEntity&lt;TokenResponse&gt; login(@Valid @RequestBody LoginRequest req) 
         if (!node) return;
         e.preventDefault();
         toggleNode(node);
+      });
+    })();
+
+    // Syntax highlight mínimo, offline e agnóstico de linguagem. Coloriza os
+    // <pre><code> do walkthrough (comentários, strings, números, anotações,
+    // keywords comuns e Tipos capitalizados). Sem libs externas.
+    (function () {
+      function esc(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+      var KW = ['function','fun','fn','func','def','return','if','else','elif','for','while','do',
+        'switch','case','break','continue','const','let','var','val','public','private','protected',
+        'internal','static','final','abstract','class','interface','enum','struct','record','extends',
+        'implements','new','throw','throws','try','catch','finally','import','from','export','package',
+        'namespace','void','async','await','yield','this','self','super','null','nil','none','true',
+        'false','True','False','None','in','is','not','and','or','as','with','lambda','typeof','instanceof'];
+      var re = new RegExp(
+        '(\\/\\/[^\\n]*|#[^\\n]*|\\/\\*[\\s\\S]*?\\*\\/)' +           // 1 comentário
+        '|("(?:\\\\.|[^"\\\\])*"|\'(?:\\\\.|[^\'\\\\])*\'|`(?:\\\\.|[^`\\\\])*`)' + // 2 string
+        '|(@[A-Za-z_]\\w*)' +                                         // 3 anotação/decorator
+        '|\\b(' + KW.join('|') + ')\\b' +                             // 4 keyword
+        '|\\b([A-Z][A-Za-z0-9_]+)\\b' +                               // 5 Tipo (Capitalizado)
+        '|\\b(\\d[\\d_]*(?:\\.\\d+)?)\\b',                            // 6 número
+        'g');
+      function hl(code) {
+        var out = '', last = 0, m;
+        while ((m = re.exec(code))) {
+          out += esc(code.slice(last, m.index));
+          var cls = m[1] ? 'tk-com' : m[2] ? 'tk-str' : m[3] ? 'tk-ann' : m[4] ? 'tk-kw' : m[5] ? 'tk-typ' : 'tk-num';
+          out += '<span class="' + cls + '">' + esc(m[0]) + '</span>';
+          last = re.lastIndex;
+        }
+        out += esc(code.slice(last));
+        return out;
+      }
+      document.querySelectorAll('.detail pre code').forEach(function (c) {
+        c.innerHTML = hl(c.textContent);
       });
     })();
   </script>

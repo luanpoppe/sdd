@@ -89,11 +89,12 @@ chunk_size: <micro|small|medium|large|xlarge>
 context_watch: <suggest|auto|off>
 flowchart: <on|off>
 implementer: subagent   # subagent (padrão): lp:continue delega a implementação do chunk a um subagente | main: a conversa principal implementa
+scribe: subagent        # subagent (padrão): as escritas de artefato do SDD (docs, flow.html, .sdd.yaml) vão para um subagente escriba, mantendo o contexto principal limpo | main: o principal escreve inline. Ver helpers/prompts/scribe-guide.md.
 parallel: off           # off (padrão): um chunk por vez | on: chunks independentes rodam em paralelo (um subagente cada). Ligar com lp:parallel.
 created: <YYYY-MM-DD>
 ```
 
-> **`implementer` e `parallel` NÃO são perguntados no grill** — gravados como `subagent` e `off`. `implementer: main` faz a conversa principal implementar. `parallel: on` (ou `lp:parallel`) liga o modo paralelo; mesmo com `off`, o `lp:continue` pergunta uma vez antes do 1º chunk se você quer paralelizar.
+> **`implementer`, `scribe` e `parallel` NÃO são perguntados no grill** — gravados como `subagent`, `subagent` e `off`. `implementer: main` faz a conversa principal implementar o código. `scribe: main` faz o principal escrever os artefatos inline (em vez de delegar ao subagente escriba). `parallel: on` (ou `lp:parallel`) liga o modo paralelo; mesmo com `off`, o `lp:continue` pergunta uma vez antes do 1º chunk se você quer paralelizar.
 
 Se `format` ∈ {html, both}: copie `../../helpers/templates/styles.css` para `.sdd/assets/styles.css` e pergunte se o usuário quer ajustar o esquema de cores (caso sim, faça um mini-grill sobre cor primária/fundo e edite o CSS).
 

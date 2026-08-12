@@ -36,6 +36,8 @@ in_review: <null | {chunks: [ids], files: [paths], updated: data}>
 
 > **Formato segue `format` do config.** Com `html`/`both`, gere o par `.md` + `.html` para `diagnosis`, `solutions` e `tasks` (espelho, usando `.sdd/assets/styles.css`). Templates: `../templates/diagnosis.*.tpl`, `../templates/solutions.*.tpl`, `../templates/tasks.md.tpl`.
 
+> **Escrita via scribe.** Com `scribe: subagent` (default), delegue as escritas de cada passo (docs, `flow.html`, `.sdd.yaml`) ao subagente escriba — veja `./scribe-guide.md`. O principal decide o conteúdo; o escriba escreve.
+
 ## Transições
 
 | Estado | Gatilho | Ação | Próximo |

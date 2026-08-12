@@ -4,6 +4,8 @@
 
 > **Dois tipos de mudança.** Sem `kind` (ou `kind: feature`) = fluxo completo desta página (`lp:new` → `lp:continue`). Com **`kind: bugfix`** = fluxo enxuto de correção de bug (`lp:bug-fix` → `lp:continue`), documentado em `./bugfix-machine.md` — diagnóstico → opções → correção, sem `plan.md` nem specs por feature. O `kind` vive no `.sdd.yaml` da mudança.
 
+> **Escrita de artefatos (scribe).** Com `scribe: subagent` (default), as escritas de arquivo do SDD (docs, `flow.html`, `.sdd.yaml`, `memory.md`) são delegadas a um subagente escriba, mantendo o contexto principal limpo. Veja `./scribe-guide.md`.
+
 ## Estado por mudança (`.sdd/changes/<id>/.sdd.yaml`)
 
 ```yaml
