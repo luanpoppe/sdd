@@ -91,6 +91,8 @@ Buckets: **decisão divergente** / **escopo extra** / **escopo faltante**. Propo
 
 Cada arquivo que vale revisão leva **3 linhas curtas** — `Faz` / `Revisar` / `Conecta` — pra o revisor entender o papel do arquivo e como ele se encaixa no fluxo sem ter que abrir o código pra descobrir. Triviais ficam em uma linha.
 
+**Espaçamento (legibilidade)**: cada arquivo é um **bloco separado por uma linha em branco** — não uma lista numerada colada. O caminho vai num cabeçalho em **negrito** e `Faz`/`Revisar`/`Conecta` viram **bullets** (quebram em linhas separadas de forma confiável no terminal). Uma linha em branco entre um arquivo e o próximo.
+
 Formato obrigatório:
 
 ```
@@ -101,12 +103,17 @@ Estado da feature: <X de Y chunks concluídos>
 
 Revisão (na ordem — comece pelo topo):
 
-1. caminho/arquivo1.ts (criado, +N)
-   Faz: <o que este arquivo passou a fazer>.
-   Revisar: <no que prestar atenção / o que validar aqui>.
-   Conecta: <quem chama/usa, pra onde aponta, qual peça do fluxo>.
+**1. caminho/arquivo1.ts** (criado, +N)
+- Faz: <o que este arquivo passou a fazer>.
+- Revisar: <no que prestar atenção / o que validar aqui>.
+- Conecta: <quem chama/usa, pra onde aponta, qual peça do fluxo>.
 
-2. caminho/tipos.d.ts (criado) — tipos gerados, pode pular.
+**2. caminho/arquivo2.ts** (editado, +N -M)
+- Faz: <...>.
+- Revisar: <...>.
+- Conecta: <...>.
+
+**3. caminho/tipos.d.ts** (criado) — tipos gerados, pode pular.
 
 Validação:
 - eslint --fix: ok
@@ -117,10 +124,11 @@ Reverter: peça "reverte o chunk F<n>.C<m>".
 ```
 
 Regras da lista:
+- **Um bloco por arquivo, separado por linha em branco.** Cabeçalho em negrito com número+caminho; `Faz`/`Revisar`/`Conecta` como bullets. Nada de blocos colados.
 - **Inclua todos os arquivos mexidos** — não omita nenhum (o usuário precisa saber o que mudou pra reverter).
 - **Ordene por prioridade de revisão**: comece pelo núcleo da lógica; termine nos triviais.
 - **Faz / Revisar / Conecta**: 1 frase concreta cada. `Revisar` aponta o ponto de atenção real (não "revise o código"); `Conecta` cita nomes reais de arquivos/funções/portas do fluxo.
-- Triviais (tipos gerados, config, stub) colapsam para uma linha só com "pode pular".
+- Triviais (tipos gerados, config, stub) colapsam para uma linha só (cabeçalho em negrito + "pode pular"), ainda separados por linha em branco.
 - Sem segunda lista. Sem repetir arquivos.
 
 ## Perguntas/alterações durante a revisão de um chunk

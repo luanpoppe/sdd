@@ -124,6 +124,8 @@ Coração da skill. Execute na ordem:
 
 Cada arquivo que vale revisão leva **3 linhas curtas** — `Faz` / `Revisar` / `Conecta` (1 frase cada, concretas, sem encher linguiça). Arquivos triviais ficam em uma linha só com "pode pular".
 
+**Espaçamento**: cada arquivo é um **bloco separado por linha em branco** — cabeçalho em **negrito** (número + caminho) e `Faz`/`Revisar`/`Conecta` como **bullets**. Não use lista numerada colada (fica ilegível no terminal).
+
 ```
 ## Chunk F<n>.C<m> — <título> (em revisão)
 
@@ -132,17 +134,17 @@ Estado da feature: <X de Y chunks concluídos>
 
 Revisão (na ordem — comece pelo topo):
 
-1. caminho/arquivo1.ts (criado, +N)
-   Faz: <o que este arquivo passou a fazer>.
-   Revisar: <no que prestar atenção / o que validar aqui>.
-   Conecta: <quem chama/usa, pra onde aponta, qual peça do fluxo>.
+**1. caminho/arquivo1.ts** (criado, +N)
+- Faz: <o que este arquivo passou a fazer>.
+- Revisar: <no que prestar atenção / o que validar aqui>.
+- Conecta: <quem chama/usa, pra onde aponta, qual peça do fluxo>.
 
-2. caminho/arquivo2.ts (editado, +N -M)
-   Faz: <...>.
-   Revisar: <...>.
-   Conecta: <...>.
+**2. caminho/arquivo2.ts** (editado, +N -M)
+- Faz: <...>.
+- Revisar: <...>.
+- Conecta: <...>.
 
-3. caminho/tipos.d.ts (criado) — tipos gerados, pode pular.
+**3. caminho/tipos.d.ts** (criado) — tipos gerados, pode pular.
 
 Validação:
 - eslint --fix: ok
@@ -153,10 +155,11 @@ Reverter: peça "reverte o chunk F<n>.C<m>".
 ```
 
 Regras das 3 linhas:
+- **Um bloco por arquivo, separado por linha em branco.** Cabeçalho em negrito; `Faz`/`Revisar`/`Conecta` em bullets.
 - **Faz**: o papel do arquivo neste chunk (não repita o nome dele; diga a responsabilidade).
 - **Revisar**: o ponto de atenção real — decisão não-óbvia, borda, contrato a conferir. Não escreva "revise o código"; seja específico.
 - **Conecta**: a ligação com outros arquivos deste chunk / feature / fluxo. Aponte nomes reais (ex: "consumido por `AuthController.login()`"; "implementa a porta `UserRepository`"). Se `flowchart: on`, pode citar o nó no `flow.html`.
-- Mantenha 1 frase por linha. Se não há nada relevante em `Revisar` ou `Conecta` (arquivo isolado/trivial), colapse para one-liner "pode pular".
+- Se não há nada relevante em `Revisar` ou `Conecta` (arquivo isolado/trivial), colapse para one-liner "pode pular".
 
 > Enquanto o usuário revisa: se ele perguntar algo ou pedir ajuste no chunk (sem rodar `/lp-continue`), atenda e **re-imprima a lista de revisão atualizada no fim da resposta** (ver seção "Durante a revisão de um chunk").
 
@@ -183,16 +186,20 @@ Vale enquanto há um chunk **em revisão**. A fonte de verdade é o `in_review` 
 
 1. Responda a pergunta / aplique a alteração normalmente e explique o que fez.
 2. Se **alterou arquivos**: rode o comando de validação do projeto (não assuma eslint) nos editados e, se o projeto exigir, os testes. A lista pode ter mudado (novos arquivos, novos ±linhas) — reflita isso e atualize `in_review.files`.
-3. **No FIM da resposta, re-imprima a lista de revisão atualizada** (mesmo formato de 3 linhas `Faz`/`Revisar`/`Conecta`), para o usuário continuar de onde parou:
+3. **No FIM da resposta, re-imprima a lista de revisão atualizada** (mesmo formato: bloco por arquivo, cabeçalho em negrito + bullets, separados por linha em branco), para o usuário continuar de onde parou:
 
    ```
    Revisão (na ordem — continue de onde parou):
 
-   1. caminho/arquivo1.ts (criado, +N)
-      Faz: <...>.
-      Revisar: <...>.
-      Conecta: <...>.
-   ...
+   **1. caminho/arquivo1.ts** (criado, +N)
+   - Faz: <...>.
+   - Revisar: <...>.
+   - Conecta: <...>.
+
+   **2. caminho/arquivo2.ts** (editado, +N -M)
+   - Faz: <...>.
+   - Revisar: <...>.
+   - Conecta: <...>.
    ```
 
 - Se o usuário já disse quais arquivos revisou, mova o "comece por aqui" para o primeiro ainda **não** revisado (ou marque os revisados com ✓). Não force se não souber.

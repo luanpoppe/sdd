@@ -43,12 +43,18 @@ Estado da feature: <X de Y chunks concluídos> · onda com <k> chunks paralelos
 Revisão (na ordem — comece pelo topo):
 
 ### F<n>.C<a> — <título>
-1. caminho/arquivo1.ts (criado, +N)
-   Faz: <...>. / Revisar: <...>. / Conecta: <...>.
+
+**1. caminho/arquivo1.ts** (criado, +N)
+- Faz: <...>.
+- Revisar: <...>.
+- Conecta: <...>.
 
 ### F<n>.C<b> — <título>
-2. caminho/arquivo2.ts (criado, +N)
-   Faz: <...>. / Revisar: <...>. / Conecta: <...>.
+
+**2. caminho/arquivo2.ts** (criado, +N)
+- Faz: <...>.
+- Revisar: <...>.
+- Conecta: <...>.
 
 Validação (por chunk):
 - F<n>.C<a>: eslint ok · test N passing
