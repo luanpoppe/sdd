@@ -102,7 +102,8 @@
       padding: .8rem 1rem; overflow-x: auto; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     .detail pre + .block-label { margin-top: 1.1rem; }
     .detail .data { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: .8rem 1rem;
-      font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-x: auto; }
+      font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-x: auto;
+      white-space: pre-wrap; }   /* pre-wrap: um passo por linha (fonte com quebras de linha) */
     .detail .note { font-size: .8rem; color: var(--muted); margin-top: 1rem; font-style: italic; }
     /* Walkthrough-rico: subtítulos de passo/arquivo, prosa e badge com o nome do arquivo no code block */
     .detail h5 { margin: 1.2rem 0 .3rem; font-size: .9rem; font-weight: 650; color: var(--fg); }
@@ -161,7 +162,7 @@
         - <p class="what"> 1-2 frases: o papel deste chunk no fluxo
         - "Como funciona": <p class="block-label">Como funciona</p> + prosa curta + um <pre data-file="caminho/real.ext"><code>…</code></pre>
           por arquivo relevante, com os TRECHOS REAIS decisivos (não pseudo). ≤ ~15 linhas por bloco; corte o resto com "…".
-        - "Dados fluindo": <p class="block-label">Dados fluindo</p> + <div class="data"> com exemplo real (request/response, evento, ou valor antes→depois no caso de bug-fix)
+        - "Dados fluindo": <p class="block-label">Dados fluindo</p> + <div class="data"> com exemplo real, UM PASSO POR LINHA (o .data é pre-wrap; quebre as linhas no HTML, flush-left, `→` no início das transições) — não texto corrido
         - "Conecta": <p class="block-label">Conecta</p> + <ul> com quem chama/usa e pra onde aponta (nomes reais)
         - <p class="note"> opcional (ex: feito diferente do planejado)
       Escape `<` `>` `&` dentro do código. Passos longos podem usar <h5> por arquivo/etapa.
@@ -209,7 +210,9 @@ SecurityFilterChain chain(HttpSecurity http) throws Exception {
         .build();
 }</code></pre>
           <p class="block-label">Dados fluindo</p>
-          <div class="data">GET /me sem token → 401 · POST /auth/login → passa direto · GET /me com Bearer válido → segue pro controller</div>
+          <div class="data">GET /me sem token → 401
+POST /auth/login → passa direto (rota liberada)
+GET /me com Bearer válido → segue pro controller</div>
           <p class="block-label">Conecta</p>
           <ul>
             <li>Protege o <code>AuthController</code> (F1.C2) e todo endpoint autenticado à frente.</li>
@@ -226,7 +229,10 @@ ResponseEntity&lt;TokenResponse&gt; login(@Valid @RequestBody LoginRequest req) 
     return ResponseEntity.ok(loginUseCase.execute(req));
 }</code></pre>
           <p class="block-label">Dados fluindo</p>
-          <div class="data">POST /auth/login { "email": "a@b.com", "senha": "***" } → 200 { "token": "eyJ..." } · credenciais erradas → 401</div>
+          <div class="data">POST /auth/login { "email": "a@b.com", "senha": "***" }
+→ LoginUseCase valida credenciais
+→ 200 { "token": "eyJ..." }
+credenciais erradas → 401</div>
           <p class="block-label">Conecta</p>
           <ul>
             <li>Chama <code>LoginUseCase.execute()</code> (F1.C3), que ainda está pendente.</li>
