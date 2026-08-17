@@ -5,9 +5,22 @@ Objetivo: **manter o contexto do agente principal limpo**. As escritas dos próp
 ## Toggle
 
 - Config `scribe` no `.sdd/config.yaml`: `subagent` (padrão) ou `main`.
+- **AUSÊNCIA DO CAMPO = `subagent`.** Configs criados antes do `scribe` existir NÃO têm a linha — nesse caso o default é `subagent`, NÃO `main`. Nunca trate "campo ausente" como inline. Na dúvida (campo ausente/ilegível) → **subagent**.
 - `scribe: subagent` (padrão) → delega as escritas ao subagente escriba.
-- `scribe: main` → o agente principal escreve inline (comportamento clássico).
-- **Fallback**: se o ambiente não suporta lançar subagente, caia para inline e avise no plano de revisão (*"artefatos escritos no agente principal — subagente indisponível"*).
+- `scribe: main` → **só** quando o campo está explicitamente `main` no config → o principal escreve inline.
+- **Fallback**: só caia para inline se o ambiente realmente não suporta lançar subagente (a chamada de Agent/Task falha). Aí avise no plano de revisão (*"artefatos escritos no agente principal — subagente indisponível"*). "Preferir controle direto do YAML" NÃO é motivo válido de fallback.
+
+## Regra dura: tudo-ou-nada por passo
+
+Quando `scribe: subagent` (incl. ausência do campo), **TODAS** as escritas de artefato SDD do passo vão para o escriba, numa **única** chamada. É proibido delegar só uma parte (ex.: só os `.html` pesados) e fazer o resto inline. Especificamente, **estas escritas NÃO podem ser feitas inline pelo principal**:
+
+- marcar/editar checkboxes e metadados no `tasks.md` (e `tasks.html` se houver);
+- gerar/editar `plan.md`, `spec.md`, `diagnosis.md`, `solutions.md` (+ `.html`);
+- (re)gerar `flow.html`;
+- atualizar o `.sdd.yaml` (state, `current_chunk`, `in_review`, checkboxes de feature/chunk, `chosen_solution`);
+- gravar/editar `memory.md` (ou `memory/<tema>.md` + `memory-map.md`).
+
+Se você se pegar prestes a dar um `Write`/`Edit` num desses arquivos com `scribe: subagent`, **pare** e ponha essa escrita no pacote do escriba. O principal decide o conteúdo (inclusive o texto exato da entrada de memória e os campos do YAML) e passa tudo ao escriba numa chamada só.
 
 ## Divisão de responsabilidade (não-negociável)
 
@@ -45,3 +58,4 @@ Agrupe **todas as escritas de um passo** do fluxo (`lp:new`, cada `lp:continue`,
 - **Um subagente por passo**, agrupando as escritas — evita overhead de vários spawns.
 - **Fallback inline** sempre disponível (`scribe: main` ou ambiente sem subagente).
 - **Leituras de estado** (ler `.sdd.yaml`, specs, memória para decidir) continuam no principal — o escriba é só saída.
+- **Anti-padrão**: delegar só os `.html`/`flow.html` e fazer `tasks.md`/`.sdd.yaml`/`memory.md` inline "pra ter controle do estado". Isso é exatamente o que polui o contexto — é tudo-ou-nada no escriba.

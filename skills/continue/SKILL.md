@@ -5,7 +5,7 @@ description: Avança UM passo no SDD `lp:*` da mudança ativa. Fluxo SEQUENCIAL 
 
 Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../helpers/prompts/state-machine.md` e o estilo de grilling em `../../helpers/prompts/grill-snippet.md`.
 
-> **Escrita de artefatos (scribe)**: com `scribe: subagent` (default no `.sdd/config.yaml`), **todas as escritas de arquivo deste passo** — docs `.md`/`.html`, `flow.html`, `.sdd.yaml`, `memory.md` — são delegadas a um **subagente escriba** numa única chamada por passo. Você (principal) decide o conteúdo e imprime o plano de revisão; o escriba só renderiza/escreve e devolve a lista de arquivos. Siga `../../helpers/prompts/scribe-guide.md`. Isto é ortogonal ao `implementer` (que delega o **código** do chunk): num passo de `implementing`, o implementer escreve o código e o escriba faz a contabilidade do SDD (marcar `tasks.md`, regenerar `flow.html`, atualizar `.sdd.yaml`). Com `scribe: main` ou sem suporte a subagente → escreva inline.
+> **Escrita de artefatos (scribe)**: com `scribe: subagent` (default), **TODAS as escritas de arquivo deste passo** — docs `.md`/`.html`, `flow.html`, `.sdd.yaml`, `memory.md`, marcação de checkboxes no `tasks.md` — vão para um **subagente escriba** numa **única** chamada por passo. **Ausência do campo `scribe` no config = `subagent`** (não trate ausência como inline). É **tudo-ou-nada**: proibido delegar só os `.html`/`flow.html` e fazer `tasks.md`/`.sdd.yaml`/`memory.md` inline — se for dar `Write`/`Edit` num artefato do SDD, ponha no pacote do escriba. Você (principal) decide o conteúdo (inclusive o texto exato da memória e os campos do YAML) e imprime o plano de revisão; o escriba renderiza/escreve e devolve a lista. Siga `../../helpers/prompts/scribe-guide.md`. Ortogonal ao `implementer` (que delega o **código**): num passo de `implementing`, o implementer escreve o código e o escriba faz TODA a contabilidade do SDD. Só escreva inline com `scribe: main` explícito ou se a chamada de subagente realmente falhar (não por "preferir controle do YAML").
 
 ## 0. Pré-checagem
 
@@ -104,7 +104,9 @@ Coração da skill. Execute na ordem:
   - Rode o **comando de validação do projeto** (campo `Validação` do chunk / CLAUDE.md — lint/format da stack real, **não assuma eslint**) apenas nos arquivos editados.
   - Se o projeto exige (ver CLAUDE.md do projeto), rode os testes.
 
-> Em ambos os modos, os passos **a) auto-sync**, **d) marcar/registrar**, **e) diagrama**, **f) transição** e **g) plano de revisão** são sempre da conversa principal — o subagente só codifica o chunk e reporta. Execute d→e→f→g→h **nesta ordem**, e só então "Pare aqui".
+> Em ambos os modos, o principal **decide** a/d/e/f/g/h (o subagente implementer só codifica o chunk e reporta). Execute d→e→f→g→h **nesta ordem**, e só então "Pare aqui".
+>
+> **Atenção (scribe):** "ser do principal" = o principal DECIDE o quê escrever, **não** que ele dá `Write`/`Edit` inline. Com `scribe: subagent` (incl. campo ausente), as **escritas** de d) (`tasks.md`, `.sdd.yaml`), e) (`flow.html`) e g-bis) (`in_review`) + a de memória vão **todas juntas numa única chamada do escriba**, montada ao final (antes de imprimir o plano g). Não escreva nenhum desses inline. Ver a nota "Escrita de artefatos (scribe)" no topo e `../../helpers/prompts/scribe-guide.md`.
 
 **d) Marcar + registrar**:
 - tasks.md: marque os checkboxes do chunk (`Faz` e `Validação`) de `[ ]` → `[~]`. Os demais itens do chunk (`Arquivos`, `Depende de`, `Ordem de revisão`) são metadados em bullet simples, não checkboxes — não precisa marcar. Se o chunk tiver outros checkboxes, marque todos.
@@ -212,7 +214,7 @@ Vale enquanto há um chunk **em revisão**. A fonte de verdade é o `in_review` 
 
 Antes de fechar o turno, **revise a conversa** procurando sinais de preferência (correção, rejeição com alternativa, "lembra disso", "sempre/nunca faça X", padrão repetido). Siga `../../helpers/prompts/memory-guide.md`:
 
-1. **Detectou sinal claro** → classifique (Estilo/Processo ou Stack/Domínio), verifique duplicação, e **grave direto** em `.sdd/memory.md` (ou no arquivo de tema se houver `memory-map.md`). Sem perguntar.
+1. **Detectou sinal claro** → classifique (Estilo/Processo ou Stack/Domínio), verifique duplicação, e grave em `.sdd/memory.md` (ou no arquivo de tema se houver `memory-map.md`). Sem perguntar. **A escrita da memória entra no MESMO pacote do escriba** do passo (`scribe: subagent`/ausente) — você decide o texto exato da entrada; o escriba grava. Não edite `memory.md` inline.
 2. **Detectou sinal ambíguo** (classificação incerta, generalização duvidosa, ou conflito com entrada existente) → faça UMA pergunta curta.
 3. **Sempre** cite no plano de revisão: *"Memória: +1 em Estilo/Processo — `<resumo>`"* (ou "atualizei entrada existente").
 4. Se `memory.md` passar de ~150 linhas → **divida sozinho** em `.sdd/memory/<tema>.md` + `memory-map.md` e informe no plano de revisão.

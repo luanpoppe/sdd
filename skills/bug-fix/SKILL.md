@@ -5,7 +5,7 @@ description: Fluxo enxuto do SDD `lp:*` para corrigir um bug, mais curto e diret
 
 Você está iniciando um **bug-fix** no SDD `lp:*` — o fluxo enxuto para corrigir um bug (não uma implementação do zero). Siga `../../helpers/prompts/bugfix-machine.md` (máquina de estados) e o estilo de grilling em `../../helpers/prompts/grill-snippet.md`.
 
-> **Escrita de artefatos (scribe)**: com `scribe: subagent` (default), a escrita de `diagnosis`/`solutions`/`tasks.md` (+`.html`), `flow.html` e `.sdd.yaml` é delegada a um **subagente escriba** (uma chamada por passo). Você decide o conteúdo (causa raiz, opções, chunks); o escriba renderiza/escreve. Siga `../../helpers/prompts/scribe-guide.md`. Com `scribe: main` ou sem suporte a subagente → inline.
+> **Escrita de artefatos (scribe)**: com `scribe: subagent` (default; **campo ausente = subagent**), a escrita de `diagnosis`/`solutions`/`tasks.md` (+`.html`), `flow.html`, `.sdd.yaml` e `memory.md` é delegada a um **subagente escriba** numa única chamada por passo — tudo-ou-nada, nada inline. Você decide o conteúdo (causa raiz, opções, chunks); o escriba renderiza/escreve. Siga `../../helpers/prompts/scribe-guide.md`. Inline só com `scribe: main` explícito ou se a chamada de subagente falhar.
 
 ## 1. Pré-checagem
 

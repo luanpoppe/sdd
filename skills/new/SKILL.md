@@ -5,7 +5,7 @@ description: Inicia uma nova mudança no SDD `lp:*`. Cria `.sdd/changes/<id>/`, 
 
 Você está iniciando uma nova mudança no SDD `lp:*`. Siga `../../helpers/prompts/grill-snippet.md` para o estilo de grilling.
 
-> **Escrita de artefatos (scribe)**: com `scribe: subagent` (default), a escrita do `plan.md` (+`.html`), do `flow.html` e do `.sdd.yaml` é delegada a um **subagente escriba** (uma chamada, ao final). Você conduz o grill e decide o conteúdo; o escriba renderiza/escreve e devolve a lista de arquivos. Siga `../../helpers/prompts/scribe-guide.md`. Com `scribe: main` ou sem suporte a subagente → inline.
+> **Escrita de artefatos (scribe)**: com `scribe: subagent` (default; **campo ausente = subagent**), a escrita do `plan.md` (+`.html`), do `flow.html` e do `.sdd.yaml` é delegada a um **subagente escriba** numa única chamada, ao final — tudo-ou-nada, nada inline. Você conduz o grill e decide o conteúdo; o escriba renderiza/escreve e devolve a lista. Siga `../../helpers/prompts/scribe-guide.md`. Inline só com `scribe: main` explícito ou se a chamada de subagente falhar.
 
 ## 1. Pré-checagem
 
