@@ -68,6 +68,7 @@ Comandos do SDD `lp-*` (via marketplace: `lp:init`; via installer/Cursor: `/lp-i
   /lp-explain <tema>  Cria/atualiza HTML acumulativo por tema em explain/<tema>.html.
   /lp-flow       Gera/regenera o diagrama macro (flow.html) do fluxo de implementação.
   /lp-parallel [on|off]  Liga/desliga implementação paralela (chunks independentes, um subagente cada).
+  /lp-settings [campo valor]  Lista/altera as configs do .sdd/config.yaml (por campo/valor ou linguagem natural).
   /lp-memory [instrução]  Gerencia .sdd/memory.md (revisar, validar, editar, remover, dividir, mesclar).
   /lp-review [tema]   Revisão guiada de código existente. Tour em chunks pelo fluxo. Permite modificações inline.
   /lp-audit      Lista divergências entre docs e código da feature ativa. Não aplica nada sem OK.

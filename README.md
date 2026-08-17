@@ -1,6 +1,6 @@
 # SDD — `lp:*` para Claude Code
 
-Spec-driven development em 15 skills. Chunks micro revisáveis, fluxo sequencial por feature, fluxo enxuto de bug-fix (causa raiz → opções → correção), diagrama macro da implementação, implementação por subagentes (com modo paralelo opcional), memória autônoma, grilling anti-assunção e revisão guiada de código existente.
+Spec-driven development em 16 skills. Chunks micro revisáveis, fluxo sequencial por feature, fluxo enxuto de bug-fix (causa raiz → opções → correção), diagrama macro da implementação, implementação por subagentes (com modo paralelo opcional), memória autônoma, grilling anti-assunção e revisão guiada de código existente.
 
 ## Instalação
 
@@ -52,6 +52,7 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 | `lp:review` | Revisão guiada de código existente (walkthrough do fluxo real). |
 | `lp:flow` | Gera/regenera o diagrama macro (`flow.html`); nós implementados são clicáveis e abrem um mini-walkthrough (como funciona + código real + dados + conecta). Vale pra features e bug-fix. |
 | `lp:parallel` | Liga/desliga o modo paralelo (chunks independentes, um subagente cada). |
+| `lp:settings` | Lista e altera as configurações do `.sdd/config.yaml` (por campo/valor ou em linguagem natural). |
 | `lp:auto-update` | Atualiza as skills para a versão mais recente do GitHub. |
 | `lp:explain` | Gera explicação em HTML de um tópico. |
 | `lp:audit` | Detecta divergência entre spec e implementação. |
@@ -78,6 +79,8 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 
 > `flowchart`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue` e `parallel` não são perguntados no grill — vêm com o padrão e você edita no `.sdd/config.yaml` quando quiser (ou usa `lp:parallel`).
 
+Para ver/alterar qualquer config, use **`lp:settings`** (`/lp-settings` lista tudo; `/lp-settings chunk_size small` ou "muda o formato pra html" aplica).
+
 ## Estrutura do repositório
 
 ```
@@ -85,7 +88,7 @@ sdd/
 ├── .claude-plugin/
 │   ├── marketplace.json   # catálogo (este repo é o marketplace)
 │   └── plugin.json        # manifesto do plugin "lp"
-├── skills/                # 15 skills (dir + frontmatter name sem prefixo lp-)
+├── skills/                # 16 skills (dir + frontmatter name sem prefixo lp-)
 ├── helpers/
 │   ├── prompts/           # prompts compartilhados (grill, memória, state-machine, bugfix-machine, flowchart, parallel, scribe…)
 │   └── templates/         # templates de plan/spec/tasks/explain/flow + diagnosis/solutions (bug-fix) + styles.css
