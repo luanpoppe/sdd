@@ -12,6 +12,7 @@ Você está iniciando uma nova mudança no SDD `lp:*`. Siga `../../helpers/promp
 - Se `.sdd/config.yaml` não existir → diga ao usuário para rodar `/lp-init` primeiro. Pare.
 - Leia `.sdd/config.yaml` (formato, idioma, chunk size).
 - **Carregue a memória**: leia `.sdd/memory.md` (ou `.sdd/memory-map.md` + arquivos relevantes pelo título da mudança). Siga `../../helpers/prompts/memory-guide.md`. Regra crítica: itens de **Estilo/Processo** aplicam direto; itens de **Stack/Domínio** só viram pergunta de confirmação ("Vi na memória que você usa X — confirma para esta mudança?"). Memória NUNCA substitui grill.
+- **Carregue o contexto** (se `context: true`/ausente): leia `.sdd/context/index.md` e os arquivos das áreas que a mudança provavelmente toca — ajuda o grill a não perguntar o que já é sabido e a referenciar o que existe. Siga `../../helpers/prompts/context-guide.md`.
 - Pergunte o **id** da mudança (kebab-case curto) se não foi passado como argumento. Valide unicidade contra `.sdd/changes/` e `.sdd/archive/`.
 
 ## 2. Criar estrutura inicial

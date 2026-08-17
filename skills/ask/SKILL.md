@@ -10,6 +10,7 @@ Responda à pergunta do usuário usando como contexto a mudança ativa do SDD. *
 - Leia `.sdd/config.yaml`.
 - Identifique a mudança ativa (state ≠ archived). Se houver mais de uma, pergunte qual.
 - Leia o que for relevante: `plan.md`, specs aplicáveis, `tasks.md`. Não leia tudo se não precisar.
+- **Contexto do projeto** (se `context: true`/ausente): consulte `.sdd/context/index.md` e o arquivo da área da pergunta — costuma responder "como X funciona" direto. Ver `../../helpers/prompts/context-guide.md`.
 - Se necessário para responder, leia código do projeto referenciado nas docs.
 
 ## 2. Resposta

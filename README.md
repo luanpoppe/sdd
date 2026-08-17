@@ -1,6 +1,6 @@
 # SDD — `lp:*` para Claude Code
 
-Spec-driven development em 16 skills. Chunks micro revisáveis, fluxo sequencial por feature, fluxo enxuto de bug-fix (causa raiz → opções → correção), diagrama macro da implementação, implementação por subagentes (com modo paralelo opcional), memória autônoma, grilling anti-assunção e revisão guiada de código existente.
+Spec-driven development em 17 skills. Chunks micro revisáveis, fluxo sequencial por feature, fluxo enxuto de bug-fix (causa raiz → opções → correção), diagrama macro da implementação, base de conhecimento viva do projeto (`.sdd/context/`), implementação por subagentes (com modo paralelo opcional), memória autônoma, grilling anti-assunção e revisão guiada de código existente.
 
 ## Instalação
 
@@ -53,6 +53,7 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 | `lp:flow` | Gera/regenera o diagrama macro (`flow.html`); nós implementados são clicáveis e abrem um mini-walkthrough (como funciona + código real + dados + conecta). Vale pra features e bug-fix. |
 | `lp:parallel` | Liga/desliga o modo paralelo (chunks independentes, um subagente cada). |
 | `lp:settings` | Lista e altera as configurações do `.sdd/config.yaml` (por campo/valor ou em linguagem natural). |
+| `lp:context` | Base de conhecimento do projeto (`.sdd/context/`): health-check do índice/arquivos, dúvidas sobre como as coisas funcionam, documentar áreas. |
 | `lp:auto-update` | Atualiza as skills para a versão mais recente do GitHub. |
 | `lp:explain` | Gera explicação em HTML de um tópico. |
 | `lp:audit` | Detecta divergência entre spec e implementação. |
@@ -73,11 +74,12 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 | `flowchart` | `on` / `off` | `on` | Gera/atualiza o `flow.html` (diagrama macro). |
 | `implementer` | `subagent` / `main` | `subagent` | Quem implementa o **código** do chunk: subagente delegado ou a conversa principal. |
 | `scribe` | `subagent` / `main` | `subagent` | Quem **escreve os artefatos** do SDD (docs, `flow.html`, `.sdd.yaml`): subagente escriba (mantém o contexto principal limpo) ou inline na conversa principal. |
+| `context` | `true` / `false` | `true` | Mantém a **base de conhecimento** do projeto em `.sdd/context/` (como as funcionalidades funcionam + decisões) e lê o índice no início dos fluxos. `false` desliga. |
 | `tasks_format` | `md` / `follow` | `md` | Formato do `tasks`. `md`: só markdown, mesmo com `format` html/both. `follow`: acompanha o `format` global (gera `tasks.html` também). |
 | `tasks_autocontinue` | `on` / `off` | `on` | Após gerar o `tasks.md`, seguir direto pro 1º chunk sem pausar (`on`) ou pausar pro usuário revisar a granularidade e esperar `/lp-continue` (`off`). |
 | `parallel` | `on` / `off` | `off` | Chunks independentes em paralelo (um subagente cada). Ligar com `lp:parallel`. |
 
-> `flowchart`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue` e `parallel` não são perguntados no grill — vêm com o padrão e você edita no `.sdd/config.yaml` quando quiser (ou usa `lp:parallel`).
+> `flowchart`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue`, `context` e `parallel` não são perguntados no grill — vêm com o padrão e você edita no `.sdd/config.yaml` quando quiser (ou usa `lp:parallel`).
 
 Para ver/alterar qualquer config, use **`lp:settings`** (`/lp-settings` lista tudo; `/lp-settings chunk_size small` ou "muda o formato pra html" aplica).
 
@@ -88,9 +90,9 @@ sdd/
 ├── .claude-plugin/
 │   ├── marketplace.json   # catálogo (este repo é o marketplace)
 │   └── plugin.json        # manifesto do plugin "lp"
-├── skills/                # 16 skills (dir + frontmatter name sem prefixo lp-)
+├── skills/                # 17 skills (dir + frontmatter name sem prefixo lp-)
 ├── helpers/
-│   ├── prompts/           # prompts compartilhados (grill, memória, state-machine, bugfix-machine, flowchart, parallel, scribe…)
+│   ├── prompts/           # prompts compartilhados (grill, memória, context, state-machine, bugfix-machine, flowchart, parallel, scribe…)
 │   └── templates/         # templates de plan/spec/tasks/explain/flow + diagnosis/solutions (bug-fix) + styles.css
 ├── bin/install.js         # installer cross-tool (npx github:luanpoppe/sdd)
 ├── package.json           # @luanpoppe/sdd (publicação npm)

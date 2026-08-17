@@ -8,7 +8,8 @@ Você está dando ao usuário um status report do SDD. **Apenas LEITURA** — nu
 ## 1. Coleta
 
 - Existe `.sdd/config.yaml`? Se não → "SDD não inicializado. Rode `/lp-init`." Pare.
-- Leia TODOS os campos do config: `format`, `lang`, `chunk_size`, `context_watch`, `flowchart`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue`, `parallel` (trate ausentes com o default: `flowchart: on`, `implementer: subagent`, `scribe: subagent`, `tasks_format: md`, `tasks_autocontinue: on`, `parallel: off`).
+- Leia TODOS os campos do config: `format`, `lang`, `chunk_size`, `context_watch`, `flowchart`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue`, `context`, `parallel` (trate ausentes com o default: `flowchart: on`, `implementer: subagent`, `scribe: subagent`, `tasks_format: md`, `tasks_autocontinue: on`, `context: true`, `parallel: off`).
+- Se `context: true`/ausente e `.sdd/context/index.md` existir: conte quantas áreas estão documentadas (linhas do índice) — reporte no status.
 - Liste pastas em `.sdd/changes/` (mudanças ativas) e conte `.sdd/archive/`.
 - Liste reviews ativos em `.sdd/reviews/` (criados por `lp:review`), se houver, com o `state`.
 - Verifique `.sdd/memory.md` (ou `.sdd/memory-map.md`): conte entradas por seção.
@@ -22,7 +23,7 @@ Formato sugerido:
 
 ```
 SDD: <projeto>
-Config: format=<f> · lang=<l> · chunk_size=<c> · flowchart=<on/off> · implementer=<subagent/main> · scribe=<subagent/main> · tasks_format=<md/follow> · tasks_autocontinue=<on/off> · parallel=<on/off>
+Config: format=<f> · lang=<l> · chunk_size=<c> · flowchart=<on/off> · implementer=<subagent/main> · scribe=<subagent/main> · tasks_format=<md/follow> · tasks_autocontinue=<on/off> · context=<true/false> · parallel=<on/off>
 
 Mudança ativa: <id> — <title>
 Estado: <state>  ·  atualizado em <updated>
@@ -69,6 +70,7 @@ Comandos do SDD `lp-*` (via marketplace: `lp:init`; via installer/Cursor: `/lp-i
   /lp-flow       Gera/regenera o diagrama macro (flow.html) do fluxo de implementação.
   /lp-parallel [on|off]  Liga/desliga implementação paralela (chunks independentes, um subagente cada).
   /lp-settings [campo valor]  Lista/altera as configs do .sdd/config.yaml (por campo/valor ou linguagem natural).
+  /lp-context [pergunta|ação]  Base de conhecimento do projeto (.sdd/context/): health-check, dúvidas, documentar áreas.
   /lp-memory [instrução]  Gerencia .sdd/memory.md (revisar, validar, editar, remover, dividir, mesclar).
   /lp-review [tema]   Revisão guiada de código existente. Tour em chunks pelo fluxo. Permite modificações inline.
   /lp-audit      Lista divergências entre docs e código da feature ativa. Não aplica nada sem OK.

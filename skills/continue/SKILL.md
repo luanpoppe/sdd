@@ -18,6 +18,7 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
 - **Leia `in_review`**: se preenchido, há um chunk aguardando revisão (pode ser de uma conversa anterior). Uma invocação normal de `/lp-continue` significa que o usuário **aprovou** essa revisão → limpe `in_review` (`null`) e siga para o próximo chunk/onda. Perguntas/ajustes sem `/lp-continue` caem na seção "Durante a revisão de um chunk".
 - **NÃO leia specs de outras features** — elas podem nem existir ainda.
 - **Carregue a memória**: leia `.sdd/memory.md` (ou `.sdd/memory-map.md` se existir; nesse caso, leia também os arquivos de tema que parecem relevantes pelo título da feature ativa). Siga `../../helpers/prompts/memory-guide.md`.
+- **Carregue o contexto do projeto** (se `context: true`/ausente no config): leia `.sdd/context/index.md`. Se a feature ativa toca uma área listada, leia também o arquivo de contexto dela antes de decidir/implementar. É a 1ª parada para "como isso funciona hoje?". Siga `../../helpers/prompts/context-guide.md`.
 
 ## 1. Despache por estado
 
@@ -117,6 +118,7 @@ Coração da skill. Execute na ordem:
 **f) Transição "feature concluída"**:
 - Se todos os chunks da `current_feature` estão `[~]`/`[x]`:
   - Marque a feature como `done` no `.sdd.yaml`. Limpe `current_feature` e `current_chunk`.
+  - **Contexto do projeto** (se `context: true`/ausente): crie/atualize o arquivo de contexto dessa feature em `.sdd/context/` (o que é / como funciona / decisões e porquês da spec+plan+auto-sync / notas) e atualize o(s) índice(s). Segue `../../helpers/prompts/context-guide.md`. **Entra no pacote do escriba** deste passo (não escreva inline). Cite no plano: *"Contexto: +1 área `<slug>` em .sdd/context/"*.
   - Se há próxima feature `pending`: `state: awaiting-feature-spec`. Imprima: *"Feature `<X>` concluída (em revisão). Próximo `/lp-continue` inicia a feature `<Y>` (spec)."*
   - Senão: `state: awaiting-archive`. Sugira `/lp-archive`.
 - O resultado desta transição define a linha "Próximo:" do plano de revisão (passo g).

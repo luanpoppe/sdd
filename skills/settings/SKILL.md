@@ -21,6 +21,7 @@ Você gerencia as configurações do SDD da mudança/projeto atual. Edita **apen
 | `flowchart` | `on` / `off` | `on` | Gera/atualiza o `flow.html` (diagrama macro). |
 | `implementer` | `subagent` / `main` | `subagent` | Quem implementa o **código** do chunk: subagente ou a conversa principal. |
 | `scribe` | `subagent` / `main` | `subagent` | Quem **escreve os artefatos** (docs, `flow.html`, `.sdd.yaml`): subagente escriba ou inline. |
+| `context` | `true` / `false` | `true` | Mantém `.sdd/context/` (base de conhecimento do projeto) e lê o índice no início dos fluxos. `false` desliga tudo de contexto. |
 | `tasks_format` | `md` / `follow` | `md` | Formato do `tasks`. `md`: só markdown. `follow`: acompanha o `format` global. |
 | `tasks_autocontinue` | `on` / `off` | `on` | Após gerar o `tasks.md`, seguir direto pro 1º chunk (`on`) ou pausar pra revisão (`off`). |
 | `parallel` | `on` / `off` | `off` | Chunks independentes em paralelo (um subagente cada). Também alternável por `lp:parallel`. |
@@ -41,6 +42,7 @@ Configurações do SDD (.sdd/config.yaml):
   flowchart=<v>           (on | off)
   implementer=<v>         (subagent | main)
   scribe=<v>              (subagent | main)
+  context=<v>             (true | false)
   tasks_format=<v>        (md | follow)
   tasks_autocontinue=<v>  (on | off)
   parallel=<v>            (on | off)

@@ -57,6 +57,8 @@ Crie no diretório do projeto:
   memory.md            # esqueleto vazio com 2 seções (Estilo/Processo e Stack/Domínio)
   changes/             # vazio
   archive/             # vazio
+  context/             # base de conhecimento do projeto (só se context: true)
+    index.md           # índice mestre (esqueleto; populado no passo 3-bis)
 ```
 
 O `memory.md` começa assim (preserve esse formato):
@@ -88,6 +90,7 @@ lang: <pt-BR|en>
 chunk_size: <micro|small|medium|large|xlarge>
 context_watch: <suggest|auto|off>
 flowchart: <on|off>
+context: true           # true (padrão): mantém .sdd/context/ (base de conhecimento do projeto por funcionalidade) e lê o índice no início dos fluxos | false: desliga. Ver helpers/prompts/context-guide.md.
 implementer: subagent   # subagent (padrão): lp:continue delega a implementação do chunk a um subagente | main: a conversa principal implementa
 scribe: subagent        # subagent (padrão): as escritas de artefato do SDD (docs, flow.html, .sdd.yaml) vão para um subagente escriba, mantendo o contexto principal limpo | main: o principal escreve inline. Ver helpers/prompts/scribe-guide.md.
 tasks_format: md        # md (padrão): o tasks.md sai só em markdown, mesmo com format=html/both | follow: o tasks acompanha o format global (gera tasks.html também).
@@ -96,9 +99,17 @@ parallel: off           # off (padrão): um chunk por vez | on: chunks independe
 created: <YYYY-MM-DD>
 ```
 
-> **`implementer`, `scribe`, `tasks_format`, `tasks_autocontinue` e `parallel` NÃO são perguntados no grill** — gravados com os defaults acima. `implementer: main` faz a conversa principal implementar o código. `scribe: main` faz o principal escrever os artefatos inline. `tasks_format: follow` faz o `tasks` acompanhar o `format` global (gera `tasks.html`). `tasks_autocontinue: off` faz o `lp:continue` pausar após o `tasks.md` (em vez de seguir direto pro 1º chunk). `parallel: on` (ou `lp:parallel`) liga o modo paralelo; mesmo com `off`, o `lp:continue` pergunta uma vez antes do 1º chunk se você quer paralelizar. Quem quiser, edita esses campos no `.sdd/config.yaml` depois.
+> **`context`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue` e `parallel` NÃO são perguntados no grill** — gravados com os defaults acima. `context: false` desliga a base de conhecimento. `implementer: main` faz a conversa principal implementar o código. `scribe: main` faz o principal escrever os artefatos inline. `tasks_format: follow` faz o `tasks` acompanhar o `format` global (gera `tasks.html`). `tasks_autocontinue: off` faz o `lp:continue` pausar após o `tasks.md` (em vez de seguir direto pro 1º chunk). `parallel: on` (ou `lp:parallel`) liga o modo paralelo; mesmo com `off`, o `lp:continue` pergunta uma vez antes do 1º chunk se você quer paralelizar. Quem quiser, edita esses campos no `.sdd/config.yaml` depois (ou via `lp:settings`).
 
 Se `format` ∈ {html, both}: copie `../../helpers/templates/styles.css` para `.sdd/assets/styles.css` e pergunte se o usuário quer ajustar o esquema de cores (caso sim, faça um mini-grill sobre cor primária/fundo e edite o CSS).
+
+## 3-bis. Bootstrap do contexto (só se `context: true`)
+
+Semeie a base de conhecimento em `.sdd/context/` seguindo `../../helpers/prompts/context-guide.md`:
+
+- **Projeto pré-existente** (já tem código): rode uma análise **macro** — com `scribe: subagent` (default/ausente), delegue a um **subagente** que (a) mapeia os principais módulos/funcionalidades do projeto e (b) escreve o `.sdd/context/index.md` + um arquivo de contexto por funcionalidade principal (formato do guia: o que é / como funciona / decisões / notas), agrupando em subpasta quando um tema junta vários. O subagente retorna só a lista de arquivos criados. Não desça a detalhe linha a linha — é contexto macro.
+- **Projeto novo/vazio**: crie só o `index.md` esqueleto (cabeçalho + seção "Áreas / funcionalidades" vazia). O contexto cresce conforme os fluxos (`lp:continue`/`lp:bug-fix`/`lp:review`) forem implementando/revisando.
+- Cite no resumo final quantos arquivos de contexto foram semeados.
 
 ## 4. Mensagem final
 

@@ -18,7 +18,8 @@ Quando `scribe: subagent` (incl. ausência do campo), **TODAS** as escritas de a
 - gerar/editar `plan.md`, `spec.md`, `diagnosis.md`, `solutions.md` (+ `.html`);
 - (re)gerar `flow.html`;
 - atualizar o `.sdd.yaml` (state, `current_chunk`, `in_review`, checkboxes de feature/chunk, `chosen_solution`);
-- gravar/editar `memory.md` (ou `memory/<tema>.md` + `memory-map.md`).
+- gravar/editar `memory.md` (ou `memory/<tema>.md` + `memory-map.md`);
+- criar/editar arquivos e índices em `.sdd/context/` (base de conhecimento — ver `./context-guide.md`).
 
 Se você se pegar prestes a dar um `Write`/`Edit` num desses arquivos com `scribe: subagent`, **pare** e ponha essa escrita no pacote do escriba. O principal decide o conteúdo (inclusive o texto exato da entrada de memória e os campos do YAML) e passa tudo ao escriba numa chamada só.
 

@@ -37,6 +37,9 @@ A **ordem da lista** define a ordem de execução. Não embaralhar.
 .sdd/
   memory.md                     # preferências persistentes (Estilo/Processo, Stack/Domínio)
                                 # OU memory-map.md + memory/<tema>.md quando dividido
+  context/                      # base de conhecimento do projeto (context: true) — ver context-guide.md
+    index.md                    # índice mestre (aponta p/ todo arquivo de contexto)
+    <area>.md                   # como cada funcionalidade funciona + decisões
   changes/<id>/
     .sdd.yaml
     plan.md                     # contexto + decisões macro + LISTA de features (1 frase cada)
@@ -49,6 +52,8 @@ A **ordem da lista** define a ordem de execução. Não embaralhar.
 ```
 
 > A memória vive no nível do **projeto** (`.sdd/memory.md`), não dentro de cada mudança. Persiste entre mudanças. Veja `./memory-guide.md`.
+
+> **Contexto** (`.sdd/context/`, se `context: true`/ausente): base de conhecimento por funcionalidade, no nível do projeto. Todo fluxo lê o `index.md` no início; features/bug-fix/review concluídos gravam/atualizam o contexto da área. Ver `./context-guide.md`. Não confundir com memória (preferências) nem com specs (detalhe de uma mudança).
 
 > **Não existe `tasks.md` global.** Cada feature tem seu próprio `specs/<slug>/tasks.md`.
 

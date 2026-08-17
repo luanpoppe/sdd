@@ -51,12 +51,14 @@ Após o grill, vá para seção 2.
 
 - Texto descrevendo tema (ex: `/lp-review como funciona o login`) → trate como resposta de Q1, pergunte Q2 e Q3 juntas num batch.
 - `pause` / `pausar` → marca review ativo como `state: paused` e termina.
-- `end` / `encerrar` / `terminar` → marca como `state: done`. Sugere o que fazer a seguir (ler walkthrough, abrir `/lp-new` se quiser refatorar).
+- `end` / `encerrar` / `terminar` → marca como `state: done`. **Contexto** (se `context: true`/ausente): destile o walkthrough num arquivo de contexto macro da área revisada em `.sdd/context/` (o que é / como funciona / decisões / notas) + atualize o índice — via escriba. Review é fonte ideal de contexto. Ver `../../helpers/prompts/context-guide.md`. Sugere o que fazer a seguir (ler walkthrough, abrir `/lp-new` se quiser refatorar).
 - `list` / `listar` → mostra reviews em `.sdd/reviews/` com state.
 
 ## 2. Exploração + plano do walkthrough
 
 > Esta fase só roda no primeiro `/lp-review` da sessão (após o grill inicial).
+
+0. **Contexto do projeto** (se `context: true`/ausente): leia `.sdd/context/index.md` e o arquivo da área revisada, se existir — pode adiantar boa parte do entendimento. Siga `../../helpers/prompts/context-guide.md`.
 
 1. **Explore o código** relacionado ao tema. Use Glob, Grep, Read agressivamente. Considere lançar agentes Explore em paralelo se o escopo for amplo.
 
