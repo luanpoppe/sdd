@@ -72,9 +72,11 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 | `flowchart` | `on` / `off` | `on` | Gera/atualiza o `flow.html` (diagrama macro). |
 | `implementer` | `subagent` / `main` | `subagent` | Quem implementa o **código** do chunk: subagente delegado ou a conversa principal. |
 | `scribe` | `subagent` / `main` | `subagent` | Quem **escreve os artefatos** do SDD (docs, `flow.html`, `.sdd.yaml`): subagente escriba (mantém o contexto principal limpo) ou inline na conversa principal. |
+| `tasks_format` | `md` / `follow` | `md` | Formato do `tasks`. `md`: só markdown, mesmo com `format` html/both. `follow`: acompanha o `format` global (gera `tasks.html` também). |
+| `tasks_autocontinue` | `on` / `off` | `on` | Após gerar o `tasks.md`, seguir direto pro 1º chunk sem pausar (`on`) ou pausar pro usuário revisar a granularidade e esperar `/lp-continue` (`off`). |
 | `parallel` | `on` / `off` | `off` | Chunks independentes em paralelo (um subagente cada). Ligar com `lp:parallel`. |
 
-> `flowchart`, `implementer`, `scribe` e `parallel` não são perguntados no grill — vêm com o padrão e você edita quando quiser (ou usa `lp:parallel`).
+> `flowchart`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue` e `parallel` não são perguntados no grill — vêm com o padrão e você edita no `.sdd/config.yaml` quando quiser (ou usa `lp:parallel`).
 
 ## Estrutura do repositório
 

@@ -63,10 +63,11 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
    - `xlarge`: até 10 arquivos OU ~700-1000 linhas.
 4. IDs no formato `F<n>.C<m>` onde n = índice (1-based) da feature na lista do plan.md, m = chunk dentro da feature.
 5. **Cada chunk DEVE incluir**: arquivos tocados, resumo de 1 frase, **`Depende de:`** (IDs de chunks que precisam vir antes, ou "nenhum" — habilita o modo paralelo a saber o que é independente), ordem de revisão, comando de validação. Na dúvida, **parta em dois**.
-5-bis. **Respeite o `format`**: se `format` ∈ {html, both}, gere também `specs/<current_feature>/tasks.html` usando `../../helpers/templates/tasks.html.tpl` (espelha o `.md`, um bloco por chunk com `data-status`). Atualize o status no `.html` a cada chunk implementado.
+5-bis. **Formato do tasks segue `tasks_format`** (default `md`), NÃO o `format` global. Só gere `specs/<current_feature>/tasks.html` (`../../helpers/templates/tasks.html.tpl`, espelho com `data-status` por chunk) se `tasks_format: follow` **e** `format` ∈ {html, both}. Com `tasks_format: md` (default), gere **só o `tasks.md`** — mesmo que `format` seja html/both. (Ausente → `md`.)
 6. Atualize `.sdd.yaml`: feature `tasking` → `implementing`, state global → `implementing`, `updated`.
 6-bis. Se `flowchart: on`, atualize `flow.html` (`../../helpers/prompts/flowchart-guide.md`) — **expanda a feature nos nós de componente** (um por chunk), todos `pending`.
-7. Imprima plano de revisão das tasks (lista de chunks + estimativa de tamanho de cada). Avise: *"Valide a granularidade antes de seguir. Próximo `/lp-continue` executa o chunk F<n>.C1."*
+7. **Auto-continua por padrão** (`tasks_autocontinue`, default `on`): NÃO pause pedindo aprovação do tasks. Imprima uma linha curta (*"tasks.md gerado (N chunks, chunk_size=<x>) — seguindo direto pro F<n>.C1"*) e **siga na mesma invocação para o estado `implementing`**, executando o 1º chunk (seção `implementing` abaixo, passos a–h). O turno termina no plano de revisão DO CHUNK, não no do tasks.
+   - Se `tasks_autocontinue: off`: comportamento clássico — imprima o plano de revisão das tasks (lista de chunks + tamanho de cada), avise *"Valide a granularidade. Próximo `/lp-continue` executa o chunk F<n>.C1."* e **pare aqui**.
 
 ### `implementing`
 
@@ -222,6 +223,6 @@ Antes de fechar o turno, **revise a conversa** procurando sinais de preferência
 2. **Um passo por invocação.** Mesmo que o usuário peça "faz tudo", redirecione: "no SDD, cada passo é um `/lp-continue` para que você possa revisar".
 3. **Grilling agressivo na criação da spec**, mínimo na criação das tasks (se a spec resolveu as dúvidas).
 4. **Auto-sync antes de implementar.** Nunca codifique sobre docs desatualizadas.
-4-bis. **Respeite o `format` em TODA doc gerada.** `format: both` ou `html` → spec e tasks saem em `.md` E `.html`, não só `.md`. Antes de fechar o passo, confira o `format` e o padrão das docs anteriores da mudança.
+4-bis. **Respeite o `format` nas docs de conteúdo** (`plan`, `spec`): `format: both`/`html` → saem em `.md` E `.html`. **Exceção: `tasks` segue `tasks_format`** (default `md` → só `.md`, mesmo com `format` html/both). Antes de fechar o passo, confira o `format`/`tasks_format` e o padrão das docs anteriores.
 5. **Plano de revisão sempre.** Sem exceções.
 6. **Não leia specs de outras features** que ainda não foram processadas — elas não existem.
