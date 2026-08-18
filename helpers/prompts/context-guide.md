@@ -12,16 +12,23 @@ Objetivo: manter uma **base de conhecimento viva** de COMO o projeto funciona �
 
 ```
 .sdd/context/
-  index.md                 # índice MESTRE: aponta para todo arquivo de contexto, 1 frase cada
-  <area>.md                # um arquivo por funcionalidade/área
-  <tema>/                  # subpasta opcional, agrupa arquivos de um tema
-    index.md               # sub-índice (só quando a subpasta cresce)
-    <area>.md
+  index.md                        # índice MESTRE
+  <dominio>/                      # subpasta por domínio/funcionalidade (preferir!)
+    index.md                      # sub-índice (quando a subpasta tem ≥ ~3 arquivos)
+    <aspecto-especifico>.md       # ex: output-dto.md, prompt-agent.md, cache-redis.md
+  <area-avulsa-de-topo>.md        # só p/ área única e realmente de topo, com nome específico
 ```
 
 - **Formato: sempre markdown** (independe do `format` global — igual à memória).
-- O agente **decide** quando agrupar em subpasta (quando um tema junta ≥ ~3 arquivos relacionados). Ao mover um arquivo para subpasta, **atualize o índice** (mestre e/ou o sub-índice) na mesma tacada.
-- **Índice grande**: se o `index.md` mestre passar de ~150 linhas, quebre por tema em `<tema>/index.md` e faça o mestre apontar para os sub-índices (não liste cada arquivo no mestre nesse caso — liste os sub-índices).
+
+### Nomes e organização (importante)
+
+- **Nomes específicos e descritivos do DOMÍNIO real** — nunca genéricos nem o slug interno do SDD. Ruim (na raiz): `output-dto.md`, `prompt-agent.md`, `feature-1.md`. Bom: nome que diz de QUAL coisa é o contexto (`mapa-estruturado-decisao-output-dto.md`) ou, de preferência, dentro da subpasta do domínio (`mapa-estruturado-decisao/output-dto.md`, `mapa-estruturado-decisao/prompt-agent.md`).
+- **Prefira agrupar por domínio/funcionalidade numa subpasta** a espalhar arquivos soltos na raiz. Uma mudança (`lp:new`/`lp:bug-fix`) quase sempre gera contexto de UM domínio → crie/use `.sdd/context/<dominio>/` e ponha os arquivos daquele domínio lá (um por aspecto: DTO, agente, endpoint, persistência…). A **raiz** fica reservada ao `index.md` mestre (e, no máximo, a uma área única e genuinamente de topo, com nome específico).
+- **Não use o slug da feature/chunk como nome de arquivo na raiz.** O slug (`output-dto`, `prompt-agent`) vira o nome do arquivo **dentro** da subpasta do domínio, onde o caminho já dá o contexto (`<dominio>/output-dto.md`), ou ganha um nome próprio descritivo.
+- O agente **decide** a subpasta pelo domínio da mudança. Ao criar o 1º arquivo de um domínio, já crie a subpasta `<dominio>/`. Quando a subpasta chega a ≥ ~3 arquivos, adicione um `<dominio>/index.md` (sub-índice) e faça o mestre apontar pra ele.
+- Ao mover/renomear qualquer arquivo, **atualize o(s) índice(s)** na mesma tacada.
+- **Índice grande**: se o `index.md` mestre passar de ~150 linhas, liste os sub-índices por domínio no lugar de cada arquivo.
 
 ## Formato do índice (`index.md`)
 
@@ -61,9 +68,9 @@ Mantenha **macro e curto**. É contexto, não spec nem walkthrough linha a linha
 
 ## Quando criar / atualizar
 
-- **`lp:init` (projeto pré-existente, `context: true`)**: um subagente analisa o **macro** do projeto (principais módulos/funcionalidades) e semeia o `index.md` + arquivos de contexto de topo. Projeto novo/vazio: só cria o `index.md` esqueleto; o resto cresce com os fluxos.
-- **`lp:continue` — ao CONCLUIR uma feature**: crie/atualize o arquivo de contexto daquela feature (o que é, como funciona, decisões da spec/plan/auto-sync). Entra no pacote do escriba do passo.
-- **`lp:bug-fix` — ao concluir a correção**: atualize o contexto da área afetada com a causa raiz e a decisão de correção (ou crie o arquivo se a área ainda não existir).
+- **`lp:init` (projeto pré-existente, `context: true`)**: um subagente analisa o **macro** do projeto e semeia o `index.md` + contexto **agrupado por domínio em subpastas** (`<dominio>/...`), com nomes específicos. Projeto novo/vazio: só cria o `index.md` esqueleto; o resto cresce com os fluxos.
+- **`lp:continue` — ao CONCLUIR uma feature**: crie/atualize o contexto daquela feature **sob a subpasta do domínio** (`.sdd/context/<dominio>/<aspecto>.md`), com nome específico (não use o slug solto na raiz). O que é, como funciona, decisões da spec/plan/auto-sync. Entra no pacote do escriba do passo, junto com a atualização do índice.
+- **`lp:bug-fix` — ao concluir a correção**: atualize o contexto da área afetada (na subpasta do domínio) com a causa raiz e a decisão de correção (ou crie, se a área ainda não existir).
 - **`lp:review` — conforme a revisão avança**: registre no contexto a área revisada (review = entendimento → fonte ideal de contexto).
 - Sempre que criar/mover/renomear um arquivo → **atualize o(s) índice(s)** no mesmo passo.
 

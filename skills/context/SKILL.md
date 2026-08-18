@@ -16,6 +16,7 @@ Você gerencia a base de conhecimento do projeto em `.sdd/context/`. Siga `../..
 Percorra `.sdd/context/` e reporte:
 
 - **Índice x arquivos**: entradas no índice sem arquivo correspondente (link quebrado); arquivos `.md` que existem mas **não** estão em nenhum índice (órfãos); subpastas com ≥ ~3 arquivos **sem** `index.md` próprio; `index.md` mestre grande (> ~150 linhas) que deveria virar sub-índices.
+- **Organização/nomes**: arquivos soltos na raiz (fora de subpasta de domínio) que deveriam estar agrupados; **nomes genéricos ou slug interno do SDD** na raiz (ex: `output-dto.md`, `prompt-agent.md`, `feature-1.md`) — deveriam ser específicos ou morar em `<dominio>/`. Proponha a reorganização (mover pra subpasta do domínio + ajustar índice). Ver `../../helpers/prompts/context-guide.md`.
 - **Frescor**: arquivos cuja descrição no índice não bate com o conteúdo; áreas obviamente implementadas (há mudanças arquivadas/features done) mas **sem** arquivo de contexto.
 - **Resumo**: liste as áreas documentadas (1 linha cada) — o mapa atual do projeto.
 
