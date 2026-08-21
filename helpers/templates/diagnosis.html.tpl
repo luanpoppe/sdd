@@ -28,12 +28,14 @@
 
     <details class="lp-sec" id="resumo" open>
       <summary><h2>Resumo</h2></summary>
+      <!-- 1 frase de NEGÓCIO: o bug + por que importa. SEM números específicos, SEM mecanismo/causa. -->
       <p>{{resumo}}</p>
     </details>
 
     <details class="lp-sec" id="sintomas" open>
       <summary><h2>Sintomas e reprodução</h2></summary>
       <ul>
+        <!-- Sintoma: EVIDÊNCIA BRUTA concreta (números exatos, print, mensagem literal). NÃO reformule o Resumo — se só repetiria, corte a linha. -->
         <li><strong>Sintoma</strong>: {{sintoma}}</li>
         <li><strong>Esperado</strong>: {{esperado}}</li>
         <li><strong>Reprodução</strong>: {{passos_repro}}</li>

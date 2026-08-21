@@ -5,11 +5,11 @@
 
 ## Resumo
 
-{{resumo}}   <!-- 1-2 frases: qual é o bug, em linguagem que qualquer um do time entende. NÃO detalhe código aqui. -->
+{{resumo}}   <!-- 1 frase de NEGÓCIO: qual é o bug + por que importa. SEM números específicos, SEM mecanismo/causa (isso é Sintoma e Causa raiz). NÃO detalhe código. -->
 
 ## Sintomas e reprodução
 
-- **Sintoma**: {{sintoma}}   <!-- o que se vê de errado -->
+- **Sintoma**: {{sintoma}}   <!-- EVIDÊNCIA BRUTA concreta: números exatos, print, mensagem literal (ex: `chat: "entre 20 membros" · painel TIME: 19 nomes`). NÃO reformule o Resumo em prosa — se só repetiria, corte esta linha. -->
 - **Esperado**: {{esperado}}
 - **Reprodução**: {{passos_repro}}   <!-- 1 linha: passos mínimos, ou "não determinística" + o que se sabe -->
 - **Escopo**: {{escopo}}   <!-- 1 linha: onde acontece (prod/local, desde quando, dado específico) -->

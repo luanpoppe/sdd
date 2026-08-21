@@ -69,7 +69,7 @@ Reusa o **mesmo motor** da seção `implementing` de `../../skills/continue/SKIL
 ## Princípios
 
 - **Curto e direto.** É bug-fix, não implementação do zero. `diagnosis.md` cabe em ~1 tela; opções em poucas telas; nada de spec BDD completa.
-- **Zero repetição no diagnóstico.** Investigação = evidência, uma linha por passo (`arquivo:linha — fato`, sem "olhei/constatei", sem recontar o código). Causa raiz = síntese pura, 1-3 frases, proibido repetir fato/arquivo já dito na Investigação. Antes de gravar, releia e corte qualquer frase que repita outra seção. Ver `../templates/diagnosis.*.tpl`.
+- **Zero repetição no diagnóstico.** Cada seção tem um papel distinto: Resumo = negócio (o quê + por que importa, sem números/mecanismo); Sintoma = evidência bruta concreta (números/print/mensagem literal, não reformula o Resumo); Investigação = trilha, uma linha por passo (`arquivo:linha — fato`, sem "olhei/constatei", sem recontar o código); Causa raiz = síntese pura, 1-3 frases, proibido repetir fato/arquivo já dito na Investigação. Antes de gravar, releia e corte qualquer frase que repita outra seção. Ver `../templates/diagnosis.*.tpl`.
 - **Causa antes de solução.** Não pule para o fix sem causa raiz no `diagnosis.md`.
 - **Uma escolha explícita.** A opção de correção é decisão do usuário (registrada em `chosen_solution`), nunca silenciosa.
 - **Um passo por `lp:continue`.** Igual ao fluxo normal — o usuário revisa entre etapas.
