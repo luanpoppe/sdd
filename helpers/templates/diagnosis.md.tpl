@@ -11,18 +11,18 @@
 
 - **Sintoma**: {{sintoma}}   <!-- o que se vê de errado -->
 - **Esperado**: {{esperado}}
-- **Reprodução**: {{passos_repro}}   <!-- passos mínimos, ou "não determinística" + o que se sabe -->
-- **Escopo**: {{escopo}}   <!-- onde acontece: prod/local, desde quando, dado específico -->
+- **Reprodução**: {{passos_repro}}   <!-- 1 linha: passos mínimos, ou "não determinística" + o que se sabe -->
+- **Escopo**: {{escopo}}   <!-- 1 linha: onde acontece (prod/local, desde quando, dado específico) -->
 
 ## Investigação
 
-<!-- A EVIDÊNCIA: a trilha que levou à causa. Um bullet por passo, formato "olhei X → constatei Y". Cite arquivo:linha uma vez cada. Só o que sustenta a causa — não narre o código inteiro. -->
-- {{passo_1}}
+<!-- A EVIDÊNCIA. UMA LINHA por passo, formato "arquivo:linha — fato" (~12-15 palavras). SEM prefixo "olhei/constatei" (é filler). NÃO reconte o código do ponto — só o fato que sustenta a causa. Só os passos que sustentam a causa (inclui achado negativo relevante). -->
+- {{passo_1}}   <!-- ex: `Agent.java:42-60` — serializa lista inteira pro LLM, sem count pré-calculado. -->
 - {{passo_2}}
 
 ## Causa raiz
 
-{{causa_raiz}}   <!-- A CONCLUSÃO em 1-3 frases: o ponto exato (arquivo:linha) e por que causa o bug. Referencie os arquivos já citados na Investigação pelo nome curto — NÃO re-liste a trilha. Se houver 2+ causas, bullets curtos. Nada de propor correção (isso é solutions.md). -->
+{{causa_raiz}}   <!-- SÍNTESE pura, 1-3 frases: por que o bug acontece, amarrando a evidência. PROIBIDO repetir fato ou arquivo:linha já dito na Investigação — se a frase reexplica um bullet, corte. Nada de propor correção (isso é solutions.md). 2+ causas → bullets curtos. -->
 
 ## Impacto
 
@@ -31,8 +31,9 @@
 
 <!--
 Princípios (objetividade > completude):
-- Cada seção tem UM trabalho; não repita o que já foi dito. Investigação = evidência (a trilha); Causa raiz = a conclusão curta. Não re-narre a trilha na causa.
+- Cada seção tem UM trabalho; não repita o que já foi dito. Investigação = evidência (uma linha/passo); Causa raiz = a síntese curta. Não re-narre a trilha na causa.
+- Auto-check antes de gravar: releia — qualquer frase que repete outra seção, corte.
 - Causa, NÃO solução. Nenhuma proposta de fix, refactor ou "lacunas a fechar" aqui — isso vive no solutions.md.
-- Direto ao ponto. Cabe em 1-2 telas (~40 linhas). Frases curtas; sem parágrafos redundantes.
+- Direto ao ponto. Cabe em 1 tela (~25-30 linhas). Frases curtas; sem parágrafos redundantes.
 - Se a causa não está clara, diga o que falta investigar — não encha linguiça nem invente.
 -->

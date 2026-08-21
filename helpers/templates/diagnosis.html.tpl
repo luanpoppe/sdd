@@ -43,12 +43,12 @@
 
     <details class="lp-sec" id="investigacao" open>
       <summary><h2>Investigação</h2></summary>
-      <!-- A EVIDÊNCIA: <ul> com a trilha "olhei X → constatei Y". Cite arquivo:linha uma vez cada, em <code>. Só o que sustenta a causa. -->
+      <!-- A EVIDÊNCIA: <ul> com UMA LINHA por passo, formato "<code>arquivo:linha</code> — fato" (~12-15 palavras). SEM "olhei/constatei". NÃO reconte o código do ponto. Só o que sustenta a causa. -->
     </details>
 
     <details class="lp-sec" id="causa" open>
       <summary><h2>Causa raiz</h2></summary>
-      <!-- A CONCLUSÃO em 1-3 frases: ponto exato + por quê. Referencie os arquivos já citados na Investigação pelo nome curto; NÃO re-liste a trilha. Nada de propor correção (vai pro solutions.html). -->
+      <!-- SÍNTESE pura em 1-3 frases: por que o bug acontece, amarrando a evidência. PROIBIDO repetir fato ou arquivo:linha já dito na Investigação — se a frase reexplica um bullet, corte. Nada de propor correção (vai pro solutions.html). -->
     </details>
 
     <details class="lp-sec" id="impacto" open>
