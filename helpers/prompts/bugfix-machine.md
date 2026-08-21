@@ -43,16 +43,17 @@ in_review: <null | {chunks: [ids], files: [paths], updated: data}>
 | Estado | Gatilho | Ação | Próximo |
 |---|---|---|---|
 | (criação) | fim de `lp:bug-fix` | Grill curto + investiga o código → gera `diagnosis` (causa raiz). | `bug-proposing` |
-| `bug-proposing` | `lp:continue` (após revisar o diagnóstico) | Gera `solutions` (2-4 opções + recomendação). Pergunta qual o usuário quer (`AskUserQuestion`). Grava `chosen_solution`. | `bug-fixing` |
+| `bug-proposing` | `lp:continue` (após revisar o diagnóstico) | Escreve `solutions` (2-4 opções + recomendação) → **imprime o plano de revisão** das opções → **só então** pergunta qual o usuário quer (`AskUserQuestion`). Grava `chosen_solution`. | `bug-fixing` |
 | `bug-fixing` | `lp:continue` | 1ª vez: gera `tasks.md` da solução escolhida (chunks `C<m>`, respeitando `chunk_size`) + define modo (paralelo/sequencial). Depois: implementa chunk(s) reusando o **motor `implementing`** (ver abaixo). | `bug-fixing` (mais chunks) · `awaiting-archive` (último chunk) |
 | `awaiting-archive` | `lp:archive` | Verifica + arquiva. | `archived` |
 
 ## `bug-proposing` — gerar opções e escolher
 
 1. Releia `diagnosis.md`. Se a causa raiz não estava clara, pode investigar mais um pouco o código antes.
-2. Gere `solutions.(md/html)` com `../templates/solutions.*.tpl`: 2-4 opções, cada uma corrigindo a **causa raiz** (não o sintoma), com abordagem + prós + contras + esforço/risco. Sempre inclua sua recomendação.
-3. Pergunte ao usuário qual opção seguir via `AskUserQuestion` (uma opção por alternativa + "Outro"). Grave em `chosen_solution`.
-4. `state: bug-fixing`, `updated`. Imprima plano de revisão do `solutions.md` (ordem: Contexto → Opções → Recomendação) e avise: *"Escolhida `<opção>`. Próximo `/lp-continue` gera o tasks.md e começa a implementar."*
+2. Escreva `solutions.(md/html)` com `../templates/solutions.*.tpl`: 2-4 opções, cada uma corrigindo a **causa raiz** (não o sintoma), com abordagem + prós + contras + esforço/risco. Sempre inclua sua recomendação. (Com `scribe: subagent`/ausente, delegue a escrita ao escriba.)
+3. **Imprima o plano de revisão** das opções no chat (ordem: Contexto → Opções → Recomendação), pra o usuário decidir sem precisar abrir o arquivo.
+4. **Só então** pergunte qual opção seguir via `AskUserQuestion` (uma alternativa por opção + "Outro"). **Nunca pergunte antes de escrever o arquivo e imprimir o plano** — o usuário escolhe com as opções à vista.
+5. Grave `chosen_solution`, `state: bug-fixing`, `updated`. Avise: *"Escolhida `<opção>`. Próximo `/lp-continue` gera o tasks.md e começa a implementar."*
 
 > **Não** gere `tasks.md` ainda — isso é o 1º passo de `bug-fixing`, já com a opção decidida.
 
