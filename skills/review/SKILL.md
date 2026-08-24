@@ -140,7 +140,11 @@ Cada `/lp-continue` ou `/lp-review` (sem args) avança 1 chunk:
 2. **Leia o código** dos arquivos do step. Não suponha — leia.
 3. **Explique o step** seguindo a granularidade do `chunk_size`:
    - **Step 0 é especial**: não tem ponte de chamada, não tem exemplos de dado, não tem "pontos não-óbvios". É só o glossário. Estrutura: lista de termos com definição curta (2 linhas max por termo), agrupados se fizer sentido (ex: "Entidades", "Estados", "Acrônimos"). Ao final do Step 0, sempre imprima: *"Vocabulário registrado. Agora vamos ao fluxo — Step 1 é o entry point externo."*
-   - **Ponte de chamada (OBRIGATÓRIO do step 1 em diante, exceto step 0)**: abra o step com uma linha mostrando quem chama este código — só o chamador imediato (step anterior). Formato: `← NomeClasse.método() em arquivo:linha`. No step 1 (entry point externo), mostre de onde vem o gatilho: `← POST /v1/rjs (HTTP)` ou `← Kafka topic: shield-rj`.
+   - **Ponte de chamada (OBRIGATÓRIO do step 1 em diante, exceto step 0)**: abra o step com uma linha **explícita** mostrando quem chama este código — nunca só uma seta solta, que fica ambígua sobre a direção (chama X ou é chamado por X?). Formato: `**Chamado por:** \`NomeClasse.método()\` em \`arquivo:linha\` — Step N: <título curto do step anterior>`.
+     - **Nomeie o step anterior por número E título** (não só "Step 2" solto) — o leitor não deve precisar rolar pra cima pra saber do que se trata.
+     - **Sempre inclua `arquivo:linha`** do método chamador — sem isso quebra a navegabilidade que o resto do walkthrough exige.
+     - **Se há condição/gate pro chamado acontecer** (só roda se aprovado, só nesse estado, só com feature flag), coloque numa **frase própria logo abaixo**, nunca emendada com travessão na mesma linha da ponte — "quem chama" e "quando chama" são duas informações distintas.
+     - No **step 1** (entry point externo), troque "Chamado por" por "Disparado por" e aponte o gatilho externo: `**Disparado por:** POST /v1/rjs (HTTP)` ou `**Disparado por:** Kafka topic \`shield-rj\``. Não há step anterior a citar aqui.
    - **No arquivo (chat e walkthrough)**: o que esse pedaço faz, qual sua responsabilidade no fluxo, como conecta com o anterior e prepara o próximo.
    - **Cite arquivos/linhas** no formato `caminho/arquivo.ts:42` para o usuário navegar.
    - **Mostre trechos curtos** de código relevante (≤ ~15 linhas por trecho). Não copie arquivos inteiros.
@@ -294,10 +298,12 @@ Cada `/lp-continue` ou `/lp-review` (sem args) avança 1 chunk:
 
      <p class="meta">Arquivo: <code class="file-path">caminho/arquivo.ext</code></p>
 
-     <!-- Ponte de chamada: quem aciona este step. No step 1 mostra o gatilho externo. -->
-     <p class="caller">← <code>NomeClasse.método()</code> em <code class="file-path">arquivo:linha</code></p>
-     <!-- Para o step 1 (entry point): -->
-     <!-- <p class="caller entry-point">← POST /v1/rjs (HTTP) · <code class="file-path">RJController.java:34</code></p> -->
+     <!-- Ponte de chamada: quem aciona este step + de qual step anterior vem. Rótulo explícito, nunca só seta. -->
+     <p class="caller"><strong>Chamado por:</strong> <code>NomeClasse.método()</code> em <code class="file-path">arquivo:linha</code> — Step N: <em>título do step anterior</em></p>
+     <!-- Se houver condição/gate pro chamado acontecer, frase PRÓPRIA logo abaixo — nunca emendada na linha da ponte: -->
+     <p class="caller-condition">Só executa quando <condição>.</p>
+     <!-- Para o step 1 (entry point), troque o rótulo e não cite step anterior: -->
+     <!-- <p class="caller entry-point"><strong>Disparado por:</strong> POST /v1/rjs (HTTP) · <code class="file-path">RJController.java:34</code></p> -->
 
      <h3>Responsabilidade</h3>
      <p>1-3 frases do papel desse pedaço no fluxo.</p>
@@ -363,12 +369,12 @@ Cada `/lp-continue` ou `/lp-review` (sem args) avança 1 chunk:
    ```
    Step 0 usa `<summary>Step 0: Vocabulário</summary>` seguido de lista de definições com `**Termo**` + descrição curta, agrupada em sub-seções `###` se necessário. Sem ponte, sem exemplos de dado.
 
-   Steps 1+ espelham a mesma hierarquia: `## Step N: <título>` (sub-steps: `## Step 5.1: <título>`), `**Arquivo**: \`caminho\``, logo abaixo `**←** \`NomeClasse.método()\` em \`arquivo:linha\`` (ponte de chamada), sub-seções com `###`, blocos de código com fences ` ```linguagem `, e **exemplos de dado real colados ao trecho** que os produz/consome (antes/depois quando há transformação) — nunca numa seção separada ao final —, listas de pontos não-óbvios.
+   Steps 1+ espelham a mesma hierarquia: `## Step N: <título>` (sub-steps: `## Step 5.1: <título>`), `**Arquivo**: \`caminho\``, logo abaixo a ponte de chamada: `**Chamado por:** \`NomeClasse.método()\` em \`arquivo:linha\` — Step M: <título do step anterior>` (step 1: `**Disparado por:** <gatilho externo>`, sem step anterior). Se houver condição/gate, frase própria numa linha abaixo, em itálico: `_Só executa quando <condição>._`. Depois, sub-seções com `###`, blocos de código com fences ` ```linguagem `, e **exemplos de dado real colados ao trecho** que os produz/consome (antes/depois quando há transformação) — nunca numa seção separada ao final —, listas de pontos não-óbvios.
 5. Marque o step como `done: true`, incremente `current_step`.
 6. Imprima no chat um **resumo do step + ponteiro para o próximo**:
    ```
    Step <N>/<total> concluído — <título>
-   ← Chamado por: <chamador imediato>
+   Chamado por: <chamador imediato> (Step <N-1>: <título do step anterior>)
    Arquivos visitados: <lista>
    Próximo: /lp-review (step <N+1>: <título do próximo>)
 
@@ -448,7 +454,7 @@ Aplica `context-watch.md`. Reviews podem ser longos (vários steps + várias mod
 
 - **Não inventar**. Se você não tem certeza do que um pedaço de código faz, leia mais e diga ao usuário que verificou. Nada de chutar.
 - **Sempre do entry point externo ao retorno externo — a ordem é do fluxo real, não dos arquivos.** O walkthrough cobre o fluxo de ponta a ponta: do gatilho do mundo externo (HTTP, Kafka, schedule…) até o retorno ao mundo externo (response, ack, evento publicado). Nunca comece numa classe interna sem antes mostrar o que a aciona. Se o usuário fornecer uma lista de arquivos organizada por camada, ignore essa ordem para fins de sequência dos steps — descubra a cadeia de chamadas real e ordene por ela. O usuário pode pedir a ordem inversa (de dentro para fora) — nesse caso respeite, mas o padrão é sempre de fora para dentro.
-- **A ponte de chamada é obrigatória**. Cada step abre mostrando quem o chama. Sem isso o usuário perde o fio condutor entre as camadas.
+- **A ponte de chamada é obrigatória e explícita**. Cada step abre com "Chamado por"/"Disparado por" + `arquivo:linha` + o step anterior nomeado por número e título — nunca só uma seta solta (ambígua sobre a direção) nem condição emendada na mesma frase. Sem isso o usuário perde o fio condutor entre as camadas.
 - **Seguir a ordem do dado**: entrada → processamento → saída. Pular essa ordem confunde.
 - **Exemplos de dado inline, não em bloco isolado**. Mostre valores reais do domínio no ponto do fluxo onde a transformação acontece, colados ao trecho de código responsável — nunca agrupados numa seção "dados em transformação" ao final do step.
 - **Sub-steps para ramificações, sempre com confirmação**. Nunca escolha silenciosamente um caminho quando o fluxo se divide — pergunte e crie sub-steps.
