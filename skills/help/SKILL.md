@@ -76,6 +76,7 @@ Comandos do SDD `lp-*` (via marketplace: `lp:init`; via installer/Cursor: `/lp-i
   /lp-audit      Lista divergências entre docs e código da feature ativa. Não aplica nada sem OK.
   /lp-archive    Finaliza: verifica + move a mudança para .sdd/archive/<id>/.
   /lp-auto-update  Atualiza as skills para a versão mais recente do GitHub (luanpoppe/sdd).
+  /lp-desktop    Abre o SDD Viewer (app desktop opcional pra ver os artefatos fora do chat). Instala se preciso.
 
 Fluxo típico (feature do zero):
   /lp-init → /lp-new <id> → revisa plan.md → /lp-continue (spec) → revisa →

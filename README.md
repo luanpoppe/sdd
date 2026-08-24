@@ -1,6 +1,6 @@
 # SDD — `lp:*` para Claude Code
 
-Spec-driven development em 17 skills. Chunks micro revisáveis, fluxo sequencial por feature, fluxo enxuto de bug-fix (causa raiz → opções → correção), diagrama macro da implementação, base de conhecimento viva do projeto (`.sdd/context/`), implementação por subagentes (com modo paralelo opcional), memória autônoma, grilling anti-assunção e revisão guiada de código existente.
+Spec-driven development em 18 skills. Chunks micro revisáveis, fluxo sequencial por feature, fluxo enxuto de bug-fix (causa raiz → opções → correção), diagrama macro da implementação, base de conhecimento viva do projeto (`.sdd/context/`), implementação por subagentes (com modo paralelo opcional), memória autônoma, grilling anti-assunção e revisão guiada de código existente.
 
 ## Instalação
 
@@ -62,6 +62,7 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 | `lp:status` | Resumo de handoff sob demanda (pra retomar em conversa nova). |
 | `lp:archive` | Arquiva uma mudança concluída. |
 | `lp:help` | Estado atual do SDD + próximos passos. |
+| `lp:desktop` | Abre o SDD Viewer (app desktop opcional pra ver os artefatos fora do chat); instala/atualiza se preciso. |
 
 ## Configuração (`.sdd/config.yaml`)
 
@@ -90,7 +91,7 @@ sdd/
 ├── .claude-plugin/
 │   ├── marketplace.json   # catálogo (este repo é o marketplace)
 │   └── plugin.json        # manifesto do plugin "lp"
-├── skills/                # 17 skills (dir + frontmatter name sem prefixo lp-)
+├── skills/                # 18 skills (dir + frontmatter name sem prefixo lp-)
 ├── helpers/
 │   ├── prompts/           # prompts compartilhados (grill, memória, context, state-machine, bugfix-machine, flowchart, parallel, scribe…)
 │   └── templates/         # templates de plan/spec/tasks/explain/flow + diagnosis/solutions (bug-fix) + styles.css
