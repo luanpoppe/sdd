@@ -222,6 +222,46 @@ Cada `/lp-continue` ou `/lp-review` (sem args) avança 1 chunk:
        window.addEventListener('hashchange', openTarget);
        window.addEventListener('DOMContentLoaded', openTarget);
      </script>
+
+     <!-- Syntax highlight mínimo, offline e agnóstico de linguagem — mesma lógica do flow.html.tpl.
+          Roda no load, coloriza todo <pre><code> do walkthrough (comentários, strings, números,
+          anotações, keywords comuns e Tipos capitalizados). Reprocessa a página inteira a cada
+          load, então incrementar o walkthrough com novos steps não exige re-rodar nada. -->
+     <script>
+       (function () {
+         function esc(s) {
+           return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+         }
+         var KW = ['function','fun','fn','func','def','return','if','else','elif','for','while','do',
+           'switch','case','break','continue','const','let','var','val','public','private','protected',
+           'internal','static','final','abstract','class','interface','enum','struct','record','extends',
+           'implements','new','throw','throws','try','catch','finally','import','from','export','package',
+           'namespace','void','async','await','yield','this','self','super','null','nil','none','true',
+           'false','True','False','None','in','is','not','and','or','as','with','lambda','typeof','instanceof'];
+         var re = new RegExp(
+           '(\\/\\/[^\\n]*|#[^\\n]*|\\/\\*[\\s\\S]*?\\*\\/)' +
+           '|("(?:\\\\.|[^"\\\\])*"|\'(?:\\\\.|[^\'\\\\])*\'|`(?:\\\\.|[^`\\\\])*`)' +
+           '|(@[A-Za-z_]\\w*)' +
+           '|\\b(' + KW.join('|') + ')\\b' +
+           '|\\b([A-Z][A-Za-z0-9_]+)\\b' +
+           '|\\b(\\d[\\d_]*(?:\\.\\d+)?)\\b',
+           'g');
+         function hl(code) {
+           var out = '', last = 0, m;
+           while ((m = re.exec(code))) {
+             out += esc(code.slice(last, m.index));
+             var cls = m[1] ? 'tk-com' : m[2] ? 'tk-str' : m[3] ? 'tk-ann' : m[4] ? 'tk-kw' : m[5] ? 'tk-typ' : 'tk-num';
+             out += '<span class="' + cls + '">' + esc(m[0]) + '</span>';
+             last = re.lastIndex;
+           }
+           out += esc(code.slice(last));
+           return out;
+         }
+         document.querySelectorAll('main pre code').forEach(function (c) {
+           c.innerHTML = hl(c.textContent);
+         });
+       })();
+     </script>
    </body>
    </html>
    ```

@@ -250,6 +250,14 @@ pre[data-file]::before, pre[data-label]::before {
 }
 pre[data-label]::before { content: attr(data-label); }
 
+/* Syntax highlight (colorização feita por um highlighter mínimo inline, offline — ver highlighter-guide.md) */
+pre .tk-com { color: var(--lp-text-muted); font-style: italic; }
+pre .tk-str { color: var(--lp-success); }
+pre .tk-num { color: var(--lp-warning); }
+pre .tk-kw  { color: var(--lp-accent); }
+pre .tk-typ { color: var(--lp-accent-2); }
+pre .tk-ann { color: var(--lp-accent-hot); }
+
 /* ─── Seções colapsáveis (<details class="lp-sec">) ────────────────────── */
 /* Card sutil: fundo levemente elevado + hairline + sombra suave (em vez de
    borda grossa). Summary é o cabeçalho clicável. */
