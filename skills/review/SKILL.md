@@ -96,7 +96,7 @@ Após o grill, vá para seção 2.
      topic: <topic>
      slug: <topic-slug>
      created: <YYYY-MM-DD>
-     updated: <YYYY-MM-DD>
+     updated: <YYYY-MM-DD>  # SÓ a data — nunca anexe nota/texto aqui (ex: "2026-08-24 (Step 1 esclarecido)"). String com `:` sem aspas quebra o parser YAML. Nota sobre o que mudou vai no walkthrough (seção 4-bis), não aqui.
      state: walking  # planning | walking | paused | done
      format: <html|md|both|chat>
      chunk_size: <micro|small|medium|large>
@@ -422,7 +422,7 @@ Quando o usuário faz uma pergunta sobre um step **sem pedir modificação**, a 
 - **Sem duplicação no chat**: a resposta no chat e a que entra no walkthrough têm o MESMO conteúdo principal.
 - **Ao reescrever (modo A)**: mantenha o texto coeso — não deixe marcas de "editado aqui" no corpo. Se o trecho de código exibido também mudou de entendimento, ajuste-o.
 - **Resposta enxuta**: se longa, divida em sub-tópicos. Mesmo limite de trechos curtos (~15 linhas de código por bloco).
-- **Atualize `updated` no `.sdd.yaml`**.
+- **Atualize `updated` no `.sdd.yaml` — só a data (`YYYY-MM-DD`)**, nunca anexe nota do que mudou ali (quebra o parser YAML se tiver `:`). A nota de "o que foi esclarecido" já está no walkthrough, no ponto do fluxo — não precisa duplicar no `.sdd.yaml`.
 - **Informe no chat ao final** (1 linha): *"📌 Resposta integrada no Step N (`walkthrough.<ext>`) — [reescrevi o parágrafo sobre X | adicionei nota após o trecho Y]."*
 - **Não aplica a**: pedidos de modificação de código (vai pra seção 5), comandos de controle (`pause`/`end`), perguntas fora do tema do review (responda só no chat).
 
