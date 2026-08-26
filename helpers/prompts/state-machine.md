@@ -6,6 +6,8 @@
 
 > **Escrita de artefatos (scribe).** Com `scribe: subagent` (default; **campo ausente também conta como `subagent`**), TODAS as escritas de arquivo do SDD do passo (docs, `flow.html`, `.sdd.yaml`, marcação do `tasks.md`, `memory.md`) são delegadas a um subagente escriba numa única chamada — tudo-ou-nada, nunca parcial/inline. Veja `./scribe-guide.md`.
 
+> **Ordem de construção (`chunk_order`).** Default `inside-out` (ausente também conta como `inside-out`): entre features/chunks independentes (sem dependência real forçando ordem), prioriza construir de dentro pra fora — domínio/persistência/lógica interna antes de controller/consumer/endpoint — porque é a ordem que deixa cada chunk compilando e validando sozinho, sem precisar de stub. `outside-in` inverte esse desempate (útil se o usuário quer ver o esqueleto do fluxo primeiro, aceitando stubs temporários). `free` = só dependência real importa, sem preferência de direção. **Dependência real declarada em `Depende de:` sempre vence a heurística** — `chunk_order` só desempata quando a spec permite mais de uma ordem válida. Usado em `lp:new` (ordem das features) e `lp:continue` (ordem dos chunks ao gerar `tasks.md`).
+
 ## Estado por mudança (`.sdd/changes/<id>/.sdd.yaml`)
 
 ```yaml
