@@ -188,11 +188,13 @@ Diga ao usuário para rodar `/lp-archive`. Não faça mais nada.
 
 ## Durante a revisão de um chunk (perguntas e alterações inline)
 
-Vale enquanto há um chunk **em revisão**. A fonte de verdade é o `in_review` no `.sdd.yaml` (preenchido no passo g-bis) — ele sobrevive a reinício/compactação da conversa. Se `in_review` está preenchido (ou o plano foi recém-impresso neste chat) e o usuário **faz uma pergunta** sobre o que foi implementado OU **pede uma alteração** no chunk — sem rodar `/lp-continue`:
+Vale enquanto há um chunk **em revisão**. A fonte de verdade é o `in_review` no `.sdd.yaml` (preenchido no passo g-bis) — ele sobrevive a reinício/compactação da conversa. Se `in_review` está preenchido (ou o plano foi recém-impresso neste chat) e o usuário faz **qualquer pergunta ou pede qualquer alteração** — sem rodar `/lp-continue` — vale o passo 3 abaixo.
 
-1. Responda a pergunta / aplique a alteração normalmente e explique o que fez.
+**Isso vale mesmo que a pergunta seja tangencial/conceitual e respondida via outra skill/comando alheio ao SDD** (ex: "explica o que é X" usando uma skill de tirar dúvida qualquer). O gatilho é `in_review` estar preenchido no `.sdd.yaml`, não qual skill respondeu — não deixe o foco na outra skill fazer você esquecer que há uma revisão pendente nesta mesma conversa.
+
+1. Responda a pergunta / aplique a alteração normalmente e explique o que fez (delegando a outra skill se fizer sentido).
 2. Se **alterou arquivos**: rode o comando de validação do projeto (não assuma eslint) nos editados e, se o projeto exigir, os testes. A lista pode ter mudado (novos arquivos, novos ±linhas) — reflita isso e atualize `in_review.files`.
-3. **No FIM da resposta, re-imprima a lista de revisão atualizada** (mesmo formato: bloco por arquivo, cabeçalho em negrito + bullets, separados por linha em branco), para o usuário continuar de onde parou:
+3. **Sempre, no FIM da resposta — nunca pule este passo, mesmo numa resposta puramente explicativa que não tocou em arquivo nenhum — re-imprima a lista de revisão atualizada** (mesmo formato: bloco por arquivo, cabeçalho em negrito + bullets, separados por linha em branco), para o usuário continuar de onde parou sem precisar perguntar "o que eu tava revisando mesmo?":
 
    ```
    Revisão (na ordem — continue de onde parou):
