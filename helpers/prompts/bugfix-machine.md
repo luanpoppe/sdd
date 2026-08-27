@@ -59,7 +59,7 @@ in_review: <null | {chunks: [ids], files: [paths], updated: data}>
 
 ## `bug-fixing` — implementar a solução escolhida
 
-Reusa o **mesmo motor** da seção `implementing` de `../../skills/continue/SKILL.md` (passos **a–h**: auto-sync → modo → chunk → implementar por subagente/main → marcar → diagrama → plano de revisão → context-watch). Diferenças do bug-fix:
+Reusa o **mesmo motor** da seção `implementing` de `../../skills/continue/SKILL.md` (passos **a–h**: auto-sync → modo → chunk → explicação breve do chunk (b-bis) → implementar por subagente/main → marcar → diagrama → plano de revisão → context-watch). Diferenças do bug-fix:
 
 - **1ª vez em `bug-fixing`**: gere `.sdd/changes/<id>/tasks.md` a partir da `chosen_solution` usando `../templates/tasks.md.tpl`. Chunks com IDs `C1`, `C2`, … (sem `F<n>.`). Cada chunk com `Arquivos` / `Depende de` / `Ordem de revisão` / `Faz` / `Validação`, igual ao fluxo normal. Respeite `chunk_size`. **Ordem dos chunks**: dependência real primeiro; desempate pela heurística de `chunk_order` (default `inside-out` — ver cabeçalho de `./state-machine.md`). **Só `tasks.md`** por padrão (`tasks_format: md`; só gere `tasks.html` com `tasks_format: follow` + `format` html/both). **Auto-continua** por padrão (`tasks_autocontinue: on`): não pause após o `tasks.md` — siga direto pro 1º chunk `C1` na mesma invocação. Defina modo paralelo vs sequencial pelo `parallel-guide.md`.
 - **Caminho dos chunks**: `tasks.md` na raiz da mudança (não em `specs/<slug>/`). Não há `current_feature`.

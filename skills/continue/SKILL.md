@@ -85,18 +85,31 @@ Coração da skill. Execute na ordem:
 **b0) Modo de execução (só na 1ª vez que a feature entra em `implementing`)**:
 - Determine sequencial vs paralelo seguindo `../../helpers/prompts/parallel-guide.md` ("Quando ativar"): `parallel: on` no config → paralelo; senão pergunte uma vez (default sequencial em não/silêncio).
 - **Paralelo** → siga o `parallel-guide.md` (ondas de chunks independentes, um subagente por chunk, plano de revisão combinado) no lugar dos passos b/c/e abaixo; d/g continuam na conversa principal. Uma onda por `lp:continue`.
-- **Sequencial** (padrão) → siga b/c/d/e normalmente, um chunk por vez.
+- **Sequencial** (padrão) → siga b/b-bis/c/d/e normalmente, um chunk por vez.
 
 **b) Próximo chunk** (modo sequencial):
 - Primeiro `[ ]` em `specs/<current_feature>/tasks.md`.
 - Marque-o como em andamento (opcional: troque para `[~]` apenas no final).
+
+**b-bis) Explicação breve do chunk** (ANTES de codar; **só modo sequencial** — no paralelo, a comunicação é por onda, ver `parallel-guide.md`):
+
+Curta (4-6 linhas, não é uma spec) — reaproveite o que o `tasks.md` já tem, não investigue do zero:
+- **O quê**: o que este chunk implementa (pode reusar o `Faz` do tasks.md).
+- **Por quê**: a decisão/motivo da spec (ou `diagnosis`/`solutions`, no bug-fix) que justifica este chunk.
+- **Conecta com o macro**: o papel dele na feature (`plan.md`) ou na correção (bug-fix).
+- **Vem de**: o(s) chunk(s) de que este depende (`Depende de:` do próprio chunk no tasks.md), ou "primeiro chunk" se nenhum.
+- **Prepara**: o(s) próximo(s) chunk(s) que dependem deste (procure no tasks.md quem lista este chunk em `Depende de:`), ou "último chunk" se nenhum.
+
+**Timing conforme `implementer`** (evita que o usuário fique olhando pra tela sem saber o que vem, e no modo subagente aproveita o tempo de execução):
+- **`subagent` (padrão)**: lance o subagente PRIMEIRO (passo c, item 1) e escreva esta explicação na mesma resposta, logo em seguida — se o ambiente suportar execução em segundo plano/notificação assíncrona, ela sai enquanto o subagente roda, sem custo de tempo extra; se o ambiente for síncrono (espera o subagente terminar antes de continuar o texto), ela ainda assim abre a resposta, antes do relatório.
+- **`main`**: não há subagente rodando em paralelo — escreva a explicação ANTES de começar a editar, e só então implemente.
 
 **c) Executar APENAS este chunk** — quem codifica depende de `implementer` no `.sdd/config.yaml` (default `subagent` se o campo não existir):
 
 - Respeite `chunk_size`. Se o chunk como descrito vai exceder, **pare e divida em sub-chunks** atualizando o tasks.md antes de codar (isso é decisão da conversa principal, mesmo no modo subagente).
 
 - **`implementer: subagent` (padrão)** — a conversa principal **delega a implementação a um subagente** e apenas orquestra:
-  1. Lance UM subagente (Task/Agent do ambiente) com escopo restrito a ESTE chunk. Passe: o chunk do `tasks.md` (arquivos, "Faz", ordem, `Validação`), a spec da feature, `plan.md`, as preferências de código do projeto (CLAUDE.md/regras) e a instrução de rodar o **comando de validação do projeto** (o do campo `Validação` do chunk / CLAUDE.md — lint/format/test da stack real, **não assuma eslint**) nos arquivos editados + testes se o projeto exigir.
+  1. Lance UM subagente (Task/Agent do ambiente) com escopo restrito a ESTE chunk. Passe: o chunk do `tasks.md` (arquivos, "Faz", ordem, `Validação`), a spec da feature, `plan.md`, as preferências de código do projeto (CLAUDE.md/regras) e a instrução de rodar o **comando de validação do projeto** (o do campo `Validação` do chunk / CLAUDE.md — lint/format/test da stack real, **não assuma eslint**) nos arquivos editados + testes se o projeto exigir. **Ordem com a explicação breve (b-bis)**: lance o subagente primeiro, escreva a explicação logo em seguida na mesma resposta.
   2. Instrua o subagente a **retornar um relatório estruturado** (não prosa longa): para cada arquivo — caminho, criado/editado, ±linhas, `Faz` (papel), `Revisar` (ponto de atenção), `Conecta` (ligações reais); mais o resultado da validação. É esse relatório que alimenta o plano de revisão (passo g).
   3. A conversa principal **não reimplementa** — confere o relatório, e se algo veio fora do escopo do chunk ou contra as docs, trata como divergência (auto-sync) antes de seguir.
   4. **Fallback**: se o ambiente não suporta lançar subagente, caia para o modo `main` e avise no plano de revisão (*"implementado no agente principal — subagente indisponível neste ambiente"*).
