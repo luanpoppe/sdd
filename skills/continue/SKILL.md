@@ -15,7 +15,7 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
   - Mais de uma: prefira `state: implementing`; em empate, pergunte qual.
 - Leia `.sdd.yaml`. **Se `kind: bugfix`** → esta é uma mudança de bug-fix: siga `../../helpers/prompts/bugfix-machine.md` (estados `bug-proposing` → `bug-fixing`) em vez da máquina de features abaixo. O resto desta pré-checagem (in_review, memória) continua valendo; pule a leitura de `plan.md`/specs (bug-fix não os tem).
 - (fluxo normal de feature) Leia `plan.md` e os arquivos da **feature ativa atualmente** (se houver `current_feature`): `specs/<current_feature>/spec.md` e `tasks.md` se existirem.
-- **Leia `in_review`**: se preenchido, há um chunk aguardando revisão (pode ser de uma conversa anterior). Uma invocação normal de `/lp-continue` significa que o usuário **aprovou** essa revisão → limpe `in_review` (`null`) e siga para o próximo chunk/onda. Perguntas/ajustes sem `/lp-continue` caem na seção "Durante a revisão de um chunk".
+- **Leia `in_review`**: se preenchido, há um chunk aguardando revisão (pode ser de uma conversa anterior). Uma invocação normal de `/lp-continue` significa que o usuário **aprovou** essa revisão. **Antes de limpar**, se `auto_commit: full` (ver `../../helpers/prompts/git-guide.md`), faça o commit do chunk aprovado agora (git add só dos `in_review.files` + git commit com `in_review.commit_message`), respeitando a exceção de branch protegida do guia. Depois, limpe `in_review` (`null`) e siga para o próximo chunk/onda. Perguntas/ajustes sem `/lp-continue` caem na seção "Durante a revisão de um chunk".
 - **NÃO leia specs de outras features** — elas podem nem existir ainda.
 - **Carregue a memória**: leia `.sdd/memory.md` (ou `.sdd/memory-map.md` se existir; nesse caso, leia também os arquivos de tema que parecem relevantes pelo título da feature ativa). Siga `../../helpers/prompts/memory-guide.md`.
 - **Carregue o contexto do projeto** (se `context: true`/ausente no config): leia `.sdd/context/index.md`. Se a feature ativa toca uma área listada, leia também o arquivo de contexto dela antes de decidir/implementar. É a 1ª parada para "como isso funciona hoje?". Siga `../../helpers/prompts/context-guide.md`.
@@ -173,6 +173,8 @@ Próximo: /lp-continue (próximo chunk OU início da próxima feature, se essa f
 Reverter: peça "reverte o chunk F<n>.C<m>".
 ```
 
+**Commit do chunk** (se `auto_commit` ≠ `off`; ver `../../helpers/prompts/git-guide.md`): decida a mensagem sugerida agora e acrescente ao final do bloco acima. Com `suggest-only` (default) mostre o comando pronto pra copiar; com `full`, avise que será commitado automaticamente ao aprovar (ou, se a branch atual é protegida, caia pro comportamento de `suggest-only` com aviso). Com `off`, não mencione git.
+
 Regras das 3 linhas:
 - **Um bloco por arquivo, separado por linha em branco.** Cabeçalho em negrito; `Faz`/`Revisar`/`Conecta` em bullets.
 - **Faz**: o papel do arquivo neste chunk (não repita o nome dele; diga a responsabilidade).
@@ -187,6 +189,7 @@ Regras das 3 linhas:
 in_review:
   chunks: ["F<n>.C<m>"]        # no paralelo, os IDs da onda
   files: ["caminho/arquivo1.ts", ...]   # a lista, na ordem de revisão
+  commit_message: "<mensagem sugerida do passo g>"   # null se auto_commit: off
   updated: <YYYY-MM-DD>
 ```
 Assim, mesmo que a conversa reinicie, o próximo turno sabe qual chunk está em revisão e consegue re-imprimir a lista. Ao aprovar (próximo `/lp-continue`) ou reverter, limpe `in_review`.
@@ -206,7 +209,7 @@ Vale enquanto há um chunk **em revisão**. A fonte de verdade é o `in_review` 
 **Isso vale mesmo que a pergunta seja tangencial/conceitual e respondida via outra skill/comando alheio ao SDD** (ex: "explica o que é X" usando uma skill de tirar dúvida qualquer). O gatilho é `in_review` estar preenchido no `.sdd.yaml`, não qual skill respondeu — não deixe o foco na outra skill fazer você esquecer que há uma revisão pendente nesta mesma conversa.
 
 1. Responda a pergunta / aplique a alteração normalmente e explique o que fez (delegando a outra skill se fizer sentido).
-2. Se **alterou arquivos**: rode o comando de validação do projeto (não assuma eslint) nos editados e, se o projeto exigir, os testes. A lista pode ter mudado (novos arquivos, novos ±linhas) — reflita isso e atualize `in_review.files`.
+2. Se **alterou arquivos**: rode o comando de validação do projeto (não assuma eslint) nos editados e, se o projeto exigir, os testes. A lista pode ter mudado (novos arquivos, novos ±linhas) — reflita isso e atualize `in_review.files` (e o bloco de commit sugerido/`in_review.commit_message`, se `auto_commit` ≠ `off`).
 3. **Sempre, no FIM da resposta — nunca pule este passo, mesmo numa resposta puramente explicativa que não tocou em arquivo nenhum — re-imprima a lista de revisão atualizada** (mesmo formato: bloco por arquivo, cabeçalho em negrito + bullets, separados por linha em branco), para o usuário continuar de onde parou sem precisar perguntar "o que eu tava revisando mesmo?":
 
    ```

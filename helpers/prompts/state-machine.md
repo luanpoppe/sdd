@@ -6,6 +6,8 @@
 
 > **Escrita de artefatos (scribe).** Com `scribe: subagent` (default; **campo ausente também conta como `subagent`**), TODAS as escritas de arquivo do SDD do passo (docs, `flow.html`, `.sdd.yaml`, marcação do `tasks.md`, `memory.md`) são delegadas a um subagente escriba numa única chamada — tudo-ou-nada, nunca parcial/inline. Veja `./scribe-guide.md`.
 
+> **Git (branch + auto-commit).** `lp:new`/`lp:bug-fix` sugerem criar uma branch dedicada no início. No motor `implementing`, `auto_commit` (default `suggest-only`, ausente também conta) decide o que acontece a cada chunk: `suggest-only` mostra o comando de commit pronto pra copiar no plano de revisão; `full` commita de verdade quando o chunk é aprovado (exceto em branch protegida: main/master/develop/dev/staging/stg/prod/prd/production/homolog/hml/qa); `off` não menciona git. Ver `./git-guide.md`.
+
 > **Ordem de construção (`chunk_order`).** Default `inside-out` (ausente também conta como `inside-out`): entre features/chunks independentes (sem dependência real forçando ordem), prioriza construir de dentro pra fora — domínio/persistência/lógica interna antes de controller/consumer/endpoint — porque é a ordem que deixa cada chunk compilando e validando sozinho, sem precisar de stub. `outside-in` inverte esse desempate (útil se o usuário quer ver o esqueleto do fluxo primeiro, aceitando stubs temporários). `free` = só dependência real importa, sem preferência de direção. **Dependência real declarada em `Depende de:` sempre vence a heurística** — `chunk_order` só desempata quando a spec permite mais de uma ordem válida. Usado em `lp:new` (ordem das features) e `lp:continue` (ordem dos chunks ao gerar `tasks.md`).
 
 ## Estado por mudança (`.sdd/changes/<id>/.sdd.yaml`)
@@ -69,7 +71,7 @@ A **ordem da lista** define a ordem de execução. Não embaralhar.
 | `awaiting-plan` | fim de `lp:new` | Gera `plan.md` com contexto + decisões macro + **lista de features** (apenas slug/título/1-frase). Define ordem. | `awaiting-feature-spec` |
 | `awaiting-feature-spec` | `lp:continue` | 1) Pega a próxima feature `pending` na ordem da lista. Marca `speccing` e `current_feature`. 2) **Grill profundo SÓ dela** (cenários BDD, edge cases, contratos). Em batches de até 4 perguntas independentes. 3) Gera `specs/<slug>/spec.md`. 4) Imprime plano de revisão da spec. | `awaiting-feature-tasks` |
 | `awaiting-feature-tasks` | `lp:continue` (após usuário revisar spec) | 1) Grill curto se necessário. 2) Gera `specs/<slug>/tasks.md` (só `.md` por padrão — ver `tasks_format`) respeitando `chunk_size`. 3) Marca feature `tasking` → `implementing`. 4) **Auto-continua por padrão** (`tasks_autocontinue: on`): segue direto pro 1º chunk na mesma invocação, sem pausar; com `off`, imprime o plano de revisão das tasks e para. | `implementing` |
-| `implementing` | `lp:continue` | 1) Auto-sync. 2) Definir modo (paralelo se `parallel: on` ou usuário pediu; senão sequencial). 3a) **Sequencial**: próximo chunk `[ ]`, explicação breve do chunk (o quê/por quê/conecta com macro/anteriores/próximos — timing conforme `implementer`), implementar por subagente (default) ou main. 3b) **Paralelo** (`../parallel-guide.md`): uma onda de chunks independentes, um subagente cada (sem a explicação breve — comunicação é por onda). 4) Marcar `[~]`. 5) Plano de revisão (combinado no paralelo). | `implementing` (se há mais chunks/ondas) · `awaiting-feature-spec` (se feature done e há próxima) · `awaiting-archive` (se foi a última) |
+| `implementing` | `lp:continue` | 1) Auto-sync. 2) Definir modo (paralelo se `parallel: on` ou usuário pediu; senão sequencial). 3a) **Sequencial**: próximo chunk `[ ]`, explicação breve do chunk (o quê/por quê/conecta com macro/anteriores/próximos — timing conforme `implementer`), implementar por subagente (default) ou main. 3b) **Paralelo** (`../parallel-guide.md`): uma onda de chunks independentes, um subagente cada (sem a explicação breve — comunicação é por onda). 4) Marcar `[~]`. 5) Plano de revisão (combinado no paralelo) + commit/sugestão de commit conforme `auto_commit`. | `implementing` (se há mais chunks/ondas) · `awaiting-feature-spec` (se feature done e há próxima) · `awaiting-archive` (se foi a última) |
 | `awaiting-archive` | `lp:archive` | Verifica + arquiva. | `archived` |
 
 ## Transição "feature concluída"
@@ -129,6 +131,8 @@ Validação:
 Próximo: /lp-continue (chunk F<n>.C<m+1>) ou — se foi o último da feature — inicia a próxima feature.
 Reverter: peça "reverte o chunk F<n>.C<m>".
 ```
+
+Se `auto_commit` ≠ `off`, acrescente ao final o bloco de commit (comando pronto em `suggest-only`, aviso de commit automático em `full`) — ver `./git-guide.md`.
 
 Regras da lista:
 - **Um bloco por arquivo, separado por linha em branco.** Cabeçalho em negrito com número+caminho; `Faz`/`Revisar`/`Conecta` como bullets. Nada de blocos colados.

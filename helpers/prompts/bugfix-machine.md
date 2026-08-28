@@ -3,6 +3,8 @@
 > Fluxo **enxuto** para corrigir um bug: **diagnóstico → opções → correção**. Não gera `plan.md` nem specs por feature — é mais curto e direto que o fluxo de `lp:new`.
 >
 > Uma mudança de bug é uma mudança normal em `.sdd/changes/<id>/` marcada com `kind: bugfix`. Por isso `lp:status`, `lp:flow`, `lp:audit`, `lp:archive` e `lp:parallel` funcionam nela sem mudança.
+>
+> `lp:bug-fix` sugere criar uma branch dedicada logo no início (ver `./git-guide.md`, seção 1).
 
 ## Estado (`.sdd/changes/<id>/.sdd.yaml`)
 
@@ -65,7 +67,7 @@ Reusa o **mesmo motor** da seção `implementing` de `../../skills/continue/SKIL
 - **Caminho dos chunks**: `tasks.md` na raiz da mudança (não em `specs/<slug>/`). Não há `current_feature`.
 - **Diagrama** (`flowchart: on`): uma única swimlane = a correção; nós = chunks `C<m>` (o `flowchart-guide.md` trata isso como uma "feature única"). Atualize a cada chunk.
 - **Transição final**: quando todos os chunks `C<m>` estão `[~]`/`[x]` → `state: awaiting-archive` (não há "próxima feature"). Sugira `/lp-archive`. **Contexto** (se `context: true`/ausente): atualize o arquivo de contexto da área afetada com a causa raiz e a decisão de correção (ou crie, se a área ainda não existir) + índice — no pacote do escriba. Ver `./context-guide.md`.
-- Plano de revisão por chunk, `in_review`, perguntas/alterações inline e memória autônoma: **idênticos** ao `implementing` do `continue` (siga aquela seção).
+- Plano de revisão por chunk, `in_review`, perguntas/alterações inline, commit/sugestão de commit (`auto_commit`, ver `./git-guide.md`) e memória autônoma: **idênticos** ao `implementing` do `continue` (siga aquela seção).
 
 ## Princípios
 
