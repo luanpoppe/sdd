@@ -1,6 +1,6 @@
 # SDD — `lp:*` para Claude Code
 
-Spec-driven development em 18 skills. Chunks micro revisáveis, fluxo sequencial por feature, fluxo enxuto de bug-fix (causa raiz → opções → correção), diagrama macro da implementação, base de conhecimento viva do projeto (`.sdd/context/`), implementação por subagentes (com modo paralelo opcional), memória autônoma, grilling anti-assunção e revisão guiada de código existente.
+Spec-driven development em 18 skills. Chunks micro revisáveis, fluxo sequencial por feature, fluxo enxuto de bug-fix (causa raiz → opções → correção), diagrama macro da implementação, base de conhecimento viva do projeto (`.sdd/context/`), implementação por subagentes (com modo paralelo opcional), memória autônoma, grilling anti-assunção, revisão guiada de código existente, sugestão de branch + commits (automáticos ou sugeridos) por chunk, e um app desktop opcional (SDD Viewer) pra visualizar os artefatos fora do chat.
 
 ## Instalação
 
@@ -63,6 +63,14 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 | `lp:archive` | Arquiva uma mudança concluída. |
 | `lp:help` | Estado atual do SDD + próximos passos. |
 | `lp:desktop` | Abre o SDD Viewer (app desktop opcional pra ver os artefatos fora do chat); instala/atualiza se preciso. |
+
+## SDD Viewer (app desktop opcional)
+
+[`luanpoppe/sdd-viewer`](https://github.com/luanpoppe/sdd-viewer) — app Electron read-only que lê `.sdd/` (mudanças, features, bug-fixes, reviews) e renderiza os artefatos `.md`/`.html` com fast refresh (atualiza sozinho quando o agente regrava um arquivo). Sidebar separa projeto → mudança/review → artefato. Não é dependência de nenhum fluxo `lp:*` — é só uma forma alternativa de ler o que o SDD já gera.
+
+- Abrir/instalar/atualizar: `lp:desktop` (Windows por enquanto; checa update em paralelo sem travar o uso).
+- Instalador `.exe` (NSIS, por-usuário, sem admin) publicado em [GitHub Releases](https://github.com/luanpoppe/sdd-viewer/releases).
+- Rodar em outro SO / modo dev: clone o repo e `npm install && npm run dev`.
 
 ## Configuração (`.sdd/config.yaml`)
 
