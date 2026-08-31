@@ -57,7 +57,7 @@ Conteúdo do detalhe (regras):
   - Nós `pending` continuam **sem** `has-detail` (não há código ainda).
 - **Como funciona**: 1 parágrafo curto + os trechos reais. Um `<pre data-file="path">` por arquivo relevante (o `data-file` vira o nome do arquivo no topo do bloco). ≤ ~15 linhas por bloco; corte o resto com `…`. Escape `<`, `>`, `&`.
 - **Dados fluindo**: exemplo concreto e real, **um passo por linha** (o `.data` usa `white-space: pre-wrap`, então quebras de linha no HTML aparecem empilhadas). NÃO escreva tudo em texto corrido numa linha só — quebra a legibilidade. Numa sequência/pipeline, ponha o `→` no início de cada linha de transição; linhas flush-left (sem indentação, que o pre-wrap preservaria). Em bug-fix, mostre o estado **antes → depois** (uma linha cada).
-- **Conecta**: liste as ligações reais (quem chama, o que consome, qual porta implementa).
+- **Conecta**: liste as ligações reais (quem chama, o que consome, qual porta implementa). Se citar outro chunk, cite-o pelo **componente/o que ele faz**, não pelo ID cru (*"consumido pelo endpoint criado no chunk do Controller"*) — ver a regra de citação em `./state-machine.md`. No nó e no `<h4>`, o ID aparece sempre ao lado do nome do componente, então lá está ok.
 - **`deviated`**: use `<p class="note">` para o que mudou em relação ao planejado.
 - **Macro na CAIXA, detalhe no PAINEL**: continua 1 nó/painel por chunk (não crie nós por arquivo). O painel pode ter vários arquivos, mas focado no chunk — não despeje o arquivo inteiro, só o que explica a implementação.
 

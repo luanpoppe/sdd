@@ -22,7 +22,7 @@ No modo paralelo, NUNCA rode todos os chunks cegamente juntos. Agrupe em **ondas
 
 ## Execução de uma onda
 
-1. Anuncie a onda: quais chunks entram e por quê os outros ficaram de fora (dependência ou arquivo compartilhado).
+1. Anuncie a onda: quais chunks entram e por quê os outros ficaram de fora (dependência ou arquivo compartilhado). **Cite cada chunk pelo que ele faz**, não só pelo ID (*"o chunk que cria o repositório (`C2`) e o que expõe o endpoint (`C4`)"*, não *"C2 e C4"*) — ver a regra de citação em `./state-machine.md`.
 2. Lance **um subagente por chunk da onda, em paralelo** (todas as chamadas no mesmo turno). Cada subagente recebe o mesmo briefing do modo subagente normal (chunk do tasks.md, spec, plan.md, prefs de código, rodar eslint --fix + testes) e retorna o relatório estruturado (`Faz`/`Revisar`/`Conecta` + validação) por arquivo.
 3. Espere todos os subagentes da onda terminarem antes de seguir.
 4. **Auto-sync + marcação** (conversa principal): confira os relatórios, trate divergências, marque `[~]` os checkboxes de TODOS os chunks da onda no `tasks.md`, atualize `.sdd.yaml` (`current_chunk` pode listar os IDs da onda) e o `flow.html` (todos os nós da onda de uma vez).
@@ -67,6 +67,7 @@ Reverter: peça "reverte o chunk F<n>.C<x>" (individual) ou "reverte a onda".
 ## Princípios
 
 - **Segurança de arquivo acima de velocidade**: na dúvida se dois chunks compartilham arquivo, serialize. É melhor uma onda menor que um conflito de edição.
+- **Chunk se cita pelo que faz**: no anúncio da onda, no resumo e nas respostas, ID sozinho não informa nada — acompanhe da descrição. Ver `./state-machine.md`.
 - **Independência real**: paralelo não muda a ordem lógica — chunks dependentes continuam em ondas ordenadas. Paralelo só junta os que genuinamente não se afetam.
 - **Revisão continua obrigatória**: paralelo agiliza a implementação, não pula revisão. Cada onda termina com plano de revisão e pausa.
 - **Fallback**: se o ambiente não suporta lançar subagentes em paralelo, avise e caia para sequencial.

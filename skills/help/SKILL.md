@@ -33,7 +33,7 @@ Features (sequenciais):
   ▶ <slug-2>  [implementing]  (X/Y chunks)
   ◌ <slug-3>  [pending]
 
-Feature ativa: <current_feature>  ·  chunk atual: <current_chunk>
+Feature ativa: <current_feature>  ·  chunk atual: <current_chunk> — <o que ele faz>
 Diagrama: .sdd/changes/<id>/flow.html   (se flowchart=on)
 
 Memória: <N em Estilo/Processo · M em Stack/Domínio>  (.sdd/memory.md)
@@ -91,4 +91,5 @@ Fluxo típico (bug-fix, enxuto):
 
 - Nunca modifique nada.
 - Sucinto no status: ≤ ~20 linhas. O resumo de comandos é adicional.
+- **Chunk se cita pelo que faz**: ao mostrar o chunk atual ou sugerir a próxima ação, acompanhe da descrição (leia o `Faz` no `tasks.md`) — ID sozinho não diz nada. Ver `../../helpers/prompts/state-machine.md`.
 - Se faltar info esperada (ex: feature em `implementing` sem `tasks.md`), aponte como inconsistência.

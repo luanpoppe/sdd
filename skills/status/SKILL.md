@@ -25,7 +25,7 @@ Formato (conciso, colável):
 ```
 ## Handoff — <id>: <title>   (<data>)
 
-Estado: <state> · feature ativa: <current_feature> (<i>/<total>) · chunk atual: <current_chunk>
+Estado: <state> · feature ativa: <current_feature> (<i>/<total>) · chunk atual: <current_chunk> — <o que ele faz>
 
 Contexto (1-2 frases): <do plan.md>
 Decisões macro que importam: <bullets curtos>
@@ -34,8 +34,8 @@ Features:
   ✓ <slug> [done]   ▶ <slug> [implementing] (X/Y chunks)   ◌ <slug> [pending]
   (bug-fix: troque esta linha pela etapa — diagnóstico / opções (escolhida: <opção>) / correção (X/Y chunks))
 
-Em revisão agora: <in_review: chunks + arquivos, ou "nada">
-Feito recentemente: <últimos 1-3 chunks concluídos>
+Em revisão agora: <in_review: chunk(s) — o que faz(em) — + arquivos, ou "nada">
+Feito recentemente: <últimos 1-3 chunks concluídos, cada um pelo que fez>
 Próximo passo: /lp-continue → <o que ele fará concretamente>
 
 Preferências salvas (memória): <1-3 itens que mudam como implementar>
@@ -47,4 +47,5 @@ Arquivos-chave da feature ativa: <spec.md, tasks.md, e 2-4 arquivos de código c
 - **Não muta nada** — nem docs, nem `.sdd.yaml`, nem código.
 - **Colável e completo**: quem ler o bloco numa conversa nova deve conseguir rodar `/lp-continue` e seguir sem perguntar "onde estávamos?".
 - **Conciso**: resuma o plan/spec, não cole inteiro. Aponte caminhos pra quem quiser detalhe.
+- **Chunk se cita pelo que faz**: um handoff que diz só "chunk atual: F2.C4" é inútil pra quem retoma — sempre acompanhe da descrição (leia o `Faz` no `tasks.md`). Ver `../../helpers/prompts/state-machine.md`.
 - Diferente do `lp:help` (status + lista de comandos): aqui o foco é **retomada de contexto**.

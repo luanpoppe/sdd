@@ -15,7 +15,7 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
   - Mais de uma: prefira `state: implementing`; em empate, pergunte qual.
 - Leia `.sdd.yaml`. **Se `kind: bugfix`** → esta é uma mudança de bug-fix: siga `../../helpers/prompts/bugfix-machine.md` (estados `bug-proposing` → `bug-fixing`) em vez da máquina de features abaixo. O resto desta pré-checagem (in_review, memória) continua valendo; pule a leitura de `plan.md`/specs (bug-fix não os tem).
 - (fluxo normal de feature) Leia `plan.md` e os arquivos da **feature ativa atualmente** (se houver `current_feature`): `specs/<current_feature>/spec.md` e `tasks.md` se existirem.
-- **Leia `in_review`**: se preenchido, há um chunk aguardando revisão (pode ser de uma conversa anterior). Uma invocação normal de `/lp-continue` significa que o usuário **aprovou** essa revisão. **Antes de limpar**, se `auto_commit: full` (ver `../../helpers/prompts/git-guide.md`), faça o commit do chunk aprovado agora (git add só dos `in_review.files` + git commit com `in_review.commit_message`), respeitando a exceção de branch protegida do guia. Depois, limpe `in_review` (`null`) e siga para o próximo chunk/onda. Perguntas/ajustes sem `/lp-continue` caem na seção "Durante a revisão de um chunk".
+- **Leia `in_review`**: se preenchido, há um chunk aguardando revisão (pode ser de uma conversa anterior). Uma invocação normal de `/lp-continue` significa que o usuário **aprovou** essa revisão. **Antes de limpar**, se `auto_commit: full` (ver `../../helpers/prompts/git-guide.md`), faça o commit do chunk aprovado agora (git add só dos `in_review.files` + git commit com `in_review.commit_message`), respeitando a exceção de branch protegida do guia. Depois, limpe `in_review` (`null`) e siga para o próximo chunk/onda. Ao mencionar no chat o chunk que acabou de ser aprovado, diga o que ele fez, não só o ID (*"aprovado o chunk que passou a marcar dimensão sem dado como não-avaliada (`C6`)"*) — ver a regra de citação em `../../helpers/prompts/state-machine.md`. Perguntas/ajustes sem `/lp-continue` caem na seção "Durante a revisão de um chunk".
 - **NÃO leia specs de outras features** — elas podem nem existir ainda.
 - **Carregue a memória**: leia `.sdd/memory.md` (ou `.sdd/memory-map.md` se existir; nesse caso, leia também os arquivos de tema que parecem relevantes pelo título da feature ativa). Siga `../../helpers/prompts/memory-guide.md`.
 - **Carregue o contexto do projeto** (se `context: true`/ausente no config): leia `.sdd/context/index.md`. Se a feature ativa toca uma área listada, leia também o arquivo de contexto dela antes de decidir/implementar. É a 1ª parada para "como isso funciona hoje?". Siga `../../helpers/prompts/context-guide.md`.
@@ -100,6 +100,8 @@ Curta (4-6 linhas, não é uma spec) — reaproveite o que o `tasks.md` já tem,
 - **Vem de**: o(s) chunk(s) de que este depende (`Depende de:` do próprio chunk no tasks.md), ou "primeiro chunk" se nenhum.
 - **Prepara**: o(s) próximo(s) chunk(s) que dependem deste (procure no tasks.md quem lista este chunk em `Depende de:`), ou "último chunk" se nenhum.
 
+**Cite os outros chunks pelo que eles fazem, não pelo número** (regra completa em `../../helpers/prompts/state-machine.md`): em `Vem de`, `Prepara` e em "Conecta com o macro", pegue o `Faz`/título do chunk citado no `tasks.md` e escreva a descrição — o ID vai entre parênteses, opcional. Ex: *"Vem de: o chunk que passou a marcar dimensão sem dado como não-avaliada (`C6`)"*, nunca *"Vem de: C6"*. Vale para qualquer frase da explicação que mencione outro chunk.
+
 **Timing conforme `implementer`** (evita que o usuário fique olhando pra tela sem saber o que vem, e no modo subagente aproveita o tempo de execução):
 - **`subagent` (padrão)**: lance o subagente PRIMEIRO (passo c, item 1) e escreva esta explicação na mesma resposta, logo em seguida — se o ambiente suportar execução em segundo plano/notificação assíncrona, ela sai enquanto o subagente roda, sem custo de tempo extra; se o ambiente for síncrono (espera o subagente terminar antes de continuar o texto), ela ainda assim abre a resposta, antes do relatório.
 - **`main`**: não há subagente rodando em paralelo — escreva a explicação ANTES de começar a editar, e só então implemente.
@@ -133,7 +135,7 @@ Curta (4-6 linhas, não é uma spec) — reaproveite o que o `tasks.md` já tem,
 - Se todos os chunks da `current_feature` estão `[~]`/`[x]`:
   - Marque a feature como `done` no `.sdd.yaml`. Limpe `current_feature` e `current_chunk`.
   - **Contexto do projeto** (se `context: true`/ausente): crie/atualize o arquivo de contexto dessa feature em `.sdd/context/` (o que é / como funciona / decisões e porquês da spec+plan+auto-sync / notas) e atualize o(s) índice(s). Segue `../../helpers/prompts/context-guide.md`. **Entra no pacote do escriba** deste passo (não escreva inline). Cite no plano: *"Contexto: +1 área `<slug>` em .sdd/context/"*.
-  - Se há próxima feature `pending`: `state: awaiting-feature-spec`. Imprima: *"Feature `<X>` concluída (em revisão). Próximo `/lp-continue` inicia a feature `<Y>` (spec)."*
+  - Se há próxima feature `pending`: `state: awaiting-feature-spec`. Imprima: *"Feature `<X>` concluída (em revisão). Próximo `/lp-continue` inicia a feature `<Y>` — <summary dela> (spec)."*
   - Senão: `state: awaiting-archive`. Sugira `/lp-archive`.
 - O resultado desta transição define a linha "Próximo:" do plano de revisão (passo g).
 
@@ -169,9 +171,11 @@ Validação:
 - eslint --fix: ok
 - test: N passing
 
-Próximo: /lp-continue (próximo chunk OU início da próxima feature, se essa foi a última).
+Próximo: /lp-continue (<descreva o que vem: "implementa <o quê do próximo chunk>" OU "inicia a feature <slug>", se essa foi a última).
 Reverter: peça "reverte o chunk F<n>.C<m>".
 ```
+
+> Na linha "Próximo", diga **o que o próximo chunk faz** (leia o `Faz` dele no `tasks.md`), não só o ID — "próximo chunk `F2.C4`" não informa nada. O ID cru fica só na linha "Reverter" (é comando pra copiar). Ver a regra de citação de chunks em `../../helpers/prompts/state-machine.md`.
 
 **Commit do chunk** (se `auto_commit` ≠ `off`; ver `../../helpers/prompts/git-guide.md`): decida a mensagem sugerida agora e acrescente ao final do bloco acima. Com `suggest-only` (default) mostre o comando pronto pra copiar; com `full`, avise que será commitado automaticamente ao aprovar (ou, se a branch atual é protegida, caia pro comportamento de `suggest-only` com aviso). Com `off`, não mencione git.
 
@@ -248,4 +252,5 @@ Antes de fechar o turno, **revise a conversa** procurando sinais de preferência
 4. **Auto-sync antes de implementar.** Nunca codifique sobre docs desatualizadas.
 4-bis. **Respeite o `format` nas docs de conteúdo** (`plan`, `spec`): `format: both`/`html` → saem em `.md` E `.html`. **Exceção: `tasks` segue `tasks_format`** (default `md` → só `.md`, mesmo com `format` html/both). Antes de fechar o passo, confira o `format`/`tasks_format` e o padrão das docs anteriores.
 5. **Plano de revisão sempre.** Sem exceções.
+5-bis. **Chunk se cita pelo que faz, não pelo número.** ID (`C6`, `F2.C3`) é etiqueta de referência, não descrição — em qualquer explicação, transição ou resposta, acompanhe sempre do que o chunk faz. Ver `../../helpers/prompts/state-machine.md`.
 6. **Não leia specs de outras features** que ainda não foram processadas — elas não existem.
