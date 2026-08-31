@@ -8,6 +8,7 @@ Objetivo: **manter o contexto do agente principal limpo**. As escritas dos próp
 - **AUSÊNCIA DO CAMPO = `subagent`.** Configs criados antes do `scribe` existir NÃO têm a linha — nesse caso o default é `subagent`, NÃO `main`. Nunca trate "campo ausente" como inline. Na dúvida (campo ausente/ilegível) → **subagent**.
 - `scribe: subagent` (padrão) → delega as escritas ao subagente escriba.
 - `scribe: main` → **só** quando o campo está explicitamente `main` no config → o principal escreve inline.
+- **Modelo/thinking do escriba**: se o config tiver `subagents.scribe.<seu harness>`, lance o escriba nesse modelo — ver `./subagents-guide.md`. Escrita mecânica costuma render bem em modelo barato. Bloco ausente = lance normal, sem comentar.
 - **Fallback**: só caia para inline se o ambiente realmente não suporta lançar subagente (a chamada de Agent/Task falha). Aí avise no plano de revisão (*"artefatos escritos no agente principal — subagente indisponível"*). "Preferir controle direto do YAML" NÃO é motivo válido de fallback.
 
 ## Regra dura: tudo-ou-nada por passo

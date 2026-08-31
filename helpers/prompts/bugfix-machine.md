@@ -40,6 +40,8 @@ in_review: <null | {chunks: [ids], files: [paths], updated: data}>
 
 > **Escrita via scribe.** Com `scribe: subagent` (default), delegue as escritas de cada passo (docs, `flow.html`, `.sdd.yaml`) ao subagente escriba — veja `./scribe-guide.md`. O principal decide o conteúdo; o escriba escreve.
 
+> **Modelo dos subagentes.** Se o config tiver o bloco opcional `subagents`, lance cada subagente no modelo/thinking do papel dele (`explorer` na investigação da causa raiz, `scribe` nas escritas, `implementer` nos chunks) — ver `./subagents-guide.md`.
+
 ## Transições
 
 | Estado | Gatilho | Ação | Próximo |

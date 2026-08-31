@@ -60,7 +60,7 @@ Após o grill, vá para seção 2.
 
 0. **Contexto do projeto** (se `context: true`/ausente): leia `.sdd/context/index.md` e o arquivo da área revisada, se existir — pode adiantar boa parte do entendimento. Siga `../../helpers/prompts/context-guide.md`.
 
-1. **Explore o código** relacionado ao tema. Use Glob, Grep, Read agressivamente. Considere lançar agentes Explore em paralelo se o escopo for amplo.
+1. **Explore o código** relacionado ao tema. Use Glob, Grep, Read agressivamente. Considere lançar agentes Explore em paralelo se o escopo for amplo (papel `explorer` para modelo/thinking — ver `../../helpers/prompts/subagents-guide.md`).
 
 2. **Encontre o(s) entry point(s) externos — OBRIGATÓRIO antes de montar o plano.**
 

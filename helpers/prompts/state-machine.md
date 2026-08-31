@@ -6,6 +6,8 @@
 
 > **Escrita de artefatos (scribe).** Com `scribe: subagent` (default; **campo ausente também conta como `subagent`**), TODAS as escritas de arquivo do SDD do passo (docs, `flow.html`, `.sdd.yaml`, marcação do `tasks.md`, `memory.md`) são delegadas a um subagente escriba numa única chamada — tudo-ou-nada, nunca parcial/inline. Veja `./scribe-guide.md`.
 
+> **Modelo dos subagentes (`subagents`).** Campo **opcional** do `.sdd/config.yaml` (ausente por padrão = tudo como hoje). Quando presente, define em qual modelo/thinking cada papel de subagente roda, por harness: `subagents.<implementer|scribe|explorer>.<claude-code|cursor|codex>: {model, effort}`. Ao lançar um subagente, use a entrada do seu papel + seu harness; se não houver entrada, lance normal **em silêncio**; se houver mas o modelo falhar, relance no default e avise em 1 linha. Ver `./subagents-guide.md`.
+
 > **Como citar chunks, features e qualquer coisa numerada em texto explicativo.** Toda etiqueta do SDD — chunk (`C6`, `F2.C3`), feature/frente (`F3`, slug), onda, opção de solução (`Opção 2`) — é **referência, não descrição**. Ninguém lembra de cabeça o que era `C6` nem qual era a "frente F3". Em toda prosa dirigida ao usuário (explicação do chunk, `Vem de`/`Prepara`, "Conecta com o macro", transições, resumo de onda, resposta a pergunta, plano de revisão, handoff), **nunca use a etiqueta sozinha como se ela explicasse algo**. Sempre acompanhe do que aquilo é/faz:
 >
 > - Chunk: *"o chunk que renormalizou o prompt (`C7`)"* — não *"o `C7`"*.

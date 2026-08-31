@@ -53,7 +53,7 @@ Toda escrita em `.sdd/context/` segue o `scribe` (com `scribe: subagent`/ausente
 
 ## Semear (pasta ainda não existe)
 
-Se `.sdd/context/` não existe e o usuário quer começar: rode uma análise **macro** do projeto (um subagente, se `scribe: subagent`) e semeie o `index.md` + arquivos de contexto de topo das principais funcionalidades — igual ao bootstrap do `lp:init` (ver `context-guide.md`).
+Se `.sdd/context/` não existe e o usuário quer começar: rode uma análise **macro** do projeto (um subagente, se `scribe: subagent`; papel `explorer` para modelo/thinking — ver `../../helpers/prompts/subagents-guide.md`) e semeie o `index.md` + arquivos de contexto de topo das principais funcionalidades — igual ao bootstrap do `lp:init` (ver `context-guide.md`).
 
 ## Princípios
 

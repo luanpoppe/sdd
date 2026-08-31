@@ -1,6 +1,6 @@
 {
   "name": "@luanpoppe/sdd",
-  "version": "1.17.3",
+  "version": "1.18.0",
   "description": "SDD (spec-driven development) — plugin lp:* para Claude Code. 18 skills: chunks micro revisáveis, fluxo sequencial por feature, fluxo enxuto de bug-fix, diagrama macro da implementação, base de conhecimento do projeto (.sdd/context/), configuração via lp:settings, memória autônoma e revisão guiada de código.",
   "license": "MIT",
   "author": {
