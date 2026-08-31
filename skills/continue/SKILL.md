@@ -96,11 +96,11 @@ Coração da skill. Execute na ordem:
 Curta (4-6 linhas, não é uma spec) — reaproveite o que o `tasks.md` já tem, não investigue do zero:
 - **O quê**: o que este chunk implementa (pode reusar o `Faz` do tasks.md).
 - **Por quê**: a decisão/motivo da spec (ou `diagnosis`/`solutions`, no bug-fix) que justifica este chunk.
-- **Conecta com o macro**: o papel dele na feature (`plan.md`) ou na correção (bug-fix).
+- **Conecta com o macro**: o papel dele na feature (`plan.md`) ou na correção (bug-fix). **Nomeie a feature/frente pelo que ela é**, não pelo índice — *"a frente de transparência do diagnóstico (`F3`)"*, nunca *"frente F3"* (puxe título/`summary` do `plan.md`/`.sdd.yaml`).
 - **Vem de**: o(s) chunk(s) de que este depende (`Depende de:` do próprio chunk no tasks.md), ou "primeiro chunk" se nenhum.
 - **Prepara**: o(s) próximo(s) chunk(s) que dependem deste (procure no tasks.md quem lista este chunk em `Depende de:`), ou "último chunk" se nenhum.
 
-**Cite os outros chunks pelo que eles fazem, não pelo número** (regra completa em `../../helpers/prompts/state-machine.md`): em `Vem de`, `Prepara` e em "Conecta com o macro", pegue o `Faz`/título do chunk citado no `tasks.md` e escreva a descrição — o ID vai entre parênteses, opcional. Ex: *"Vem de: o chunk que passou a marcar dimensão sem dado como não-avaliada (`C6`)"*, nunca *"Vem de: C6"*. Vale para qualquer frase da explicação que mencione outro chunk.
+**Cite chunks E features pelo que são/fazem, nunca só pelo número** (regra completa em `../../helpers/prompts/state-machine.md`): em `Vem de`, `Prepara` e "Conecta com o macro", pegue o `Faz`/título do chunk no `tasks.md` (ou o título/`summary` da feature no `plan.md`/`.sdd.yaml`) e escreva a descrição — a etiqueta vai entre parênteses, opcional. Ex: *"Vem de: o chunk que passou a marcar dimensão sem dado como não-avaliada (`C6`)"*, nunca *"Vem de: C6"*; *"frente de transparência do diagnóstico (`F3`)"*, nunca *"frente F3"*. Vale para toda frase da explicação que mencione outro chunk, feature ou opção de solução.
 
 **Timing conforme `implementer`** (evita que o usuário fique olhando pra tela sem saber o que vem, e no modo subagente aproveita o tempo de execução):
 - **`subagent` (padrão)**: lance o subagente PRIMEIRO (passo c, item 1) e escreva esta explicação na mesma resposta, logo em seguida — se o ambiente suportar execução em segundo plano/notificação assíncrona, ela sai enquanto o subagente roda, sem custo de tempo extra; se o ambiente for síncrono (espera o subagente terminar antes de continuar o texto), ela ainda assim abre a resposta, antes do relatório.
@@ -252,5 +252,5 @@ Antes de fechar o turno, **revise a conversa** procurando sinais de preferência
 4. **Auto-sync antes de implementar.** Nunca codifique sobre docs desatualizadas.
 4-bis. **Respeite o `format` nas docs de conteúdo** (`plan`, `spec`): `format: both`/`html` → saem em `.md` E `.html`. **Exceção: `tasks` segue `tasks_format`** (default `md` → só `.md`, mesmo com `format` html/both). Antes de fechar o passo, confira o `format`/`tasks_format` e o padrão das docs anteriores.
 5. **Plano de revisão sempre.** Sem exceções.
-5-bis. **Chunk se cita pelo que faz, não pelo número.** ID (`C6`, `F2.C3`) é etiqueta de referência, não descrição — em qualquer explicação, transição ou resposta, acompanhe sempre do que o chunk faz. Ver `../../helpers/prompts/state-machine.md`.
+5-bis. **Nada se cita só pelo número.** Chunk (`C6`, `F2.C3`), feature/frente (`F3`), onda, opção de solução — etiqueta é referência, não descrição. Em qualquer explicação, transição ou resposta, acompanhe sempre do que aquilo é/faz. Ver `../../helpers/prompts/state-machine.md`.
 6. **Não leia specs de outras features** que ainda não foram processadas — elas não existem.

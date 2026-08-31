@@ -91,5 +91,5 @@ Fluxo típico (bug-fix, enxuto):
 
 - Nunca modifique nada.
 - Sucinto no status: ≤ ~20 linhas. O resumo de comandos é adicional.
-- **Chunk se cita pelo que faz**: ao mostrar o chunk atual ou sugerir a próxima ação, acompanhe da descrição (leia o `Faz` no `tasks.md`) — ID sozinho não diz nada. Ver `../../helpers/prompts/state-machine.md`.
+- **Nada se cita só pelo número**: ao mostrar o chunk atual, a feature ou sugerir a próxima ação, acompanhe da descrição (`Faz` do chunk no `tasks.md`; título/`summary` da feature) — etiqueta sozinha não diz nada. Ver `../../helpers/prompts/state-machine.md`.
 - Se faltar info esperada (ex: feature em `implementing` sem `tasks.md`), aponte como inconsistência.

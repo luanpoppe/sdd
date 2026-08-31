@@ -67,7 +67,7 @@ Reverter: peça "reverte o chunk F<n>.C<x>" (individual) ou "reverte a onda".
 ## Princípios
 
 - **Segurança de arquivo acima de velocidade**: na dúvida se dois chunks compartilham arquivo, serialize. É melhor uma onda menor que um conflito de edição.
-- **Chunk se cita pelo que faz**: no anúncio da onda, no resumo e nas respostas, ID sozinho não informa nada — acompanhe da descrição. Ver `./state-machine.md`.
+- **Nada se cita só pelo número**: no anúncio da onda, no resumo e nas respostas, etiqueta sozinha (chunk, feature/frente, onda) não informa nada — acompanhe da descrição. Ver `./state-machine.md`.
 - **Independência real**: paralelo não muda a ordem lógica — chunks dependentes continuam em ondas ordenadas. Paralelo só junta os que genuinamente não se afetam.
 - **Revisão continua obrigatória**: paralelo agiliza a implementação, não pula revisão. Cada onda termina com plano de revisão e pausa.
 - **Fallback**: se o ambiente não suporta lançar subagentes em paralelo, avise e caia para sequencial.

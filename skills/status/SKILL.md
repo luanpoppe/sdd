@@ -47,5 +47,5 @@ Arquivos-chave da feature ativa: <spec.md, tasks.md, e 2-4 arquivos de código c
 - **Não muta nada** — nem docs, nem `.sdd.yaml`, nem código.
 - **Colável e completo**: quem ler o bloco numa conversa nova deve conseguir rodar `/lp-continue` e seguir sem perguntar "onde estávamos?".
 - **Conciso**: resuma o plan/spec, não cole inteiro. Aponte caminhos pra quem quiser detalhe.
-- **Chunk se cita pelo que faz**: um handoff que diz só "chunk atual: F2.C4" é inútil pra quem retoma — sempre acompanhe da descrição (leia o `Faz` no `tasks.md`). Ver `../../helpers/prompts/state-machine.md`.
+- **Nada se cita só pelo número**: um handoff que diz só "chunk atual: F2.C4" ou "frente F3" é inútil pra quem retoma — sempre acompanhe da descrição (`Faz` do chunk no `tasks.md`; título/`summary` da feature no `plan.md`/`.sdd.yaml`). Ver `../../helpers/prompts/state-machine.md`.
 - Diferente do `lp:help` (status + lista de comandos): aqui o foco é **retomada de contexto**.
