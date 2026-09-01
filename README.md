@@ -52,7 +52,7 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 | `lp:review` | Revisão guiada de código existente (walkthrough do fluxo real). |
 | `lp:flow` | Gera/regenera o diagrama macro (`flow.html`); nós implementados são clicáveis e abrem um mini-walkthrough (como funciona + código real + dados + conecta). Vale pra features e bug-fix. |
 | `lp:parallel` | Liga/desliga o modo paralelo (chunks independentes, um subagente cada). |
-| `lp:settings` | Lista e altera as configurações do `.sdd/config.yaml` (por campo/valor ou em linguagem natural). |
+| `lp:settings` | Lista e altera as configurações do `.sdd/config.yaml` (por campo/valor ou em linguagem natural). Com a palavra `global`, mexe na config global do usuário (`~/.sdd/config.yaml`). |
 | `lp:context` | Base de conhecimento do projeto (`.sdd/context/`): health-check do índice/arquivos, dúvidas sobre como as coisas funcionam, documentar áreas. |
 | `lp:auto-update` | Atualiza as skills para a versão mais recente do GitHub. |
 | `lp:explain` | Gera explicação em HTML de um tópico. |
@@ -94,6 +94,22 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 
 > `flowchart`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue`, `context`, `parallel`, `chunk_order`, `auto_commit` e `tests` não são perguntados no grill — vêm com o padrão e você edita no `.sdd/config.yaml` quando quiser (ou usa `lp:parallel`). `lp:new`/`lp:bug-fix` também sugerem uma branch dedicada no início (aceitar/criar manual/continuar na atual). O bloco `subagents` nem é escrito no config — só existe se você ligar (`/lp-settings "roda o escriba no haiku"`).
 
+### Configuração global (`~/.sdd/config.yaml`)
+
+Para não repetir as mesmas escolhas em todo projeto novo, dá pra guardar suas preferências numa config global, na home do usuário:
+
+```
+/lp-settings global tests on          # cria/atualiza ~/.sdd/config.yaml
+/lp-settings global                   # lista o que está configurado globalmente
+"liga o paralelo globalmente"         # linguagem natural também funciona
+```
+
+- Aceita **todos** os campos da tabela acima (incluindo o bloco `subagents`) — é o mesmo esquema, sem subconjunto. Só `version`/`created` ficam de fora, por serem metadados do projeto.
+- É **esparso**: só existe o que você põe. Campo ausente = default do plugin (assim você continua recebendo mudanças de default em versões novas).
+- É **semente, não herança dinâmica**: o `lp:init` copia os valores para o `.sdd/config.yaml` do projeto e mostra o que herdou. Nos campos do grill, o valor global vem pré-selecionado — dá pra divergir num projeto específico.
+- Portanto, **mudar o global não altera projetos já criados** — de propósito: o `.sdd/config.yaml` versionado no repo é a verdade daquele projeto, igual pra todo mundo do time. Pra mudar um projeto existente, `lp:settings` normal.
+- Fica em `~/.sdd/` (não em `~/.claude/`) porque o installer limpa `lp-*` da pasta de skills a cada update, e porque assim serve Claude Code, Cursor e Codex igualmente.
+
 Para ver/alterar qualquer config, use **`lp:settings`** (`/lp-settings` lista tudo; `/lp-settings chunk_size small` ou "muda o formato pra html" aplica).
 
 ## Estrutura do repositório
@@ -105,7 +121,7 @@ sdd/
 │   └── plugin.json        # manifesto do plugin "lp"
 ├── skills/                # 18 skills (dir + frontmatter name sem prefixo lp-)
 ├── helpers/
-│   ├── prompts/           # prompts compartilhados (grill, memória, context, state-machine, bugfix-machine, flowchart, parallel, scribe, git, subagents, tester…)
+│   ├── prompts/           # prompts compartilhados (grill, memória, context, state-machine, bugfix-machine, flowchart, parallel, scribe, git, subagents, tester, global-config…)
 │   └── templates/         # templates de plan/spec/tasks/explain/flow + diagnosis/solutions (bug-fix) + styles.css
 ├── bin/install.js         # installer cross-tool (npx github:luanpoppe/sdd)
 ├── package.json           # @luanpoppe/sdd (publicação npm)

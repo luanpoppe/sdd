@@ -11,10 +11,13 @@ Você está configurando o spec-driven development `lp:*` neste projeto. Siga es
   1. Manter como está (sair).
   2. Reconfigurar (sobrescrever após confirmação explícita).
 - Caso contrário, prossiga.
+- **Leia a config global** `~/.sdd/config.yaml` (home do usuário), se existir — são as preferências do usuário para projetos novos. Siga `../../helpers/prompts/global-config-guide.md`. **Se não existir, ignore em silêncio**: não mencione global em lugar nenhum e siga o fluxo normal.
 
 ## 2. Grill curto (use `AskUserQuestion`)
 
 Faça as perguntas abaixo. Siga as diretrizes de `../../helpers/prompts/grill-snippet.md` — como formato, idioma e chunk size são independentes entre si, mande as três num único batch de `AskUserQuestion`.
+
+> **Se a config global definir algum destes campos**, continue perguntando, mas ponha o valor global como a **primeira opção e a recomendada**, sinalizando a origem no rótulo (ex: *"HTML e Markdown (seu padrão global)"*) em vez do "(Recomendado)" padrão. O usuário confirma ou muda só neste projeto.
 
 **Q1. Formato dos artefatos**
 - Markdown apenas (Recomendado) — diff-friendly, simples.
@@ -81,7 +84,7 @@ O `memory.md` começa assim (preserve esse formato):
 (vazio)
 ```
 
-`config.yaml` (use os valores do grill):
+`config.yaml` (use os valores do grill; **para os campos NÃO perguntados, se a config global definir o campo, grave o valor do global em vez do default abaixo**):
 
 ```yaml
 version: 1
@@ -104,7 +107,9 @@ created: <YYYY-MM-DD>
 
 > **`context`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue`, `parallel`, `chunk_order` e `auto_commit` NÃO são perguntados no grill** — gravados com os defaults acima. `context: false` desliga a base de conhecimento. `implementer: main` faz a conversa principal implementar o código. `scribe: main` faz o principal escrever os artefatos inline. `tasks_format: follow` faz o `tasks` acompanhar o `format` global (gera `tasks.html`). `tasks_autocontinue: off` faz o `lp:continue` pausar após o `tasks.md` (em vez de seguir direto pro 1º chunk). `parallel: on` (ou `lp:parallel`) liga o modo paralelo; mesmo com `off`, o `lp:continue` pergunta uma vez antes do 1º chunk se você quer paralelizar. `chunk_order` muda a heurística de ordenação de features (lp:new) e chunks (lp:continue) — ver `helpers/prompts/state-machine.md`. `tests: on` liga a geração automática de testes ao final de cada feature/correção (desligado por padrão) — ver `helpers/prompts/tester-guide.md`. `auto_commit: full` faz o `lp:continue` commitar de verdade cada chunk aprovado (exceto em branch protegida); `off` desliga qualquer menção a git — ver `helpers/prompts/git-guide.md`. Quem quiser, edita esses campos no `.sdd/config.yaml` depois (ou via `lp:settings`).
 
-> **Não escreva o bloco `subagents`.** Existe também um campo opcional `subagents`, que escolhe em qual modelo/thinking cada papel de subagente roda (`implementer`/`scribe`/`explorer`), por harness. Ele é **omitido de propósito** no config gerado — ausente significa "cada subagente herda o modelo do principal", que é o comportamento desejado pela maioria. Quem quiser ligar, usa `lp:settings` (ex: *"roda o escriba no haiku"*) ou edita à mão seguindo `../../helpers/prompts/subagents-guide.md`.
+> **Bloco `subagents`: só copie se vier do global.** Se `~/.sdd/config.yaml` tiver um bloco `subagents`, **copie-o inteiro** para o config do projeto — é a exceção deliberada à regra abaixo (o usuário já declarou essa preferência globalmente). Sem global, siga a regra: não escreva o bloco.
+
+> **Não escreva o bloco `subagents`** (quando não veio do global). Existe também um campo opcional `subagents`, que escolhe em qual modelo/thinking cada papel de subagente roda (`implementer`/`scribe`/`explorer`/`tester`), por harness. Ele é **omitido de propósito** no config gerado — ausente significa "cada subagente herda o modelo do principal", que é o comportamento desejado pela maioria. Quem quiser ligar, usa `lp:settings` (ex: *"roda o escriba no haiku"*) ou edita à mão seguindo `../../helpers/prompts/subagents-guide.md`.
 
 Se `format` ∈ {html, both}: copie `../../helpers/templates/styles.css` para `.sdd/assets/styles.css` e pergunte se o usuário quer ajustar o esquema de cores (caso sim, faça um mini-grill sobre cor primária/fundo e edite o CSS).
 
@@ -122,13 +127,17 @@ Imprima:
 
 ```
 SDD inicializado em .sdd/
+Herdado do global (~/.sdd/config.yaml): implementer=main · tests=on · subagents.scribe
 Próximo passo: /lp-new <id-da-mudanca>
 ```
+
+A linha "Herdado do global" só aparece **se** a config global existir e tiver contribuído com algum valor — liste os campos que vieram de lá. Sem global, omita a linha inteira.
 
 Liste os arquivos criados em ordem de revisão (config primeiro, depois assets se houver).
 
 ## Princípios
 
+- **Config global é semente, não vínculo**: os valores herdados de `~/.sdd/config.yaml` são **materializados** no `.sdd/config.yaml` do projeto. Mudar o global depois não altera este projeto (nem o contrário). Ver `../../helpers/prompts/global-config-guide.md`.
 - Não comite nada automaticamente.
 - Não adicione `.sdd/` ao `.gitignore` (docs devem entrar no repo).
 - Se algo já existe e seria sobrescrito, pare e pergunte.

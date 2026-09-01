@@ -1,14 +1,21 @@
 ---
 name: settings
-description: Lista e altera as configurações do SDD `lp:*` no `.sdd/config.yaml` do projeto. Sem argumentos, mostra todas as configs personalizáveis (valor atual, opções, default). Com argumentos, aplica a mudança pedida (ex: "lp:settings chunk_size small", "muda o formato pra html", "liga o paralelo"). Use quando o usuário pedir "lp:settings", "ver/mudar configurações do lp", "trocar chunk size", "desligar o flowchart", etc.
+description: Lista e altera as configurações do SDD `lp:*` — no `.sdd/config.yaml` do projeto ou na config global do usuário (`~/.sdd/config.yaml`, com a palavra "global"). Sem argumentos, mostra todas as configs personalizáveis (valor atual, opções, default). Com argumentos, aplica a mudança pedida (ex: "lp:settings chunk_size small", "muda o formato pra html", "liga o paralelo", "lp:settings global tests on", "salva isso como meu padrão"). Use quando o usuário pedir "lp:settings", "ver/mudar configurações do lp", "trocar chunk size", "desligar o flowchart", "config global do sdd", etc.
 ---
 
-Você gerencia as configurações do SDD da mudança/projeto atual. Edita **apenas** o `.sdd/config.yaml`. Nunca toca em specs, tasks, código, `.sdd.yaml` de mudanças ou memória.
+Você gerencia as configurações do SDD. Edita **apenas** arquivos de config (`.sdd/config.yaml` do projeto ou `~/.sdd/config.yaml` global). Nunca toca em specs, tasks, código, `.sdd.yaml` de mudanças ou memória.
 
 ## 0. Pré-checagem
 
-- Se `.sdd/config.yaml` não existir → "SDD não inicializado. Rode `/lp-init`." Pare.
-- Leia o `.sdd/config.yaml` atual (todos os campos + comentários).
+**Primeiro, determine o ALVO** — projeto (padrão) ou global:
+
+- O pedido contém **"global"** (ou equivalente claro: *"pra todos os projetos"*, *"salva como meu padrão"*, *"padrão da máquina"*) → alvo é **`~/.sdd/config.yaml`** (home do usuário). Siga `../../helpers/prompts/global-config-guide.md`.
+- Caso contrário → alvo é o **`.sdd/config.yaml` do projeto** (comportamento padrão).
+
+Depois, conforme o alvo:
+
+- **Projeto**: se `.sdd/config.yaml` não existir → "SDD não inicializado. Rode `/lp-init`." Pare. Senão leia-o inteiro (campos + comentários).
+- **Global**: leia `~/.sdd/config.yaml` se existir. **Se não existir, não é erro** — é o caso normal de quem nunca configurou. Numa leitura, informe que não há config global; numa escrita, crie o arquivo (ver passo 2).
 
 ## Configurações personalizáveis
 
@@ -30,7 +37,9 @@ Você gerencia as configurações do SDD da mudança/projeto atual. Edita **apen
 | `subagents` | bloco aninhado (papel → harness → `{model, effort}`) | (ausente) | **Opcional.** Em qual modelo/thinking cada papel de subagente roda: `implementer`, `scribe`, `explorer`; harnesses `claude-code`, `cursor`, `codex`. Ausente = cada subagente herda o modelo do principal. Ver `../../helpers/prompts/subagents-guide.md`. |
 | `auto_commit` | `full` / `suggest-only` / `off` | `suggest-only` | Git a cada chunk aprovado. `full`: commita de verdade (git add + commit só dos arquivos do chunk), exceto em branch protegida (main/master/develop/staging/... — aí só sugere, a menos que peça explicitamente). `suggest-only`: só mostra o comando pronto pra copiar. `off`: não menciona git. |
 
-> `created` e `version` são metadados — não são configuráveis por aqui.
+> `created` e `version` são metadados — não são configuráveis por aqui, nem existem no global.
+
+> **Todos os campos acima valem igualmente no global** (`~/.sdd/config.yaml`) — é o mesmo esquema, sem subconjunto. Campo novo adicionado no futuro já nasce válido nos dois. Ver `../../helpers/prompts/global-config-guide.md`.
 
 ## 1. Sem argumentos → listar
 
@@ -57,7 +66,10 @@ Configurações do SDD (.sdd/config.yaml):
 
 Pra mudar: /lp-settings <campo> <valor>  (ex: /lp-settings chunk_size small)
 ou descreva em linguagem natural (ex: "muda o formato pra html", "desliga o flowchart").
+Pra mudar o padrão de TODOS os projetos novos: /lp-settings global <campo> <valor>
 ```
+
+**`/lp-settings global` (sem campo) → liste o global** em vez do projeto: mesmo formato, cabeçalho `Configurações globais do SDD (~/.sdd/config.yaml):`, e **"não configurado"** em cada campo que não estiver no arquivo (ele é esparso de propósito — ausente = usa o default do plugin). Se o arquivo não existir: *"Você ainda não tem config global. Crie com `/lp-settings global <campo> <valor>` — ela vira o padrão dos próximos `/lp-init`."*
 
 Marque com o default entre parênteses quando o valor atual estiver ausente (assumido).
 
@@ -65,9 +77,10 @@ Marque com o default entre parênteses quando o valor atual estiver ausente (ass
 
 O argumento pode ser `campo valor` (ex: `chunk_size small`) ou linguagem natural (ex: "liga o paralelo", "docs em inglês", "não pausa no tasks"). Interprete para um ou mais pares campo/valor.
 
-1. **Mapeie** cada pedido a um campo da tabela e ao valor canônico. Ex: "inglês" → `lang: en`; "liga paralelo" → `parallel: on`; "não pausa no tasks" → `tasks_autocontinue: on`; "tasks em html" → `tasks_format: follow`; "implementa de fora pra dentro" → `chunk_order: outside-in`; "comita automático" / "commita sozinho" → `auto_commit: full`; "só sugere o commit" → `auto_commit: suggest-only`; "não mexe com git" → `auto_commit: off`; "gera testes automático" / "quero testes no final" → `tests: on`; "roda o escriba no haiku" → `subagents.scribe.<harness atual>.model: haiku`; "implementer no opus com thinking alto" → `subagents.implementer.<harness atual>: {model: opus, effort: high}`.
+1. **Mapeie** cada pedido a um campo da tabela e ao valor canônico. Ex: "inglês" → `lang: en`; "liga paralelo" → `parallel: on`; "não pausa no tasks" → `tasks_autocontinue: on`; "tasks em html" → `tasks_format: follow`; "implementa de fora pra dentro" → `chunk_order: outside-in`; "comita automático" / "commita sozinho" → `auto_commit: full`; "só sugere o commit" → `auto_commit: suggest-only`; "não mexe com git" → `auto_commit: off`; "gera testes automático" / "quero testes no final" → `tests: on`; "roda o escriba no haiku" → `subagents.scribe.<harness atual>.model: haiku`; "implementer no opus com thinking alto" → `subagents.implementer.<harness atual>: {model: opus, effort: high}`. **Sinais de alvo global**: "globalmente", "pra todos os projetos", "salva como meu padrão", "sempre uso assim" → mesmo campo/valor, mas gravando em `~/.sdd/config.yaml`.
 2. **Valide** o valor contra a coluna "Valores". Se inválido ou ambíguo, **não edite** — liste as opções válidas daquele campo e pergunte (`AskUserQuestion`).
-3. **Edite o `.sdd/config.yaml`**: altere só a(s) linha(s) do(s) campo(s) pedido(s). **Preserve o comentário inline** de cada campo e o resto do arquivo (não reordene, não remova comentários, não reescreva o arquivo inteiro). Se o campo não existir ainda no arquivo (config antigo), **adicione a linha** com o comentário padrão (veja `lp:init`).
+3. **Edite o arquivo do ALVO** (`.sdd/config.yaml` do projeto, ou `~/.sdd/config.yaml` se o pedido for global): altere só a(s) linha(s) do(s) campo(s) pedido(s). **Preserve o comentário inline** de cada campo e o resto do arquivo (não reordene, não remova comentários, não reescreva o arquivo inteiro). Se o campo não existir ainda no arquivo (config antigo), **adicione a linha** com o comentário padrão (veja `lp:init`).
+3-ter. **Se o alvo é global e `~/.sdd/config.yaml` não existe**: crie o arquivo com um cabeçalho curto (`# ~/.sdd/config.yaml — preferências do usuário para projetos novos (esparso)`) e **só o campo pedido**. Nunca materialize os outros defaults — o arquivo é esparso de propósito: campo ausente = default do plugin, e assim o usuário continua recebendo mudanças de default em versões novas. Nunca grave `version`/`created` no global.
 3-bis. **`subagents` é aninhado — trate diferente dos campos de linha única.** É o único campo em bloco:
    - Não valide o nome do modelo contra lista fixa (o catálogo de cada harness muda) — grave o que o usuário pediu. Valide só o **papel** (`implementer`/`scribe`/`explorer`) e, se o usuário nomear um, o **harness** (`claude-code`/`cursor`/`codex`).
    - Se o usuário não disser o harness, use **o harness atual** e diga qual assumiu na confirmação.
@@ -77,16 +90,28 @@ O argumento pode ser `campo valor` (ex: `chunk_size small`) ou linguagem natural
 5. **Confirme** mostrando o diff conceitual:
 
    ```
-   Config atualizado (.sdd/config.yaml):
+   Config do PROJETO atualizado (.sdd/config.yaml):
      <campo>: <antigo> → <novo>
 
    Efeito: <1 frase do que muda no fluxo daqui pra frente>.
    ```
 
+   No global, deixe o alvo igualmente explícito — o usuário precisa saber que mexeu na máquina toda, não neste projeto:
+
+   ```
+   Config GLOBAL atualizada (~/.sdd/config.yaml):
+     <campo>: <antigo ou "não configurado"> → <novo>
+
+   Efeito: novos projetos (`/lp-init`) já nascem com isso. Projetos existentes não mudam.
+   ```
+
 ## Princípios
 
-- **Só o `.sdd/config.yaml`.** Nada de mudar docs, código ou estado de mudança.
-- **Escopo do projeto**: a config vale pro projeto todo; muda o comportamento das próximas execuções (`lp:new`, `lp:continue`, `lp:bug-fix`). Não reprocessa o que já foi gerado.
+- **Só arquivos de config.** `.sdd/config.yaml` (projeto) ou `~/.sdd/config.yaml` (global). Nada de mudar docs, código ou estado de mudança.
+- **Projeto é o padrão; global só com a palavra.** Na dúvida sobre a intenção, edite o projeto — errar no projeto afeta um repo, errar no global afeta todos os futuros.
+- **Sempre diga qual arquivo foi tocado.** "Config do PROJETO" vs "Config GLOBAL", explicitamente, em toda confirmação.
+- **Escopo do projeto**: a config do projeto vale pro projeto todo; muda o comportamento das próximas execuções (`lp:new`, `lp:continue`, `lp:bug-fix`). Não reprocessa o que já foi gerado.
+- **Escopo do global**: vale como **semente de projetos novos** (`lp:init`). Não afeta projeto já criado — cada um tem sua cópia materializada. Se o usuário estranhar isso, explique; não é bug. Ver `../../helpers/prompts/global-config-guide.md`.
 - **Valores canônicos e validados.** Nunca grave um valor fora da tabela. Na dúvida, pergunte com `AskUserQuestion`.
 - **Preserve o arquivo**: edição cirúrgica linha a linha, mantendo comentários e ordem. Não regenere o `config.yaml` do zero.
 - Para `parallel`, mencione que `lp:parallel` faz o mesmo toggle de forma rápida.
