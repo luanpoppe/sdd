@@ -26,6 +26,7 @@ No modo paralelo, NUNCA rode todos os chunks cegamente juntos. Agrupe em **ondas
 2. Lance **um subagente por chunk da onda, em paralelo** (todas as chamadas no mesmo turno). Todos usam o papel `implementer` para efeito de modelo/thinking (`subagents.implementer.<harness>`, ver `./subagents-guide.md`); se caírem no fallback, agrupe o aviso numa linha só. Cada subagente recebe o mesmo briefing do modo subagente normal (chunk do tasks.md, spec, plan.md, prefs de código, rodar eslint --fix + testes) e retorna o relatório estruturado (`Faz`/`Revisar`/`Conecta` + validação) por arquivo.
 3. Espere todos os subagentes da onda terminarem antes de seguir.
 4. **Auto-sync + marcação** (conversa principal): confira os relatórios, trate divergências, marque `[~]` os checkboxes de TODOS os chunks da onda no `tasks.md`, atualize `.sdd.yaml` (`current_chunk` pode listar os IDs da onda) e o `flow.html` (todos os nós da onda de uma vez).
+4-bis. **Testes** (se `tests: on`): se esta onda **fechou a feature**, rode o passo f-bis igual ao sequencial — um subagente tester para a feature inteira, uma vez só (não um por chunk da onda). Ver `./tester-guide.md`.
 5. **Plano de revisão combinado** — ver abaixo. Pare para revisão.
 
 Uma onda por invocação de `lp:continue` (mesmo no paralelo): não dispare a próxima onda no mesmo turno — o usuário revisa a onda atual primeiro.

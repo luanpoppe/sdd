@@ -25,9 +25,11 @@ subagents:
     codex:       { model: gpt-5-mini }
   explorer:
     claude-code: { model: sonnet, effort: medium }
+  tester:
+    claude-code: { model: sonnet, effort: high }
 ```
 
-- **Papéis válidos** (só estes três): `implementer`, `scribe`, `explorer`.
+- **Papéis válidos** (só estes quatro): `implementer`, `scribe`, `explorer`, `tester`.
 - **Chaves de harness canônicas**: `claude-code`, `cursor`, `codex`. Chaves desconhecidas são **ignoradas em silêncio** (permite deixar preparada a entrada de um harness que este guia ainda não nomeia).
 - `effort` (thinking/reasoning) é opcional e só vale onde o harness suporta configurar isso. Se o harness não suporta, use só o `model` e ignore o `effort`.
 - **Valores de modelo NÃO são validados contra uma lista fixa.** O catálogo de cada harness muda com o tempo; quem resolve o nome é o harness em runtime. Não recuse um valor por não reconhecê-lo — tente lançar e trate a falha pelo passo 4.
@@ -41,6 +43,7 @@ Mapa fixo — use-o para saber qual entrada da config se aplica ao subagente que
 | `implementer` | `../../skills/continue/SKILL.md` passo **c** (chunk sequencial) · cada subagente de uma onda do `./parallel-guide.md` |
 | `scribe` | toda chamada do escriba — `lp:continue`, `lp:new`, `lp:bug-fix`, `lp:flow`, `lp:context` (ver `./scribe-guide.md`) |
 | `explorer` | `Agent Explore` de investigação — reúso no `lp:new`, causa raiz no `lp:bug-fix`, escopo amplo no `lp:review` · bootstrap de contexto do `lp:init` (3-bis) · semeadura do `lp:context` |
+| `tester` | passo **f-bis** do motor `implementing` — geração de testes ao concluir a feature/correção, só com `tests: on` (ver `./tester-guide.md`) |
 
 O checador de atualização do `lp:desktop` fica **fora** deste mapa — roda sempre no default.
 

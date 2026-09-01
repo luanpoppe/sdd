@@ -26,6 +26,7 @@ Você gerencia as configurações do SDD da mudança/projeto atual. Edita **apen
 | `tasks_autocontinue` | `on` / `off` | `on` | Após gerar o `tasks.md`, seguir direto pro 1º chunk (`on`) ou pausar pra revisão (`off`). |
 | `parallel` | `on` / `off` | `off` | Chunks independentes em paralelo (um subagente cada). Também alternável por `lp:parallel`. |
 | `chunk_order` | `inside-out` / `outside-in` / `free` | `inside-out` | Desempate de ordem entre features/chunks independentes (dependência real sempre manda primeiro). `inside-out`: domínio/persistência antes de controller/consumer (compila incremental, sem stub). `outside-in`: prioriza mostrar o esqueleto do fluxo primeiro. `free`: só dependência, sem preferência. |
+| `tests` | `off` / `on` | `off` | Geração automática de testes. `on`: ao concluir cada feature (ou correção de bug-fix), um subagente tester escreve os testes da funcionalidade (borda e falha, não só caminho feliz), roda e reporta — nunca corrige. Ver `../../helpers/prompts/tester-guide.md`. |
 | `subagents` | bloco aninhado (papel → harness → `{model, effort}`) | (ausente) | **Opcional.** Em qual modelo/thinking cada papel de subagente roda: `implementer`, `scribe`, `explorer`; harnesses `claude-code`, `cursor`, `codex`. Ausente = cada subagente herda o modelo do principal. Ver `../../helpers/prompts/subagents-guide.md`. |
 | `auto_commit` | `full` / `suggest-only` / `off` | `suggest-only` | Git a cada chunk aprovado. `full`: commita de verdade (git add + commit só dos arquivos do chunk), exceto em branch protegida (main/master/develop/staging/... — aí só sugere, a menos que peça explicitamente). `suggest-only`: só mostra o comando pronto pra copiar. `off`: não menciona git. |
 
@@ -51,6 +52,7 @@ Configurações do SDD (.sdd/config.yaml):
   parallel=<v>            (on | off)
   chunk_order=<v>         (inside-out | outside-in | free)
   auto_commit=<v>         (full | suggest-only | off)
+  tests=<v>               (off | on)
   subagents=<resumo>      (opcional — modelo por papel de subagente; "não configurado" se ausente)
 
 Pra mudar: /lp-settings <campo> <valor>  (ex: /lp-settings chunk_size small)
@@ -63,7 +65,7 @@ Marque com o default entre parênteses quando o valor atual estiver ausente (ass
 
 O argumento pode ser `campo valor` (ex: `chunk_size small`) ou linguagem natural (ex: "liga o paralelo", "docs em inglês", "não pausa no tasks"). Interprete para um ou mais pares campo/valor.
 
-1. **Mapeie** cada pedido a um campo da tabela e ao valor canônico. Ex: "inglês" → `lang: en`; "liga paralelo" → `parallel: on`; "não pausa no tasks" → `tasks_autocontinue: on`; "tasks em html" → `tasks_format: follow`; "implementa de fora pra dentro" → `chunk_order: outside-in`; "comita automático" / "commita sozinho" → `auto_commit: full`; "só sugere o commit" → `auto_commit: suggest-only`; "não mexe com git" → `auto_commit: off`; "roda o escriba no haiku" → `subagents.scribe.<harness atual>.model: haiku`; "implementer no opus com thinking alto" → `subagents.implementer.<harness atual>: {model: opus, effort: high}`.
+1. **Mapeie** cada pedido a um campo da tabela e ao valor canônico. Ex: "inglês" → `lang: en`; "liga paralelo" → `parallel: on`; "não pausa no tasks" → `tasks_autocontinue: on`; "tasks em html" → `tasks_format: follow`; "implementa de fora pra dentro" → `chunk_order: outside-in`; "comita automático" / "commita sozinho" → `auto_commit: full`; "só sugere o commit" → `auto_commit: suggest-only`; "não mexe com git" → `auto_commit: off`; "gera testes automático" / "quero testes no final" → `tests: on`; "roda o escriba no haiku" → `subagents.scribe.<harness atual>.model: haiku`; "implementer no opus com thinking alto" → `subagents.implementer.<harness atual>: {model: opus, effort: high}`.
 2. **Valide** o valor contra a coluna "Valores". Se inválido ou ambíguo, **não edite** — liste as opções válidas daquele campo e pergunte (`AskUserQuestion`).
 3. **Edite o `.sdd/config.yaml`**: altere só a(s) linha(s) do(s) campo(s) pedido(s). **Preserve o comentário inline** de cada campo e o resto do arquivo (não reordene, não remova comentários, não reescreva o arquivo inteiro). Se o campo não existir ainda no arquivo (config antigo), **adicione a linha** com o comentário padrão (veja `lp:init`).
 3-bis. **`subagents` é aninhado — trate diferente dos campos de linha única.** É o único campo em bloco:

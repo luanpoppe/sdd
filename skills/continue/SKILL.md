@@ -121,7 +121,7 @@ Curta (4-6 linhas, não é uma spec) — reaproveite o que o `tasks.md` já tem,
   - Rode o **comando de validação do projeto** (campo `Validação` do chunk / CLAUDE.md — lint/format da stack real, **não assuma eslint**) apenas nos arquivos editados.
   - Se o projeto exige (ver CLAUDE.md do projeto), rode os testes.
 
-> Em ambos os modos, o principal **decide** a/d/e/f/g/h (o subagente implementer só codifica o chunk e reporta). Execute d→e→f→g→h **nesta ordem**, e só então "Pare aqui".
+> Em ambos os modos, o principal **decide** a/d/e/f/f-bis/g/h (o subagente implementer só codifica o chunk e reporta). Execute d→e→f→f-bis→g→h **nesta ordem**, e só então "Pare aqui".
 >
 > **Atenção (scribe):** "ser do principal" = o principal DECIDE o quê escrever, **não** que ele dá `Write`/`Edit` inline. Com `scribe: subagent` (incl. campo ausente), as **escritas** de d) (`tasks.md`, `.sdd.yaml`), e) (`flow.html`) e g-bis) (`in_review`) + a de memória vão **todas juntas numa única chamada do escriba**, montada ao final (antes de imprimir o plano g). Não escreva nenhum desses inline. Ver a nota "Escrita de artefatos (scribe)" no topo e `../../helpers/prompts/scribe-guide.md`.
 
@@ -139,11 +139,19 @@ Curta (4-6 linhas, não é uma spec) — reaproveite o que o `tasks.md` já tem,
   - Senão: `state: awaiting-archive`. Sugira `/lp-archive`.
 - O resultado desta transição define a linha "Próximo:" do plano de revisão (passo g).
 
+**f-bis) Geração de testes** — só se **`tests: on`** no `.sdd/config.yaml` **E** o passo f acabou de concluir a feature (no bug-fix: foi o último chunk da correção). Nos demais chunks, pule sem mencionar nada. Com `tests: off`/ausente (padrão), este passo **não existe** — não gere testes nem comente que está desligado.
+
+Lance UM **subagente tester** (papel `tester` em `subagents` para modelo/thinking) seguindo `../../helpers/prompts/tester-guide.md`. Passe: os arquivos de código de **todos** os chunks da feature (campos `Arquivos` do `tasks.md`, não só o último chunk), a `spec.md` da feature (cenários BDD + Edge cases são os casos de teste) — ou, no bug-fix, `diagnosis.md` + `chosen_solution`, com teste de regressão obrigatório para a causa raiz — e as convenções de código do projeto.
+
+O tester **escreve os testes, roda, reporta — e nunca corrige** (nem o teste, nem a implementação). Teste falhando é decisão do usuário: bug real ou teste mal escrito. Leve o retorno dele para o bloco `Testes` do plano de revisão (passo g) e os arquivos criados para `in_review.files` (g-bis).
+
 **g) Plano de revisão obrigatório** (formato da state-machine.md):
 
 **UMA lista só** de arquivos, já na ordem de revisão (não separe "Arquivos" de "Ordem de revisão"). Inclua TODOS os arquivos tocados (serve de manifesto pra revert), ordenados por prioridade; triviais (tipos gerados, config, stubs) no FIM marcados "pode pular".
 
 Cada arquivo que vale revisão leva **3 linhas curtas** — `Faz` / `Revisar` / `Conecta` (1 frase cada, concretas, sem encher linguiça). Arquivos triviais ficam em uma linha só com "pode pular".
+
+**Arquivos de teste** (quando f-bis rodou): entram na lista, no **fim**, mas **nunca** marcados "pode pular" — um teste falhando é o item mais importante do turno. Se algum falhou, diga isso também na linha `Próximo:` (*"há 1 teste falhando — decida se é bug ou teste antes de seguir"*); isso **não bloqueia** o `/lp-continue`.
 
 **Espaçamento**: cada arquivo é um **bloco separado por linha em branco** — cabeçalho em **negrito** (número + caminho) e `Faz`/`Revisar`/`Conecta` como **bullets**. Não use lista numerada colada (fica ilegível no terminal).
 
@@ -171,6 +179,11 @@ Validação:
 - eslint --fix: ok
 - test: N passing
 
+Testes (feature concluída):        <!-- só no passo que fecha a feature, com tests: on -->
+- test/foo.spec.ts — 12 casos · 11 passing, 1 failing
+  ↳ falhou: "rejeita valor negativo" — esperava erro, recebeu null
+- Coverage: 87% nos arquivos da feature.
+
 Próximo: /lp-continue (<descreva o que vem: "implementa <o quê do próximo chunk>" OU "inicia a feature <slug>", se essa foi a última).
 Reverter: peça "reverte o chunk F<n>.C<m>".
 ```
@@ -192,7 +205,7 @@ Regras das 3 linhas:
 ```yaml
 in_review:
   chunks: ["F<n>.C<m>"]        # no paralelo, os IDs da onda
-  files: ["caminho/arquivo1.ts", ...]   # a lista, na ordem de revisão
+  files: ["caminho/arquivo1.ts", ...]   # a lista, na ordem de revisão — INCLUI os arquivos de teste criados no f-bis
   commit_message: "<mensagem sugerida do passo g>"   # null se auto_commit: off
   updated: <YYYY-MM-DD>
 ```
@@ -251,6 +264,7 @@ Antes de fechar o turno, **revise a conversa** procurando sinais de preferência
 3. **Grilling agressivo na criação da spec**, mínimo na criação das tasks (se a spec resolveu as dúvidas).
 4. **Auto-sync antes de implementar.** Nunca codifique sobre docs desatualizadas.
 4-bis. **Respeite o `format` nas docs de conteúdo** (`plan`, `spec`): `format: both`/`html` → saem em `.md` E `.html`. **Exceção: `tasks` segue `tasks_format`** (default `md` → só `.md`, mesmo com `format` html/both). Antes de fechar o passo, confira o `format`/`tasks_format` e o padrão das docs anteriores.
+4-ter. **Testes (se `tests: on`) só ao concluir a feature**, nunca por chunk, num subagente tester dedicado que **reporta e não corrige**. Ver `../../helpers/prompts/tester-guide.md`.
 5. **Plano de revisão sempre.** Sem exceções.
 5-bis. **Nada se cita só pelo número.** Chunk (`C6`, `F2.C3`), feature/frente (`F3`), onda, opção de solução — etiqueta é referência, não descrição. Em qualquer explicação, transição ou resposta, acompanhe sempre do que aquilo é/faz. Ver `../../helpers/prompts/state-machine.md`.
 6. **Não leia specs de outras features** que ainda não foram processadas — elas não existem.
