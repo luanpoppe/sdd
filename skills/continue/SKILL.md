@@ -112,7 +112,7 @@ Curta (4-6 linhas, não é uma spec) — reaproveite o que o `tasks.md` já tem,
 
 - **`implementer: subagent` (padrão)** — a conversa principal **delega a implementação a um subagente** e apenas orquestra:
   1. Lance UM subagente (Task/Agent do ambiente) com escopo restrito a ESTE chunk. **Modelo/thinking**: se o config tiver `subagents.implementer.<seu harness>`, lance nesse modelo — ver `../../helpers/prompts/subagents-guide.md` (bloco ausente = lance normal, sem comentar). Passe: o chunk do `tasks.md` (arquivos, "Faz", ordem, `Validação`), a spec da feature, `plan.md`, as preferências de código do projeto (CLAUDE.md/regras) e a instrução de rodar o **comando de validação do projeto** (o do campo `Validação` do chunk / CLAUDE.md — lint/format/test da stack real, **não assuma eslint**) nos arquivos editados + testes se o projeto exigir. **Ordem com a explicação breve (b-bis)**: lance o subagente primeiro, escreva a explicação logo em seguida na mesma resposta.
-  2. Instrua o subagente a **retornar um relatório estruturado** (não prosa longa): para cada arquivo — caminho, criado/editado, ±linhas, `Faz` (papel), `Revisar` (ponto de atenção), `Conecta` (ligações reais); mais o resultado da validação. É esse relatório que alimenta o plano de revisão (passo g).
+  2. Instrua o subagente a **retornar um relatório estruturado** (não prosa longa): para cada arquivo — caminho, criado/editado, ±linhas, e nesta ordem `Faz` (responsabilidade + o essencial de como), `Conecta` (ligações reais, com nomes e direção), `Revisar` (ponto de atenção / decisão discutível); **1-2 frases por item, ~15-35 palavras** — nem one-liner que só repete o nome do que criou, nem parágrafo. Mais o resultado da validação. É esse relatório que alimenta o plano de revisão (passo g).
   3. A conversa principal **não reimplementa** — confere o relatório, e se algo veio fora do escopo do chunk ou contra as docs, trata como divergência (auto-sync) antes de seguir.
   4. **Fallback**: se o ambiente não suporta lançar subagente, caia para o modo `main` e avise no plano de revisão (*"implementado no agente principal — subagente indisponível neste ambiente"*).
 
@@ -149,11 +149,13 @@ O tester **escreve os testes, roda, reporta — e nunca corrige** (nem o teste, 
 
 **UMA lista só** de arquivos, já na ordem de revisão (não separe "Arquivos" de "Ordem de revisão"). Inclua TODOS os arquivos tocados (serve de manifesto pra revert), ordenados por prioridade; triviais (tipos gerados, config, stubs) no FIM marcados "pode pular".
 
-Cada arquivo que vale revisão leva **3 linhas curtas** — `Faz` / `Revisar` / `Conecta` (1 frase cada, concretas, sem encher linguiça). Arquivos triviais ficam em uma linha só com "pode pular".
+Cada arquivo que vale revisão leva **3 linhas, nesta ordem: `Faz` → `Conecta` → `Revisar`** (o `Revisar` fecha o bloco de propósito — é o que o usuário vai efetivamente fazer com o arquivo aberto; deixá-lo por último evita que ele leia o ponto de atenção e depois tenha que voltar pro contexto).
+
+**Profundidade — 1 a 2 frases por linha** (~15-35 palavras). Nem one-liner raso ("campo `textoAnonimizado`"), nem parágrafo. O teste: o usuário deve entender o arquivo **sem abrir o código**; se a frase só repete o nome do que foi criado, ela está rasa — falta o *como* ou o *porquê*. Arquivos triviais ficam em uma linha só com "pode pular".
 
 **Arquivos de teste** (quando f-bis rodou): entram na lista, no **fim**, mas **nunca** marcados "pode pular" — um teste falhando é o item mais importante do turno. Se algum falhou, diga isso também na linha `Próximo:` (*"há 1 teste falhando — decida se é bug ou teste antes de seguir"*); isso **não bloqueia** o `/lp-continue`.
 
-**Espaçamento**: cada arquivo é um **bloco separado por linha em branco** — cabeçalho em **negrito** (número + caminho) e `Faz`/`Revisar`/`Conecta` como **bullets**. Não use lista numerada colada (fica ilegível no terminal).
+**Espaçamento**: cada arquivo é um **bloco separado por linha em branco** — cabeçalho em **negrito** (número + caminho) e `Faz`/`Conecta`/`Revisar` como **bullets**. Não use lista numerada colada (fica ilegível no terminal).
 
 ```
 ## Chunk F<n>.C<m> — <título> (em revisão)
@@ -164,14 +166,14 @@ Estado da feature: <X de Y chunks concluídos>
 Revisão (na ordem — comece pelo topo):
 
 **1. caminho/arquivo1.ts** (criado, +N)
-- Faz: <o que este arquivo passou a fazer>.
-- Revisar: <no que prestar atenção / o que validar aqui>.
+- Faz: <o que este arquivo passou a fazer, e como — 1-2 frases>.
 - Conecta: <quem chama/usa, pra onde aponta, qual peça do fluxo>.
+- Revisar: <no que prestar atenção / o que validar aqui>.
 
 **2. caminho/arquivo2.ts** (editado, +N -M)
 - Faz: <...>.
-- Revisar: <...>.
 - Conecta: <...>.
+- Revisar: <...>.
 
 **3. caminho/tipos.d.ts** (criado) — tipos gerados, pode pular.
 
@@ -193,10 +195,11 @@ Reverter: peça "reverte o chunk F<n>.C<m>".
 **Commit do chunk** (se `auto_commit` ≠ `off`; ver `../../helpers/prompts/git-guide.md`): decida a mensagem sugerida agora e acrescente ao final do bloco acima. Com `suggest-only` (default) mostre o comando pronto pra copiar; com `full`, avise que será commitado automaticamente ao aprovar (ou, se a branch atual é protegida, caia pro comportamento de `suggest-only` com aviso). Com `off`, não mencione git.
 
 Regras das 3 linhas:
-- **Um bloco por arquivo, separado por linha em branco.** Cabeçalho em negrito; `Faz`/`Revisar`/`Conecta` em bullets.
-- **Faz**: o papel do arquivo neste chunk (não repita o nome dele; diga a responsabilidade).
-- **Revisar**: o ponto de atenção real — decisão não-óbvia, borda, contrato a conferir. Não escreva "revise o código"; seja específico.
-- **Conecta**: a ligação com outros arquivos deste chunk / feature / fluxo. Aponte nomes reais (ex: "consumido por `AuthController.login()`"; "implementa a porta `UserRepository`"). Se `flowchart: on`, pode citar o nó no `flow.html`.
+- **Um bloco por arquivo, separado por linha em branco.** Cabeçalho em negrito; `Faz` → `Conecta` → `Revisar` em bullets, **sempre nessa ordem** (`Revisar` é o último).
+- **Alvo de tamanho: 1-2 frases por linha (~15-35 palavras).** Substancial o suficiente pra dispensar abrir o arquivo, curto o suficiente pra ler as 3 linhas de um lance. Passar de ~2 frases é sinal de que você está escrevendo a spec de novo — corte.
+- **Faz**: a responsabilidade do arquivo neste chunk **e o essencial de como** — o mecanismo, a regra, o valor de default que importa. Não repita o nome do arquivo/campo como se fosse explicação: *"campo `textoAnonimizado`"* é raso; *"guarda o texto já anonimizado, preenchido só ao fim do ciclo — nulo até lá"* informa.
+- **Conecta**: a ligação real com outros arquivos deste chunk / feature / fluxo, com **nomes reais** (ex: "consumido por `AuthController.login()`"; "implementa a porta `UserRepository`"). Diga a direção (quem chama quem), não só que existe relação. Se `flowchart: on`, pode citar o nó no `flow.html`.
+- **Revisar** (por último): o ponto de atenção real — decisão não-óbvia, borda, contrato a conferir, algo que você fez diferente do que o usuário esperaria. Diga **o que olhar e por que aquilo é a decisão discutível**, não "revise o código". Se você tomou uma decisão que o usuário pode querer reverter, é aqui que ela aparece.
 - Se não há nada relevante em `Revisar` ou `Conecta` (arquivo isolado/trivial), colapse para one-liner "pode pular".
 
 > Enquanto o usuário revisa: se ele perguntar algo ou pedir ajuste no chunk (sem rodar `/lp-continue`), atenda e **re-imprima a lista de revisão atualizada no fim da resposta** (ver seção "Durante a revisão de um chunk").
@@ -234,13 +237,13 @@ Vale enquanto há um chunk **em revisão**. A fonte de verdade é o `in_review` 
 
    **1. caminho/arquivo1.ts** (criado, +N)
    - Faz: <...>.
-   - Revisar: <...>.
    - Conecta: <...>.
+   - Revisar: <...>.
 
    **2. caminho/arquivo2.ts** (editado, +N -M)
    - Faz: <...>.
-   - Revisar: <...>.
    - Conecta: <...>.
+   - Revisar: <...>.
    ```
 
 - Se o usuário já disse quais arquivos revisou, mova o "comece por aqui" para o primeiro ainda **não** revisado (ou marque os revisados com ✓). Não force se não souber.

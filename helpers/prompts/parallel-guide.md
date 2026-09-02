@@ -23,7 +23,7 @@ No modo paralelo, NUNCA rode todos os chunks cegamente juntos. Agrupe em **ondas
 ## Execução de uma onda
 
 1. Anuncie a onda: quais chunks entram e por quê os outros ficaram de fora (dependência ou arquivo compartilhado). **Cite cada chunk pelo que ele faz**, não só pelo ID (*"o chunk que cria o repositório (`C2`) e o que expõe o endpoint (`C4`)"*, não *"C2 e C4"*) — ver a regra de citação em `./state-machine.md`.
-2. Lance **um subagente por chunk da onda, em paralelo** (todas as chamadas no mesmo turno). Todos usam o papel `implementer` para efeito de modelo/thinking (`subagents.implementer.<harness>`, ver `./subagents-guide.md`); se caírem no fallback, agrupe o aviso numa linha só. Cada subagente recebe o mesmo briefing do modo subagente normal (chunk do tasks.md, spec, plan.md, prefs de código, rodar eslint --fix + testes) e retorna o relatório estruturado (`Faz`/`Revisar`/`Conecta` + validação) por arquivo.
+2. Lance **um subagente por chunk da onda, em paralelo** (todas as chamadas no mesmo turno). Todos usam o papel `implementer` para efeito de modelo/thinking (`subagents.implementer.<harness>`, ver `./subagents-guide.md`); se caírem no fallback, agrupe o aviso numa linha só. Cada subagente recebe o mesmo briefing do modo subagente normal (chunk do tasks.md, spec, plan.md, prefs de código, rodar eslint --fix + testes) e retorna o relatório estruturado por arquivo (`Faz` → `Conecta` → `Revisar`, 1-2 frases cada, + validação).
 3. Espere todos os subagentes da onda terminarem antes de seguir.
 4. **Auto-sync + marcação** (conversa principal): confira os relatórios, trate divergências, marque `[~]` os checkboxes de TODOS os chunks da onda no `tasks.md`, atualize `.sdd.yaml` (`current_chunk` pode listar os IDs da onda) e o `flow.html` (todos os nós da onda de uma vez).
 4-bis. **Testes** (se `tests: on`): se esta onda **fechou a feature**, rode o passo f-bis igual ao sequencial — um subagente tester para a feature inteira, uma vez só (não um por chunk da onda). Ver `./tester-guide.md`.
@@ -33,7 +33,7 @@ Uma onda por invocação de `lp:continue` (mesmo no paralelo): não dispare a pr
 
 ## Plano de revisão combinado (após uma onda)
 
-Mesmo formato do plano de chunk único, mas agrupado por chunk. Ordene os chunks por prioridade de revisão; dentro de cada um, os arquivos na ordem (`Faz`/`Revisar`/`Conecta`).
+Mesmo formato do plano de chunk único, mas agrupado por chunk. Ordene os chunks por prioridade de revisão; dentro de cada um, os arquivos na ordem, cada um com `Faz` → `Conecta` → `Revisar` (nessa ordem, `Revisar` por último), 1-2 frases cada — ver as regras em `./state-machine.md`.
 
 ```
 ## Onda F<n>.[C<a>, C<b>, C<c>] — <resumo> (em revisão)
@@ -47,15 +47,15 @@ Revisão (na ordem — comece pelo topo):
 
 **1. caminho/arquivo1.ts** (criado, +N)
 - Faz: <...>.
-- Revisar: <...>.
 - Conecta: <...>.
+- Revisar: <...>.
 
 ### F<n>.C<b> — <título>
 
 **2. caminho/arquivo2.ts** (criado, +N)
 - Faz: <...>.
-- Revisar: <...>.
 - Conecta: <...>.
+- Revisar: <...>.
 
 Validação (por chunk):
 - F<n>.C<a>: eslint ok · test N passing

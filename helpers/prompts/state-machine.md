@@ -111,9 +111,11 @@ Buckets: **decisão divergente** / **escopo extra** / **escopo faltante**. Propo
 
 **UMA lista só**: todos os arquivos tocados, já na ordem de revisão (não duas listas separadas). A lista é completa — serve de manifesto pra revert também. Arquivos de baixo valor de revisão (tipos gerados, config trivial, stubs) vão para o FIM, marcados "pode pular".
 
-Cada arquivo que vale revisão leva **3 linhas curtas** — `Faz` / `Revisar` / `Conecta` — pra o revisor entender o papel do arquivo e como ele se encaixa no fluxo sem ter que abrir o código pra descobrir. Triviais ficam em uma linha.
+Cada arquivo que vale revisão leva **3 linhas, na ordem `Faz` → `Conecta` → `Revisar`** — pra o revisor entender o papel do arquivo e como ele se encaixa no fluxo sem ter que abrir o código pra descobrir. O `Revisar` **fecha** o bloco: é a ação que o revisor vai executar, então vem depois do contexto que a torna compreensível. Triviais ficam em uma linha.
 
-**Espaçamento (legibilidade)**: cada arquivo é um **bloco separado por uma linha em branco** — não uma lista numerada colada. O caminho vai num cabeçalho em **negrito** e `Faz`/`Revisar`/`Conecta` viram **bullets** (quebram em linhas separadas de forma confiável no terminal). Uma linha em branco entre um arquivo e o próximo.
+**Profundidade**: **1-2 frases por linha (~15-35 palavras)**. Uma linha que só repete o nome do que foi criado (*"campo `x`"*, *"mapeia A → B"*) está rasa — falta o *como* ou o *porquê*. Mais de 2 frases já é spec, não plano de revisão.
+
+**Espaçamento (legibilidade)**: cada arquivo é um **bloco separado por uma linha em branco** — não uma lista numerada colada. O caminho vai num cabeçalho em **negrito** e `Faz`/`Conecta`/`Revisar` viram **bullets** (quebram em linhas separadas de forma confiável no terminal). Uma linha em branco entre um arquivo e o próximo.
 
 Formato obrigatório:
 
@@ -126,14 +128,14 @@ Estado da feature: <X de Y chunks concluídos>
 Revisão (na ordem — comece pelo topo):
 
 **1. caminho/arquivo1.ts** (criado, +N)
-- Faz: <o que este arquivo passou a fazer>.
-- Revisar: <no que prestar atenção / o que validar aqui>.
+- Faz: <o que este arquivo passou a fazer, e como — 1-2 frases>.
 - Conecta: <quem chama/usa, pra onde aponta, qual peça do fluxo>.
+- Revisar: <no que prestar atenção / o que validar aqui>.
 
 **2. caminho/arquivo2.ts** (editado, +N -M)
 - Faz: <...>.
-- Revisar: <...>.
 - Conecta: <...>.
+- Revisar: <...>.
 
 **3. caminho/tipos.d.ts** (criado) — tipos gerados, pode pular.
 
@@ -148,10 +150,10 @@ Reverter: peça "reverte o chunk F<n>.C<m>".
 Se `auto_commit` ≠ `off`, acrescente ao final o bloco de commit (comando pronto em `suggest-only`, aviso de commit automático em `full`) — ver `./git-guide.md`.
 
 Regras da lista:
-- **Um bloco por arquivo, separado por linha em branco.** Cabeçalho em negrito com número+caminho; `Faz`/`Revisar`/`Conecta` como bullets. Nada de blocos colados.
+- **Um bloco por arquivo, separado por linha em branco.** Cabeçalho em negrito com número+caminho; `Faz` → `Conecta` → `Revisar` como bullets, **sempre nessa ordem**. Nada de blocos colados.
 - **Inclua todos os arquivos mexidos** — não omita nenhum (o usuário precisa saber o que mudou pra reverter).
 - **Ordene por prioridade de revisão**: comece pelo núcleo da lógica; termine nos triviais.
-- **Faz / Revisar / Conecta**: 1 frase concreta cada. `Revisar` aponta o ponto de atenção real (não "revise o código"); `Conecta` cita nomes reais de arquivos/funções/portas do fluxo.
+- **Faz / Conecta / Revisar**: 1-2 frases concretas cada (~15-35 palavras). `Faz` diz a responsabilidade **e o essencial de como** (não repita o nome do arquivo/campo como explicação); `Conecta` cita nomes reais de arquivos/funções/portas e a direção da chamada; `Revisar` aponta o ponto de atenção real e por que é discutível (não "revise o código").
 - Triviais (tipos gerados, config, stub) colapsam para uma linha só (cabeçalho em negrito + "pode pular"), ainda separados por linha em branco.
 - Sem segunda lista. Sem repetir arquivos.
 
