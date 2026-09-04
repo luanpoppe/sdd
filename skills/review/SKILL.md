@@ -370,7 +370,7 @@ Cada `/lp-continue` ou `/lp-review` (sem args) avança 1 chunk:
    Step 0 usa `<summary>Step 0: Vocabulário</summary>` seguido de lista de definições com `**Termo**` + descrição curta, agrupada em sub-seções `###` se necessário. Sem ponte, sem exemplos de dado.
 
    Steps 1+ espelham a mesma hierarquia: `## Step N: <título>` (sub-steps: `## Step 5.1: <título>`), `**Arquivo**: \`caminho\``, logo abaixo a ponte de chamada: `**Chamado por:** \`NomeClasse.método()\` em \`arquivo:linha\` — Step M: <título do step anterior>` (step 1: `**Disparado por:** <gatilho externo>`, sem step anterior). Se houver condição/gate, frase própria numa linha abaixo, em itálico: `_Só executa quando <condição>._`. Depois, sub-seções com `###`, blocos de código com fences ` ```linguagem `, e **exemplos de dado real colados ao trecho** que os produz/consome (antes/depois quando há transformação) — nunca numa seção separada ao final —, listas de pontos não-óbvios.
-5. Marque o step como `done: true`, incremente `current_step`.
+5. Marque o step como `done: true`, incremente `current_step`. Com **`mcp: on`** no `.sdd/config.yaml`, chame `sdd_record_review` com o review (slug, topic, state, current_step) e o step recém-fechado, incluindo os arquivos percorridos e o que cada um explicou. Ver `../../helpers/prompts/mcp-guide.md`; com `off`/ausente, não mencione MCP.
 6. Imprima no chat um **resumo do step + ponteiro para o próximo**:
    ```
    Step <N>/<total> concluído — <título>

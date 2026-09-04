@@ -21,6 +21,7 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const SKILLS_SRC = path.join(ROOT, 'skills');
 const HELPERS_SRC = path.join(ROOT, 'helpers');
+const MCP_SRC = path.join(ROOT, 'mcp');
 const HOME = os.homedir();
 const PKG_VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, '.claude-plugin', 'plugin.json'), 'utf8')).version;
 const VERSION_MARKER = '.lp-version.json';
@@ -56,8 +57,10 @@ function listSkills() {
     .filter(name => fs.existsSync(path.join(SKILLS_SRC, name, 'SKILL.md')));
 }
 
+// Só PLANEJA as cópias — não cria nada. O mkdir de cada destino acontece na hora
+// de aplicar a ação (ver o laço no final de main), então --dry-run não deixa
+// diretório vazio pra trás.
 function copyDir(src, dest, actions) {
-  fs.mkdirSync(dest, { recursive: true });
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
     const s = path.join(src, entry.name);
     const d = path.join(dest, entry.name);
@@ -184,6 +187,25 @@ function planCursor(skills, actions) {
   return { line: `Cursor → ${cmdDest} (invoca /lp-<nome>)`, installed };
 }
 
+// Servidor MCP do SDD. Vai pra ~/.sdd/mcp/ e NÃO pra ~/.claude/skills/lp-* nem
+// ~/.cursor/lp-helpers/, porque planPurgeOrphans/planCursor apagam aqueles dois a
+// cada atualização — e ali dentro fica também o banco (~/.sdd/sdd.db) e o config
+// global, que precisam sobreviver. Mesmo motivo do ~/.sdd/config.yaml.
+//
+// Copiado SEMPRE, mesmo com `mcp: off` no config: é barato, e assim o lp:init só
+// precisa registrar o servidor no .mcp.json, sem instalar nada na hora.
+function planMcp(actions) {
+  const mcpDest = path.join(HOME, '.sdd', 'mcp');
+  const installed = readInstalledVersion(mcpDest);
+  // Recria a pasta inteira em vez de sobrescrever arquivo por arquivo: uma tool
+  // renomeada numa versão nova deixaria o arquivo antigo pra trás. Só a subpasta
+  // mcp/ é apagada — config.yaml e sdd.db ficam num nível acima, intactos.
+  if (fs.existsSync(mcpDest)) actions.push(['deleteDir', mcpDest]);
+  copyDir(MCP_SRC, mcpDest, actions);
+  writeVersionMarker(mcpDest, actions);
+  return { dest: mcpDest, installed };
+}
+
 // ---- run ----
 function main() {
   const args = parseArgs(process.argv);
@@ -216,6 +238,9 @@ function main() {
     else if (p.installed === PKG_VERSION) process.stdout.write(`    já está na versão mais recente (${p.installed})\n`);
     else process.stdout.write(`    atualizando: ${p.installed} → ${PKG_VERSION}\n`);
   });
+  const mcpPlan = planMcp(actions);
+  process.stdout.write(`  • MCP → ${mcpPlan.dest} (opcional; ligue com /lp-settings mcp on)\n`);
+
   if (claudeCoversCursor) {
     const n = planCleanupCursorDuplicates(skills, actions);
     process.stdout.write(`  • Cursor lê ~/.claude/skills/lp-* nativamente — não escrevendo em ~/.cursor/commands (evita duplicar).\n`);

@@ -54,6 +54,10 @@ Agrupe **todas as escritas de um passo** do fluxo (`lp:new`, cada `lp:continue`,
 - Imprime o **plano de revisão** normalmente (formato da `state-machine.md`), usando a lista de arquivos retornada. O plano em si NÃO é delegado — é a comunicação com o usuário.
 - Se o escriba reportar que algo saiu diferente do pedido, trata como divergência antes de seguir.
 
+## Tool de MCP não passa pelo escriba
+
+A regra tudo-ou-nada acima vale para escrita **de arquivo** em `.sdd/`. Chamar uma tool do MCP do SDD (`sdd_*`, quando `mcp: on`) **não** é escrita de arquivo, então não entra no pacote do escriba: quem chama é o **agente principal**, direto, no mesmo turno. Ele é quem decide o conteúdo, e não há garantia de que um subagente enxergue as tools MCP da sessão. Ver `./mcp-guide.md`.
+
 ## Princípios
 
 - **Só escrita mecânica é delegada.** Decisão, grill e conteúdo continuam no principal.

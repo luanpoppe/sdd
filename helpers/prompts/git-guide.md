@@ -30,6 +30,7 @@ Campo `auto_commit` do `.sdd/config.yaml`: `full` / `suggest-only` (default; aus
   1. `git branch --show-current` — se é uma branch protegida (lista acima), **não commite**; caia pro comportamento de `suggest-only` neste chunk (mostre o comando pronto) e avise que a branch é protegida (*"branch `<nome>` é protegida — commit automático desativado aqui; peça explicitamente se quiser mesmo assim"*). Se o usuário pedir explicitamente para commitar mesmo em branch protegida, obedeça.
   2. Senão, `git add <arquivos de in_review.files>` (não `git add -A`/`.`; só os arquivos do chunk) e `git commit -m "<in_review.commit_message>"` (a mesma mensagem já sugerida no turno anterior — não invente uma nova).
   3. Se o commit falhar (nada staged, hook, conflito), avise em 1 linha e siga o turno normalmente — nunca trave o fluxo por causa disso.
+  4. Com `mcp: on`, rechame `sdd_record_chunk` com o `commit` preenchido (`mode: full`, `branch`, `sha`) — assim o histórico registra o commit que realmente saiu, não só o sugerido. Ver `./mcp-guide.md`.
 
 ### Mensagem de commit sugerida
 

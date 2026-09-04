@@ -50,6 +50,15 @@ Faça as perguntas abaixo. Siga as diretrizes de `../../helpers/prompts/grill-sn
 
 > Visão macro (Config → Controller → UseCase → Mapper/Repository…), foca no que falta. HTML autocontido, abre no navegador. Regenerável com `lp:flow`.
 
+**Q6. Histórico estruturado via MCP local**
+
+> **Antes de perguntar, chece a versão do Node** (`node -v`). O servidor usa `node:sqlite`, que só existe a partir do **Node 23**. Abaixo disso, **não faça a pergunta**: grave `mcp: off` e diga em uma linha o motivo (*"MCP não oferecido: precisa de Node 23+, esta máquina tem vX"*). Não sugira atualizar o Node.
+
+- off — nada é gravado além dos arquivos em `.sdd/`. (Recomendado se você não usa o SDD Viewer)
+- on — cada etapa (chunk implementado, arquivos tocados e o que revisar em cada um, testes, divergências, steps de `lp:review`) também é gravada num SQLite em `~/.sdd/sdd.db`.
+
+> Duas vantagens concretas. **Visualização**: o SDD Viewer passa a mostrar a timeline de chunks e o que revisar arquivo por arquivo — informação que hoje só existe no chat e se perde. **Memória**: o agente consegue responder *"o que já mexemos no `AuthService`?"* e *"onde paramos?"* consultando o banco, inclusive em outro projeto e depois de a conversa ter sido compactada. Custo: grava um `.mcp.json` na raiz do projeto (versionado, o time herda) e as tools só passam a existir **depois de reiniciar a sessão**. Dá pra ligar/desligar depois com `/lp-settings mcp on|off`.
+
 ## 3. Criação de arquivos
 
 Crie no diretório do projeto:
@@ -102,10 +111,11 @@ parallel: off           # off (padrão): um chunk por vez | on: chunks independe
 chunk_order: inside-out # inside-out (padrão): ordem de features/chunks prioriza construir de dentro pra fora (domínio/persistência antes de controller/consumer) | outside-in: prioriza de fora pra dentro | free: só dependência real, sem preferência de direção.
 tests: off              # off (padrão): não gera testes automaticamente | on: ao concluir cada feature (ou a correção de um bug-fix), um subagente tester dedicado escreve os testes da funcionalidade — foco em borda e falha, não só caminho feliz — roda e reporta sem corrigir. Ver helpers/prompts/tester-guide.md.
 auto_commit: suggest-only # suggest-only (padrão): a cada chunk aprovado, sugere o git add + git commit pronto pra copiar | full: commita de verdade (exceto em branch protegida) | off: não menciona git. Ver helpers/prompts/git-guide.md.
+mcp: <off|on>           # off (padrão): nada é gravado fora de .sdd/ | on: cada etapa também vai para o SQLite global (~/.sdd/sdd.db) via MCP local, destravando a timeline no SDD Viewer e a memória entre conversas/projetos. Ver helpers/prompts/mcp-guide.md.
 created: <YYYY-MM-DD>
 ```
 
-> **`context`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue`, `parallel`, `chunk_order` e `auto_commit` NÃO são perguntados no grill** — gravados com os defaults acima. `context: false` desliga a base de conhecimento. `implementer: main` faz a conversa principal implementar o código. `scribe: main` faz o principal escrever os artefatos inline. `tasks_format: follow` faz o `tasks` acompanhar o `format` global (gera `tasks.html`). `tasks_autocontinue: off` faz o `lp:continue` pausar após o `tasks.md` (em vez de seguir direto pro 1º chunk). `parallel: on` (ou `lp:parallel`) liga o modo paralelo; mesmo com `off`, o `lp:continue` pergunta uma vez antes do 1º chunk se você quer paralelizar. `chunk_order` muda a heurística de ordenação de features (lp:new) e chunks (lp:continue) — ver `helpers/prompts/state-machine.md`. `tests: on` liga a geração automática de testes ao final de cada feature/correção (desligado por padrão) — ver `helpers/prompts/tester-guide.md`. `auto_commit: full` faz o `lp:continue` commitar de verdade cada chunk aprovado (exceto em branch protegida); `off` desliga qualquer menção a git — ver `helpers/prompts/git-guide.md`. Quem quiser, edita esses campos no `.sdd/config.yaml` depois (ou via `lp:settings`).
+> **`context`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue`, `parallel`, `chunk_order` e `auto_commit` NÃO são perguntados no grill** — gravados com os defaults acima. `context: false` desliga a base de conhecimento. `implementer: main` faz a conversa principal implementar o código. `scribe: main` faz o principal escrever os artefatos inline. `tasks_format: follow` faz o `tasks` acompanhar o `format` global (gera `tasks.html`). `tasks_autocontinue: off` faz o `lp:continue` pausar após o `tasks.md` (em vez de seguir direto pro 1º chunk). `parallel: on` (ou `lp:parallel`) liga o modo paralelo; mesmo com `off`, o `lp:continue` pergunta uma vez antes do 1º chunk se você quer paralelizar. `chunk_order` muda a heurística de ordenação de features (lp:new) e chunks (lp:continue) — ver `helpers/prompts/state-machine.md`. `tests: on` liga a geração automática de testes ao final de cada feature/correção (desligado por padrão) — ver `helpers/prompts/tester-guide.md`. `auto_commit: full` faz o `lp:continue` commitar de verdade cada chunk aprovado (exceto em branch protegida); `off` desliga qualquer menção a git — ver `helpers/prompts/git-guide.md`. Quem quiser, edita esses campos no `.sdd/config.yaml` depois (ou via `lp:settings`). O `mcp` **é** perguntado (Q6), então grave o valor escolhido — ou `off`, se a pergunta foi pulada por causa da versão do Node.
 
 > **Bloco `subagents`: só copie se vier do global.** Se `~/.sdd/config.yaml` tiver um bloco `subagents`, **copie-o inteiro** para o config do projeto — é a exceção deliberada à regra abaixo (o usuário já declarou essa preferência globalmente). Sem global, siga a regra: não escreva o bloco.
 
@@ -121,6 +131,25 @@ Semeie a base de conhecimento em `.sdd/context/` seguindo `../../helpers/prompts
 - **Projeto novo/vazio**: crie só o `index.md` esqueleto (cabeçalho + seção "Áreas / funcionalidades" vazia). O contexto cresce conforme os fluxos (`lp:continue`/`lp:bug-fix`/`lp:review`) forem implementando/revisando.
 - Cite no resumo final quantos arquivos de contexto foram semeados.
 
+## 3-ter. Registro do MCP (só se `mcp: on`)
+
+Grave o servidor no arquivo de MCP do harness em que você está rodando — `.mcp.json` na raiz do projeto (Claude Code) ou `.cursor/mcp.json` (Cursor). Siga `../../helpers/prompts/mcp-guide.md`.
+
+**Merge, nunca sobrescrita.** Se o arquivo já existe, leia, acrescente só a chave `sdd` dentro de `mcpServers` e regrave preservando todo o resto. Se a chave `sdd` já existir apontando para outro caminho, mostre as duas e pergunte antes de trocar.
+
+```json
+{
+  "mcpServers": {
+    "sdd": {
+      "command": "node",
+      "args": ["<caminho absoluto de ~/.sdd/mcp/server.js>"]
+    }
+  }
+}
+```
+
+Resolva o `~` para o caminho absoluto da home do usuário. Não escreva `env` nenhum — `SDD_PROJECT_ROOT` e `SDD_DB_PATH` existem só para teste. Se `~/.sdd/mcp/server.js` não existir, avise em uma linha que falta rodar `lp:auto-update` e grave `mcp: off` em vez de registrar um caminho quebrado.
+
 ## 4. Mensagem final
 
 Imprima:
@@ -128,10 +157,13 @@ Imprima:
 ```
 SDD inicializado em .sdd/
 Herdado do global (~/.sdd/config.yaml): implementer=main · tests=on · subagents.scribe
+MCP registrado em .mcp.json — reinicie a sessão para as tools do SDD ficarem disponíveis.
 Próximo passo: /lp-new <id-da-mudanca>
 ```
 
 A linha "Herdado do global" só aparece **se** a config global existir e tiver contribuído com algum valor — liste os campos que vieram de lá. Sem global, omita a linha inteira.
+
+A linha do MCP só aparece **se** `mcp: on` e o registro foi gravado. Com `mcp: off`, omita — nenhuma menção a MCP.
 
 Liste os arquivos criados em ordem de revisão (config primeiro, depois assets se houver).
 

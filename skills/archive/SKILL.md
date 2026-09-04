@@ -34,6 +34,7 @@ Só siga adiante com `Sim`.
 - Mover `.sdd/changes/<id>/` → `.sdd/archive/<id>/`.
 - Editar `.sdd.yaml` movido: `state: archived`, `archived: <YYYY-MM-DD>`.
 - Marcar todos os `[~]` restantes como `[x]` no `tasks.md` arquivado.
+- Com **`mcp: on`** no `.sdd/config.yaml`: chame `sdd_sync_change` com `archived: <YYYY-MM-DD>` e `state: archived`. Ver `../../helpers/prompts/mcp-guide.md`. Com `off`/ausente, não mencione MCP.
 
 ## 5. Mensagem final
 

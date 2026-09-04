@@ -23,11 +23,12 @@ No modo paralelo, NUNCA rode todos os chunks cegamente juntos. Agrupe em **ondas
 ## Execução de uma onda
 
 1. Anuncie a onda: quais chunks entram e por quê os outros ficaram de fora (dependência ou arquivo compartilhado). **Cite cada chunk pelo que ele faz**, não só pelo ID (*"o chunk que cria o repositório (`C2`) e o que expõe o endpoint (`C4`)"*, não *"C2 e C4"*) — ver a regra de citação em `./state-machine.md`.
+1-bis. Com **`mcp: on`**, registre a onda com `sdd_record_event` (`kind: wave_planned`): quais chunks entraram e o motivo de exclusão dos outros (dependência ou arquivo compartilhado). Hoje o `current_chunk` guarda só os IDs, sem o agrupamento nem o porquê. Ver `./mcp-guide.md`.
 2. Lance **um subagente por chunk da onda, em paralelo** (todas as chamadas no mesmo turno). Todos usam o papel `implementer` para efeito de modelo/thinking (`subagents.implementer.<harness>`, ver `./subagents-guide.md`); se caírem no fallback, agrupe o aviso numa linha só. Cada subagente recebe o mesmo briefing do modo subagente normal (chunk do tasks.md, spec, plan.md, prefs de código, rodar eslint --fix + testes) e retorna o relatório estruturado por arquivo (`Faz` → `Conecta` → `Revisar`, 1-2 frases cada, + validação).
 3. Espere todos os subagentes da onda terminarem antes de seguir.
 4. **Auto-sync + marcação** (conversa principal): confira os relatórios, trate divergências, marque `[~]` os checkboxes de TODOS os chunks da onda no `tasks.md`, atualize `.sdd.yaml` (`current_chunk` pode listar os IDs da onda) e o `flow.html` (todos os nós da onda de uma vez).
 4-bis. **Testes** (se `tests: on`): se esta onda **fechou a feature**, rode o passo f-bis igual ao sequencial — um subagente tester para a feature inteira, uma vez só (não um por chunk da onda). Ver `./tester-guide.md`.
-5. **Plano de revisão combinado** — ver abaixo. Pare para revisão.
+5. **Plano de revisão combinado** — ver abaixo. Pare para revisão. Com **`mcp: on`**, chame `sdd_record_chunk` **uma vez por chunk da onda** (com o `wave` preenchido), no g-bis.
 
 Uma onda por invocação de `lp:continue` (mesmo no paralelo): não dispare a próxima onda no mesmo turno — o usuário revisa a onda atual primeiro.
 

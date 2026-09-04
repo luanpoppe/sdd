@@ -57,7 +57,7 @@ in_review: <null | {chunks: [ids], files: [paths], updated: data}>
 2. Escreva `solutions.(md/html)` com `../templates/solutions.*.tpl`: 2-4 opções, cada uma corrigindo a **causa raiz** (não o sintoma), com abordagem + prós + contras + esforço/risco. Sempre inclua sua recomendação. (Com `scribe: subagent`/ausente, delegue a escrita ao escriba.)
 3. **Imprima o plano de revisão** das opções no chat (ordem: Contexto → Opções → Recomendação), pra o usuário decidir sem precisar abrir o arquivo.
 4. **Só então** pergunte qual opção seguir via `AskUserQuestion` (uma alternativa por opção + "Outro"). **Nunca pergunte antes de escrever o arquivo e imprimir o plano** — o usuário escolhe com as opções à vista.
-5. Grave `chosen_solution`, `state: bug-fixing`, `updated`. Avise: *"Escolhida `<opção>`. Próximo `/lp-continue` gera o tasks.md e começa a implementar."*
+5. Grave `chosen_solution`, `state: bug-fixing`, `updated`. Com **`mcp: on`**, chame `sdd_sync_change` com o `chosen_solution` e o `state` novo — ver `./mcp-guide.md`. Avise: *"Escolhida `<opção>`. Próximo `/lp-continue` gera o tasks.md e começa a implementar."*
 
 > **Não** gere `tasks.md` ainda — isso é o 1º passo de `bug-fixing`, já com a opção decidida.
 
@@ -70,6 +70,7 @@ Reusa o **mesmo motor** da seção `implementing` de `../../skills/continue/SKIL
 - **Diagrama** (`flowchart: on`): uma única swimlane = a correção; nós = chunks `C<m>` (o `flowchart-guide.md` trata isso como uma "feature única"). Atualize a cada chunk.
 - **Testes** (se `tests: on`): no último chunk da correção, roda o passo **f-bis** — subagente tester gera os testes da correção inteira, e a **causa raiz do `diagnosis.md` obriga um teste de regressão** (o teste que teria pego o bug). Ver `./tester-guide.md`. Com `tests: off`/ausente (padrão), pule em silêncio.
 - **Transição final**: quando todos os chunks `C<m>` estão `[~]`/`[x]` → `state: awaiting-archive` (não há "próxima feature"). Sugira `/lp-archive`. **Contexto** (se `context: true`/ausente): atualize o arquivo de contexto da área afetada com a causa raiz e a decisão de correção (ou crie, se a área ainda não existir) + índice — no pacote do escriba. Ver `./context-guide.md`.
+- **Histórico** (se `mcp: on`): idêntico ao `implementing` — `sdd_record_chunk` no g-bis (chunks `C<m>`, sem `feature_slug`), `sdd_record_event` nas divergências e na decisão de modo, `sdd_record_tests` no f-bis. Ver `./mcp-guide.md`. Com `off`/ausente, pule em silêncio.
 - Plano de revisão por chunk, `in_review`, perguntas/alterações inline, commit/sugestão de commit (`auto_commit`, ver `./git-guide.md`) e memória autônoma: **idênticos** ao `implementing` do `continue` (siga aquela seção).
 
 ## Princípios

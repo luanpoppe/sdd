@@ -15,7 +15,7 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
   - Mais de uma: prefira `state: implementing`; em empate, pergunte qual.
 - Leia `.sdd.yaml`. **Se `kind: bugfix`** → esta é uma mudança de bug-fix: siga `../../helpers/prompts/bugfix-machine.md` (estados `bug-proposing` → `bug-fixing`) em vez da máquina de features abaixo. O resto desta pré-checagem (in_review, memória) continua valendo; pule a leitura de `plan.md`/specs (bug-fix não os tem).
 - (fluxo normal de feature) Leia `plan.md` e os arquivos da **feature ativa atualmente** (se houver `current_feature`): `specs/<current_feature>/spec.md` e `tasks.md` se existirem.
-- **Leia `in_review`**: se preenchido, há um chunk aguardando revisão (pode ser de uma conversa anterior). Uma invocação normal de `/lp-continue` significa que o usuário **aprovou** essa revisão. **Antes de limpar**, se `auto_commit: full` (ver `../../helpers/prompts/git-guide.md`), faça o commit do chunk aprovado agora (git add só dos `in_review.files` + git commit com `in_review.commit_message`), respeitando a exceção de branch protegida do guia. Depois, limpe `in_review` (`null`) e siga para o próximo chunk/onda. Ao mencionar no chat o chunk que acabou de ser aprovado, diga o que ele fez, não só o ID (*"aprovado o chunk que passou a marcar dimensão sem dado como não-avaliada (`C6`)"*) — ver a regra de citação em `../../helpers/prompts/state-machine.md`. Perguntas/ajustes sem `/lp-continue` caem na seção "Durante a revisão de um chunk".
+- **Leia `in_review`**: se preenchido, há um chunk aguardando revisão (pode ser de uma conversa anterior). Uma invocação normal de `/lp-continue` significa que o usuário **aprovou** essa revisão. **Antes de limpar**, se `auto_commit: full` (ver `../../helpers/prompts/git-guide.md`), faça o commit do chunk aprovado agora (git add só dos `in_review.files` + git commit com `in_review.commit_message`), respeitando a exceção de branch protegida do guia. Com `mcp: on`, depois de commitar rechame `sdd_record_chunk` com o `commit` preenchido (`mode: full`, branch e sha). Depois, limpe `in_review` (`null`) e siga para o próximo chunk/onda. Ao mencionar no chat o chunk que acabou de ser aprovado, diga o que ele fez, não só o ID (*"aprovado o chunk que passou a marcar dimensão sem dado como não-avaliada (`C6`)"*) — ver a regra de citação em `../../helpers/prompts/state-machine.md`. Perguntas/ajustes sem `/lp-continue` caem na seção "Durante a revisão de um chunk".
 - **NÃO leia specs de outras features** — elas podem nem existir ainda.
 - **Carregue a memória**: leia `.sdd/memory.md` (ou `.sdd/memory-map.md` se existir; nesse caso, leia também os arquivos de tema que parecem relevantes pelo título da feature ativa). Siga `../../helpers/prompts/memory-guide.md`.
 - **Carregue o contexto do projeto** (se `context: true`/ausente no config): leia `.sdd/context/index.md`. Se a feature ativa toca uma área listada, leia também o arquivo de contexto dela antes de decidir/implementar. É a 1ª parada para "como isso funciona hoje?". Siga `../../helpers/prompts/context-guide.md`.
@@ -81,11 +81,13 @@ Coração da skill. Execute na ordem:
 - Pergunte: aplicar diffs / ignorar / tratar depois.
 - Aplique aprovados ANTES de codar. Mostre resumo.
 - **Divergências que persistem** (feito diferente do planejado e a doc foi ajustada) → anote para marcar o componente como `deviated` no diagrama (passo g).
+- Com **`mcp: on`**, registre cada divergência que persistiu com `sdd_record_event` (`kind: deviation`): o que divergiu e o que foi decidido. Hoje isso só sobrevive como classe `deviated` num `flow.html` que é regenerado inteiro. Ver `../../helpers/prompts/mcp-guide.md`.
 
 **b0) Modo de execução (só na 1ª vez que a feature entra em `implementing`)**:
 - Determine sequencial vs paralelo seguindo `../../helpers/prompts/parallel-guide.md` ("Quando ativar"): `parallel: on` no config → paralelo; senão pergunte uma vez (default sequencial em não/silêncio).
 - **Paralelo** → siga o `parallel-guide.md` (ondas de chunks independentes, um subagente por chunk, plano de revisão combinado) no lugar dos passos b/c/e abaixo; d/g continuam na conversa principal. Uma onda por `lp:continue`.
 - **Sequencial** (padrão) → siga b/b-bis/c/d/e normalmente, um chunk por vez.
+- Com **`mcp: on`**, registre a decisão com `sdd_record_event` (`kind: mode_decision`), dizendo o modo e o porquê. Ela é perguntada uma vez por feature e hoje não é persistida em lugar nenhum — reiniciar a conversa a perde.
 
 **b) Próximo chunk** (modo sequencial):
 - Primeiro `[ ]` em `specs/<current_feature>/tasks.md`.
@@ -137,13 +139,14 @@ Curta (4-6 linhas, não é uma spec) — reaproveite o que o `tasks.md` já tem,
   - **Contexto do projeto** (se `context: true`/ausente): crie/atualize o arquivo de contexto dessa feature em `.sdd/context/` (o que é / como funciona / decisões e porquês da spec+plan+auto-sync / notas) e atualize o(s) índice(s). Segue `../../helpers/prompts/context-guide.md`. **Entra no pacote do escriba** deste passo (não escreva inline). Cite no plano: *"Contexto: +1 área `<slug>` em .sdd/context/"*.
   - Se há próxima feature `pending`: `state: awaiting-feature-spec`. Imprima: *"Feature `<X>` concluída (em revisão). Próximo `/lp-continue` inicia a feature `<Y>` — <summary dela> (spec)."*
   - Senão: `state: awaiting-archive`. Sugira `/lp-archive`.
+  - Com **`mcp: on`**: `sdd_sync_change` com a feature em `done` e o `state` novo.
 - O resultado desta transição define a linha "Próximo:" do plano de revisão (passo g).
 
 **f-bis) Geração de testes** — só se **`tests: on`** no `.sdd/config.yaml` **E** o passo f acabou de concluir a feature (no bug-fix: foi o último chunk da correção). Nos demais chunks, pule sem mencionar nada. Com `tests: off`/ausente (padrão), este passo **não existe** — não gere testes nem comente que está desligado.
 
 Lance UM **subagente tester** (papel `tester` em `subagents` para modelo/thinking) seguindo `../../helpers/prompts/tester-guide.md`. Passe: os arquivos de código de **todos** os chunks da feature (campos `Arquivos` do `tasks.md`, não só o último chunk), a `spec.md` da feature (cenários BDD + Edge cases são os casos de teste) — ou, no bug-fix, `diagnosis.md` + `chosen_solution`, com teste de regressão obrigatório para a causa raiz — e as convenções de código do projeto.
 
-O tester **escreve os testes, roda, reporta — e nunca corrige** (nem o teste, nem a implementação). Teste falhando é decisão do usuário: bug real ou teste mal escrito. Leve o retorno dele para o bloco `Testes` do plano de revisão (passo g) e os arquivos criados para `in_review.files` (g-bis).
+O tester **escreve os testes, roda, reporta — e nunca corrige** (nem o teste, nem a implementação). Teste falhando é decisão do usuário: bug real ou teste mal escrito. Leve o retorno dele para o bloco `Testes` do plano de revisão (passo g) e os arquivos criados para `in_review.files` (g-bis). Com **`mcp: on`**, registre o relatório com `sdd_record_tests` (runner, passou/falhou, cobertura, arquivos criados) — hoje ele só existe no chat.
 
 **g) Plano de revisão obrigatório** (formato da state-machine.md):
 
@@ -213,6 +216,10 @@ in_review:
   updated: <YYYY-MM-DD>
 ```
 Assim, mesmo que a conversa reinicie, o próximo turno sabe qual chunk está em revisão e consegue re-imprimir a lista. Ao aprovar (próximo `/lp-continue`) ou reverter, limpe `in_review`.
+
+Com **`mcp: on`**, registre o chunk no banco **no mesmo passo**, com `sdd_record_chunk`: um item de `files` por arquivo desta lista, na mesma ordem, com `does`/`connects`/`review_note` recebendo exatamente as linhas `Faz`/`Conecta`/`Revisar` que você acabou de imprimir (`is_test: true` nos arquivos vindos do f-bis), mais `summary`/`reasoning` do chunk e o `commit` sugerido. Este é o ponto certo porque é aqui que você tem tudo junto.
+
+Mande também, **só para o banco e sem imprimir no chat**, o `detail` (explicação longa de cada arquivo que merece: mecanismo, decisão descartada, armadilha) e os `highlights` (0-3 trechos de código decisivos por arquivo, cada um com título, código recortado e explicação). É o que deixa o plano de revisão curto sem perder profundidade — quem abrir o histórico depois tem o arquivo explicado. Ver `../../helpers/prompts/mcp-guide.md`.
 
 **h) Context watch** — por último, antes de fechar o turno, siga `../../helpers/prompts/context-watch.md` usando `context_watch` do `.sdd/config.yaml`. Heurística: na faixa de 5-10 chunks implementados nesta MESMA conversa, comece a observar. Se julgar pesada → siga o protocolo (suggest/auto/off).
 

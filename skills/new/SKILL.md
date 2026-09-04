@@ -40,6 +40,8 @@ current_chunk: null
 in_review: null
 ```
 
+Com **`mcp: on`** no `.sdd/config.yaml`, chame `sdd_sync_change` logo depois de criar o arquivo (`change_id`, `kind: feature`, `state: awaiting-plan`). Com `off`/ausente, não mencione MCP. Ver `../../helpers/prompts/mcp-guide.md`.
+
 ## 3. Grill (estilo grill-me — EM BATCHES de até 4 independentes)
 
 > **Crítico**: NÃO assuma defaults. Use `AskUserQuestion` agrupando perguntas **independentes** (a resposta de uma não muda outra) em batches de 3-4; perguntas dependentes vão em batches posteriores. Cada pergunta com 2-4 opções concretas + sua recomendação + trade-offs. Releia `grill-snippet.md` antes.
@@ -76,6 +78,7 @@ Se `format` ∈ {html, both}, gere também `plan.html` usando `../../helpers/tem
 - `title`: preencher
 - `features`: lista completa (slug, title, summary, status: `pending`) na ordem definida.
 - `updated`: hoje.
+- Com **`mcp: on`**: `sdd_sync_change` com o `title`, o `state` novo e o `features[]` completo — é o momento em que a estrutura da mudança fica conhecida.
 
 ## 6. Mensagem final e pausa para revisão
 
