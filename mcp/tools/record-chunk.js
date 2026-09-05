@@ -22,34 +22,31 @@ class RecordChunkTool {
     return {
       name: 'sdd_record_chunk',
       description:
-        'Registra um chunk implementado no banco do SDD, com uma entrada por arquivo tocado. ' +
-        'Além das 3 linhas do plano de revisão (does/connects/review_note), mande a explicação ' +
-        'longa (detail) e os trechos de código decisivos (highlights): o chat fica curto, e a ' +
-        'profundidade vive aqui. Chame no passo g-bis, junto de gravar in_review.',
+        'Registra um chunk implementado, com uma entrada por arquivo tocado. Chame no passo ' +
+        'g-bis. Além das 3 linhas do plano de revisão, mande detail/highlights/symbols — o ' +
+        'chat fica curto e a profundidade vive aqui. Ver mcp-guide.md.',
       inputSchema: {
         type: 'object',
         required: ['change_id', 'chunk_id'],
         properties: {
           change_id: { type: 'string' },
-          chunk_id: { type: 'string', description: 'ID do chunk, ex: "F2.C3" (feature) ou "C3" (bugfix)' },
-          feature_slug: { type: 'string', description: 'Slug da feature dona do chunk. Omita em bugfix.' },
-          title: { type: 'string', description: 'Título do chunk como está no tasks.md' },
+          chunk_id: { type: 'string', description: 'Ex: "F2.C3" (feature) ou "C3" (bugfix)' },
+          feature_slug: { type: 'string', description: 'Omita em bugfix.' },
+          title: { type: 'string', description: 'Título do chunk' },
           status: { type: 'string', enum: ['pending', 'in_progress', 'done', 'deviated'] },
           mark: {
             type: 'string',
             enum: [' ', '~', 'x'],
-            description:
-              'Só com tasks_storage: mcp — marca os checkboxes deste chunk no plano guardado ' +
-              'no banco, equivalente a trocar [ ] por [~] no tasks.md.'
+            description: 'Só com tasks_storage: mcp — marca os checkboxes deste chunk no banco.'
           },
-          wave: { type: 'integer', description: 'Número da onda no modo paralelo. Omita no sequencial.' },
-          started_at: { type: 'string', description: 'ISO 8601 com hora. Omitido = agora.' },
-          finished_at: { type: 'string', description: 'ISO 8601 com hora. Omitido = agora.' },
-          summary: { type: 'string', description: 'O que o chunk fez, em prosa' },
-          reasoning: { type: 'string', description: 'Por quê / como conecta com o macro (passo b-bis)' },
+          wave: { type: 'integer', description: 'Onda do modo paralelo. Omita no sequencial.' },
+          started_at: { type: 'string', description: 'ISO 8601. Omitido = agora.' },
+          finished_at: { type: 'string', description: 'ISO 8601. Omitido = agora.' },
+          summary: { type: 'string', description: 'O que o chunk fez' },
+          reasoning: { type: 'string', description: 'Por quê / como conecta com o macro' },
           files: {
             type: 'array',
-            description: 'Um item por arquivo tocado, na ordem de revisão',
+            description: 'Um por arquivo tocado, na ordem de revisão',
             items: {
               type: 'object',
               required: ['path'],
@@ -58,39 +55,35 @@ class RecordChunkTool {
                 operation: { type: 'string', enum: ['created', 'modified', 'deleted'] },
                 lines_added: { type: 'integer' },
                 lines_removed: { type: 'integer' },
-                does: { type: 'string', description: 'A linha "Faz" do plano de revisão' },
+                does: { type: 'string', description: 'A linha "Faz"' },
                 connects: { type: 'string', description: 'A linha "Conecta"' },
                 review_note: { type: 'string', description: 'A linha "Revisar"' },
                 detail: {
                   type: 'string',
                   description:
-                    'Explicação longa do arquivo, sem o limite de 1-2 frases do plano de revisão: ' +
-                    'o mecanismo, o fluxo de dados, o que foi decidido e descartado, armadilhas. ' +
-                    'O leitor deve entender o arquivo sem abrir o código.'
+                    'Explicação longa: mecanismo, fluxo de dados, decisão descartada, armadilha. ' +
+                    'Deve bastar para entender o arquivo sem abri-lo. Vazio se só repetiria does.'
                 },
                 diff: {
                   type: 'string',
                   description:
-                    'Diff unificado do que mudou neste arquivo (so de arquivo modificado; ' +
-                    'em arquivo criado o diff seria o arquivo inteiro e os highlights ja bastam). ' +
-                    'Corte em ~200 linhas — o banco e indice, nao copia do repo.'
+                    'Diff unificado, só de arquivo modificado, cortado em ~200 linhas. ' +
+                    'NÃO mande com auto_commit: full — o git já guarda o mesmo diff.'
                 },
                 highlights: HIGHLIGHTS_SCHEMA,
                 symbols: SYMBOLS_SCHEMA,
-                is_test: { type: 'boolean', description: 'Arquivo de teste criado no passo f-bis' }
+                is_test: { type: 'boolean', description: 'Teste criado no passo f-bis' }
               }
             }
           },
           scenario_keys: {
             type: 'array',
             items: { type: 'string' },
-            description:
-              'Chaves dos cenarios da spec que este chunk implementa (ex: ["CT-01","CT-03"]). ' +
-              'E o que da rastreabilidade spec <-> codigo e revela cenario sem cobertura.'
+            description: 'Cenários da spec que este chunk implementa, ex: ["CT-01","CT-03"].'
           },
           commit: {
             type: 'object',
-            description: 'Commit sugerido ou já efetivado deste chunk',
+            description: 'Commit sugerido ou efetivado',
             required: ['message'],
             properties: {
               message: { type: 'string' },

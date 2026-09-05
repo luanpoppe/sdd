@@ -2,15 +2,24 @@
 
 > Fluxo: **sequencial por feature**. Nunca gere todas as specs/tasks de uma vez. Cada feature passa por spec → tasks → implementação → revisão antes da próxima começar.
 
-> **Dois tipos de mudança.** Sem `kind` (ou `kind: feature`) = fluxo completo desta página (`lp:new-feature` → `lp:continue`). Com **`kind: bugfix`** = fluxo enxuto de correção de bug (`lp:bug-fix` → `lp:continue`), documentado em `./bugfix-machine.md` — diagnóstico → opções → correção, sem `plan.md` nem specs por feature. O `kind` vive no `.sdd.yaml` da mudança.
+> **Dois tipos de mudança.** Sem `kind` (ou `kind: feature`) = fluxo completo desta página (`lp:new-feature` → `lp:continue`). Com **`kind: bugfix`** = fluxo enxuto de correção (`lp:bug-fix` → `lp:continue`), em `./bugfix-machine.md`: diagnóstico → opções → correção, sem `plan.md` nem specs por feature. O `kind` vive no `.sdd.yaml`.
 
-> **Escrita de artefatos (scribe).** Com `scribe: subagent` (default; **campo ausente também conta como `subagent`**), TODAS as escritas de arquivo do SDD do passo (docs, `flow.html`, `.sdd.yaml`, marcação do `tasks.md`, `memory.md`) são delegadas a um subagente escriba numa única chamada — tudo-ou-nada, nunca parcial/inline. Veja `./scribe-guide.md`.
+## Toggles que mudam este fluxo
 
-> **Geração de testes (`tests`).** Campo `off` (padrão; **ausente = `off`**) ou `on`. Com `on`, ao concluir uma feature (ou a correção de um bug-fix) roda o passo **f-bis**: um subagente **tester** dedicado escreve os testes da funcionalidade inteira, focando borda e falha além do caminho feliz, roda e **reporta sem corrigir** (nem o teste, nem a implementação — a decisão é do usuário). Nunca roda por chunk. Ver `./tester-guide.md`.
+Cada linha tem o default entre parênteses; **campo ausente conta como o default**. Abra o guia só quando o passo em questão chegar — o resumo aqui basta para saber se ele chega.
 
-> **Histórico estruturado (`mcp`).** Campo `off` (padrão; **ausente = `off`**) ou `on`. Com `off`, o passo não existe: não chame tool, não mencione MCP. Com `on`, cada ponto da máquina também é registrado no banco global (`~/.sdd/sdd.db`) via as tools `sdd_*` do MCP local — quem chama é o **agente principal**, não o escriba, e o banco é **índice derivado**, nunca fonte de verdade — com duas exceções declaradas em config: `tasks_storage: mcp` tira o plano de chunks do `tasks.md` e `state_storage: mcp` tira o bloco volátil do `.sdd.yaml`. Fora desses dois modos, o estado continua vindo dos arquivos. Tool ausente na sessão → 1 linha de aviso e siga. Ver `./mcp-guide.md`.
+| Campo | Efeito no fluxo | Guia |
+|---|---|---|
+| `scribe` (`subagent`) | `subagent`: TODAS as escritas de arquivo do passo vão num único pacote para o escriba — tudo-ou-nada, nunca parcial. `main`: você escreve inline. | `./scribe-guide.md` |
+| `implementer` (`subagent`) | Quem escreve o **código** do chunk. Ortogonal ao `scribe`. | `./subagents-guide.md` |
+| `tests` (`off`) | `on`: ao concluir uma feature (ou a correção), roda o passo **f-bis** — um tester dedicado escreve os testes da funcionalidade inteira, roda e **reporta sem corrigir**. Nunca por chunk. | `./tester-guide.md` |
+| `mcp` (`off`) | `on`: cada ponto desta máquina também é registrado no banco global, pelo **agente principal** (não pelo escriba). Tool ausente → 1 linha de aviso e siga. | `./mcp-guide.md` |
+| `tasks_storage` (`file`) · `state_storage` (`file`) | Em `mcp`, o plano de chunks e/ou o bloco volátil do `.sdd.yaml` saem do arquivo e passam a viver no banco. São as **duas únicas** exceções a "o banco é índice derivado", e nesses modos o passo trava se a tool faltar. | `./mcp-guide.md` |
+| `subagents` (ausente) | Modelo/thinking por papel de subagente, por harness. Sem entrada, lance normal **em silêncio**. | `./subagents-guide.md` |
+| `auto_commit` (`suggest-only`) | `suggest-only`: mostra o comando de commit no plano de revisão. `full`: commita quando o chunk é aprovado, exceto em branch protegida. `off`: não menciona git. `lp:new-feature`/`lp:bug-fix` também sugerem uma branch dedicada no início. | `./git-guide.md` |
+| `flowchart` (`on`) | Mantém o `flow.html` da mudança atualizado a cada passo que muda o progresso. | `./flowchart-guide.md` |
 
-> **Modelo dos subagentes (`subagents`).** Campo **opcional** do `.sdd/config.yaml` (ausente por padrão = tudo como hoje). Quando presente, define em qual modelo/thinking cada papel de subagente roda, por harness: `subagents.<implementer|scribe|explorer>.<claude-code|cursor|codex>: {model, effort}`. Ao lançar um subagente, use a entrada do seu papel + seu harness; se não houver entrada, lance normal **em silêncio**; se houver mas o modelo falhar, relance no default e avise em 1 linha. Ver `./subagents-guide.md`.
+> **Ordem de construção (`chunk_order`).** Default `inside-out`: entre features/chunks independentes, prioriza construir de dentro pra fora — domínio/persistência/lógica interna antes de controller/consumer/endpoint — porque é a ordem que deixa cada chunk compilando e validando sozinho, sem stub. `outside-in` inverte o desempate (esqueleto do fluxo primeiro, aceitando stub temporário). `free` = só dependência real importa. **`Depende de:` real sempre vence a heurística** — `chunk_order` só desempata quando a spec permite mais de uma ordem válida. Usado em `lp:new-feature` (ordem das features) e `lp:continue` (ordem dos chunks).
 
 > **Como citar chunks, features e qualquer coisa numerada em texto explicativo.** Toda etiqueta do SDD — chunk (`C6`, `F2.C3`), feature/frente (`F3`, slug), onda, opção de solução (`Opção 2`) — é **referência, não descrição**. Ninguém lembra de cabeça o que era `C6` nem qual era a "frente F3". Em toda prosa dirigida ao usuário (explicação do chunk, `Vem de`/`Prepara`, "Conecta com o macro", transições, resumo de onda, resposta a pergunta, plano de revisão, handoff), **nunca use a etiqueta sozinha como se ela explicasse algo**. Sempre acompanhe do que aquilo é/faz:
 >
@@ -19,10 +28,6 @@
 > - Opção de solução: *"a opção que recalcula no mapper (Opção 2)"* — não *"a Opção 2"*.
 >
 > Se a frase continua clara sem a etiqueta, prefira só a descrição; a etiqueta entra entre parênteses quando o usuário pode querer referenciá-la (revert, achar no `tasks.md`/`plan.md`). **Exceções** (etiqueta crua é o certo): cabeçalhos no formato `<ID> — <título>` (o título já vem ao lado), campos do `.sdd.yaml`/`tasks.md`, `data-*` do `flow.html`, e comandos que o usuário vai copiar ("reverte o chunk `F2.C3`").
-
-> **Git (branch + auto-commit).** `lp:new-feature`/`lp:bug-fix` sugerem criar uma branch dedicada no início. No motor `implementing`, `auto_commit` (default `suggest-only`, ausente também conta) decide o que acontece a cada chunk: `suggest-only` mostra o comando de commit pronto pra copiar no plano de revisão; `full` commita de verdade quando o chunk é aprovado (exceto em branch protegida: main/master/develop/dev/staging/stg/prod/prd/production/homolog/hml/qa); `off` não menciona git. Ver `./git-guide.md`.
-
-> **Ordem de construção (`chunk_order`).** Default `inside-out` (ausente também conta como `inside-out`): entre features/chunks independentes (sem dependência real forçando ordem), prioriza construir de dentro pra fora — domínio/persistência/lógica interna antes de controller/consumer/endpoint — porque é a ordem que deixa cada chunk compilando e validando sozinho, sem precisar de stub. `outside-in` inverte esse desempate (útil se o usuário quer ver o esqueleto do fluxo primeiro, aceitando stubs temporários). `free` = só dependência real importa, sem preferência de direção. **Dependência real declarada em `Depende de:` sempre vence a heurística** — `chunk_order` só desempata quando a spec permite mais de uma ordem válida. Usado em `lp:new-feature` (ordem das features) e `lp:continue` (ordem dos chunks ao gerar `tasks.md`).
 
 ## Estado por mudança (`.sdd/changes/<id>/.sdd.yaml`)
 

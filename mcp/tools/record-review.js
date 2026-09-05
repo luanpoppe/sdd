@@ -20,9 +20,8 @@ class RecordReviewTool {
     return {
       name: 'sdd_record_review',
       description:
-        'Registra no banco do SDD um review (lp:review) e, opcionalmente, o step recem-fechado: ' +
-        'arquivos percorridos, explicacao longa, trechos de codigo destacados e os metodos com ' +
-        'exemplos de entrada e saida. Chame ao marcar cada step como done.',
+        'Registra um review (lp:review) e, opcionalmente, o step recém-fechado com a mesma ' +
+        'profundidade de um chunk. Chame ao marcar cada step como done. Ver mcp-guide.md.',
       inputSchema: {
         type: 'object',
         required: ['slug'],
@@ -35,20 +34,20 @@ class RecordReviewTool {
           updated: { type: 'string' },
           step: {
             type: 'object',
-            description: 'O step que acabou de fechar. Omita se está só atualizando o review.',
+            description: 'O step recém-fechado. Omita se só atualiza o review.',
             required: ['step_id'],
             properties: {
               step_id: { type: 'string', description: 'Ex: "0", "5", "5.1"' },
               label: { type: 'string' },
-              caller: { type: 'string', description: 'Ex: "RJController.criar() em RJController.java:34"' },
+              caller: { type: 'string', description: 'Quem chama, com arquivo:linha' },
               position: { type: 'integer' },
               done: { type: 'boolean' },
-              summary: { type: 'string', description: 'O que o step explicou, em 1-2 frases' },
+              summary: { type: 'string', description: 'O que o step explicou, 1-2 frases' },
               detail: {
                 type: 'string',
                 description:
-                  'Explicacao longa do step, sem limite de frases: o mecanismo, o fluxo de ' +
-                  'dados, as decisoes de projeto que dao pra inferir do codigo e as armadilhas.'
+                  'Explicação longa: mecanismo, fluxo de dados, decisão inferível do código, ' +
+                  'armadilha.'
               },
               highlights: HIGHLIGHTS_SCHEMA,
               symbols: SYMBOLS_SCHEMA,

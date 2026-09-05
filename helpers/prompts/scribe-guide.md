@@ -34,7 +34,7 @@ O escriba **renderiza e escreve** — nunca **decide**.
 
 ## Uma chamada por passo
 
-Agrupe **todas as escritas de um passo** do fluxo (`lp:new-feature`, cada `lp:continue`, cada etapa do bug-fix) numa **única** invocação do escriba — não um subagente por arquivo. Ex.: no passo de tasks, uma chamada escreve `tasks.md` + `tasks.html` + regenera `flow.html` + atualiza `.sdd.yaml`.
+Agrupe **todas as escritas de um passo** do fluxo (`lp:new-feature`, cada `lp:continue`, cada etapa do bug-fix) numa **única** invocação do escriba — não um subagente por arquivo. Ex.: no passo de tasks, uma chamada escreve `tasks.md` + `tasks.html` + atualiza `flow.html` + atualiza `.sdd.yaml`. No `flow.html`, o pacote leva as **edições pontuais** (qual nó troca de classe, qual painel entra e acima de qual marcador), não o arquivo reescrito — ver `./flowchart-guide.md`, seção "Atualização incremental".
 
 ## O que o principal passa ao escriba
 

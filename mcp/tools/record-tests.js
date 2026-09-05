@@ -13,23 +13,22 @@ class RecordTestsTool {
     return {
       name: 'sdd_record_tests',
       description:
-        'Registra o resultado da geração de testes do SDD (passo f-bis): runner, contagem de ' +
-        'passou/falhou, cobertura e os arquivos de teste criados.',
+        'Registra o resultado da geração de testes (passo f-bis).',
       inputSchema: {
         type: 'object',
         required: ['change_id'],
         properties: {
           change_id: { type: 'string' },
-          feature_slug: { type: 'string', description: 'Feature cujos testes foram gerados' },
-          chunk_id: { type: 'string', description: 'Chunk que fechou a feature, se quiser amarrar' },
-          runner: { type: 'string', description: 'Ex: "vitest", "pytest", "go test"' },
+          feature_slug: { type: 'string', description: 'Feature testada' },
+          chunk_id: { type: 'string', description: 'Chunk que fechou a feature, se houver' },
+          runner: { type: 'string', description: 'Ex: "vitest", "pytest"' },
           passed: { type: 'integer' },
           failed: { type: 'integer' },
-          coverage_pct: { type: 'number', description: 'Cobertura das linhas da feature, 0-100' },
-          report: { type: 'string', description: 'Resumo do relatório do tester, incluindo o que ele apontou' },
+          coverage_pct: { type: 'number', description: '0-100, linhas da feature' },
+          report: { type: 'string', description: 'Resumo do tester, com o que ele apontou' },
           files: {
             type: 'array',
-            description: 'Arquivos de teste criados',
+            description: 'Arquivos criados',
             items: { type: 'string' }
           }
         }

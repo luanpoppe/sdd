@@ -120,21 +120,23 @@ class ExplainWriter {
 
 // --- fragmentos de JSON Schema, compartilhados pelas tools -------------------
 
+// As descrições aqui são curtas de propósito: elas entram no prompt de TODA requisição
+// da sessão, enquanto o `../helpers/prompts/mcp-guide.md` só é lido quando o passo pede.
+// Fica no schema o que muda o payload (limite, exclusão, formato); o resto mora no guia.
 const HIGHLIGHTS_SCHEMA = {
   type: 'array',
   description:
-    'Os trechos de código que DECIDEM este arquivo, na ordem de leitura. Só o que é ' +
-    'decisivo — regra de negócio, query, tratamento de erro, ponto onde o dado muda de ' +
-    'forma. Nunca import, boilerplate, getter, nem o arquivo inteiro colado.',
+    '0-3 trechos decisivos por arquivo (regra, query, erro, transformação), na ordem de ' +
+    'leitura. Nunca import, boilerplate nem o arquivo inteiro.',
   items: {
     type: 'object',
     required: ['snippet'],
     properties: {
-      label: { type: 'string', description: 'Título do trecho, ex: "Lookup em lote"' },
-      lines: { type: 'string', description: 'Faixa de linhas, ex: "34-48"' },
-      language: { type: 'string', description: 'Linguagem para destaque, ex: "csharp"' },
-      snippet: { type: 'string', description: 'O código, recortado no essencial (5-25 linhas)' },
-      explanation: { type: 'string', description: 'O que este trecho faz e por que importa' }
+      label: { type: 'string', description: 'Título do trecho' },
+      lines: { type: 'string', description: 'Faixa, ex: "34-48"' },
+      language: { type: 'string', description: 'Ex: "csharp"' },
+      snippet: { type: 'string', description: 'O código, 5-25 linhas' },
+      explanation: { type: 'string', description: 'O que faz e por que importa' }
     }
   }
 };
@@ -142,34 +144,31 @@ const HIGHLIGHTS_SCHEMA = {
 const SYMBOLS_SCHEMA = {
   type: 'array',
   description:
-    'Os métodos/funções/endpoints que carregam comportamento, cada um com exemplos de ' +
-    'entrada e saída com dado que faz sentido. É o que responde "o que isso faz de ' +
-    'verdade" — pergunta que o snippet de código não responde. Pule símbolo trivial ' +
-    '(DTO, getter, barrel, construtor).',
+    'Só os símbolos que carregam comportamento, com exemplos. Pule DTO, getter, barrel ' +
+    'e construtor.',
   items: {
     type: 'object',
     required: ['name'],
     properties: {
-      name: { type: 'string', description: 'Ex: "JulgadoUsuarioResolver.ResolverNomesAsync"' },
+      name: { type: 'string', description: 'Ex: "UsuarioResolver.ResolverNomesAsync"' },
       kind: {
         type: 'string',
         enum: ['method', 'function', 'class', 'endpoint', 'component', 'hook', 'query', 'other']
       },
       signature: { type: 'string', description: 'Assinatura real, com tipos' },
-      purpose: { type: 'string', description: 'O que ele resolve, em 1-2 frases' },
+      purpose: { type: 'string', description: 'O que resolve, 1-2 frases' },
       examples: {
         type: 'array',
         description:
-          'Entrada -> saída com dado plausível do domínio, não "foo"/"bar". ' +
-          'Inclua ao menos UM caso de borda ou falha, não só o caminho feliz.',
+          'Dado plausível do domínio, nunca "foo"/"bar". Ao menos UM caso de borda ou falha.',
         items: {
           type: 'object',
           properties: {
-            label: { type: 'string', description: 'Ex: "página com 2 julgados do mesmo usuário"' },
-            input: { description: 'Entrada: string ou objeto/array (vira JSON)' },
-            output: { description: 'Saída: string ou objeto/array (vira JSON)' },
+            label: { type: 'string', description: 'O caso, em poucas palavras' },
+            input: { description: 'String ou objeto/array (vira JSON)' },
+            output: { description: 'String ou objeto/array (vira JSON)' },
             note: { type: 'string', description: 'O que este caso prova' },
-            is_edge: { type: 'boolean', description: 'true em caso de borda ou falha' }
+            is_edge: { type: 'boolean', description: 'true em borda ou falha' }
           }
         }
       }

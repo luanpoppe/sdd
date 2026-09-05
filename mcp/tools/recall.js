@@ -25,11 +25,10 @@ class RecallTool {
     return {
       name: 'sdd_recall',
       description:
-        'Busca no histórico do SDD por termo livre — nome de arquivo, classe, método, conceito. ' +
-        'Varre chunks, arquivos, trechos de código destacados, métodos com seus exemplos de ' +
-        'entrada e saída, steps de review, cenários da spec, a base de conhecimento do projeto ' +
-        'e as decisões registradas. Use antes de mexer em algo ' +
-        'que talvez já tenha sido tocado, ou para lembrar como uma parte do sistema funciona.',
+        'Busca no histórico do SDD por termo livre (arquivo, classe, método, conceito) em 7 ' +
+        'fontes: chunks, arquivos, destaques, métodos com exemplos, steps de review, cenários e ' +
+        'conhecimento. Use antes de mexer em algo que talvez já tenha sido tocado, ou para ' +
+        'lembrar como uma parte do sistema funciona.',
       inputSchema: {
         type: 'object',
         required: ['query'],

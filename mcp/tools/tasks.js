@@ -8,28 +8,28 @@ const CHUNK_SCHEMA = {
   type: 'object',
   required: ['chunk_id'],
   properties: {
-    chunk_id: { type: 'string', description: 'Ex: "F2.C3" em feature, "C3" em bug-fix' },
+    chunk_id: { type: 'string', description: 'Ex: "F2.C3" ou "C3" em bug-fix' },
     title: { type: 'string' },
     files: {
       type: 'array',
       items: { type: 'string' },
-      description: 'Arquivos que o chunk vai tocar (equivale ao campo Arquivos do tasks.md)'
+      description: 'Arquivos que o chunk vai tocar'
     },
     depends_on: {
       type: 'array',
       items: { type: 'string' },
-      description: 'IDs de chunks que precisam estar prontos antes deste'
+      description: 'Chunks que precisam vir antes deste'
     },
-    review_order: { type: 'string', description: 'Ordem sugerida de revisão dos arquivos' },
+    review_order: { type: 'string', description: 'Ordem de revisão dos arquivos' },
     faz: {
       type: 'array',
       items: { type: 'string' },
-      description: 'Itens do bloco "Faz" — um por checkbox'
+      description: 'Bloco "Faz" — um item por checkbox'
     },
     validacao: {
       type: 'array',
       items: { type: 'string' },
-      description: 'Itens do bloco "Validação" — um por checkbox'
+      description: 'Bloco "Validação" — um item por checkbox'
     }
   }
 };
@@ -45,9 +45,8 @@ class WriteTasksTool {
     return {
       name: 'sdd_write_tasks',
       description:
-        'Grava no banco o plano de chunks de uma feature (ou da correção, em bug-fix), ' +
-        'substituindo o que houver. Use SOMENTE com tasks_storage: mcp — nesse modo o ' +
-        'tasks.md não é gerado e este plano é a fonte de verdade.',
+        'Grava o plano de chunks, SUBSTITUINDO o que houver (nunca parcial). Só com ' +
+        'tasks_storage: mcp, modo em que não existe tasks.md e este plano é a fonte de verdade.',
       inputSchema: {
         type: 'object',
         required: ['change_id', 'chunks'],

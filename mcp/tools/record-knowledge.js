@@ -18,9 +18,8 @@ class RecordKnowledgeTool {
     return {
       name: 'sdd_record_knowledge',
       description:
-        'Registra no banco do SDD uma área da base de conhecimento (.sdd/context/) ou um ' +
-        'tema do lp:explain, para que a busca alcance também o entendimento de longo prazo ' +
-        'do projeto, e não só o que mudou em cada chunk.',
+        'Registra uma área de .sdd/context/ ou um tema do lp:explain, para a busca alcançar ' +
+        'também o entendimento de longo prazo do projeto.',
       inputSchema: {
         type: 'object',
         required: ['kind', 'slug'],
@@ -28,18 +27,18 @@ class RecordKnowledgeTool {
           kind: {
             type: 'string',
             enum: ['context', 'explain'],
-            description: '"context" para .sdd/context/, "explain" para um tema do lp:explain'
+            description: '"context" = .sdd/context/; "explain" = tema do lp:explain'
           },
-          slug: { type: 'string', description: 'Identificador da área/tema, ex: "julgados/upload"' },
+          slug: { type: 'string', description: 'Ex: "julgados/upload"' },
           title: { type: 'string' },
-          path: { type: 'string', description: 'Caminho do arquivo correspondente em .sdd/' },
-          change_id: { type: 'string', description: 'Mudança relacionada, quando houver' },
-          summary: { type: 'string', description: 'O que é essa área/tema, em 1-2 frases' },
+          path: { type: 'string', description: 'Arquivo correspondente em .sdd/' },
+          change_id: { type: 'string', description: 'Se houver' },
+          summary: { type: 'string', description: 'O que é, 1-2 frases' },
           detail: {
             type: 'string',
             description:
-              'O conteúdo que vale ser encontrado depois: como funciona, decisões e porquês, ' +
-              'armadilhas. Não cole o arquivo inteiro — o banco é índice, não cópia.'
+              'O que vale ser achado depois: como funciona, decisões, armadilhas. Não cole o ' +
+              'arquivo inteiro.'
           }
         }
       }

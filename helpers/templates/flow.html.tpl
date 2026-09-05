@@ -156,6 +156,13 @@
           `.detail-panel` da MESMA feature.
       Nós `pending` (sem código ainda) NÃO recebem has-detail nem bloco de detalhe.
 
+      ATUALIZAR ESTE ARQUIVO NO lp:continue = EDIÇÃO PONTUAL, NUNCA REESCRITA DO <main>.
+      Cada feature termina o painel com um marcador `<!-- /detail-panel: <slug> -->`: o bloco
+      de detalhe de um chunk novo entra imediatamente ACIMA dele, e os que já estão lá não são
+      tocados — o painel de um chunk fechado é imutável. Os nós mudam por troca de classe e de
+      badge, com âncora no `data-detail` ou no texto do `.sub`. Ver flowchart-guide.md, seção
+      "Atualização incremental". Regeneração inteira é do lp:flow.
+
       Conteúdo do bloco de detalhe = MINI-WALKTHROUGH do chunk, com CÓDIGO REAL implementado
       (estilo do lp:review). Para chunks done/current/deviated, LEIA os arquivos realmente tocados
       (ver flowchart-guide.md, seção "Detalhe clicável por nó") e monte:
@@ -240,10 +247,13 @@ credenciais erradas → 401</div>
             <li>Só é alcançável porque o <code>SecurityConfig</code> (F1.C1) liberou a rota.</li>
           </ul>
         </div>
+        <!-- /detail-panel: auth-endpoint — painel de chunk novo entra AQUI, acima desta linha -->
       </div>
     </details>
 
-    <!-- Feature ainda sem tasks.md: um único nó macro. Sem tasks = sem código = sem has-detail. -->
+    <!-- Feature ainda sem tasks.md: um único nó macro. Sem tasks = sem código = sem has-detail.
+         Quando o tasks.md dela for gerado, ESTA feature (só ela) é regenerada expandida em
+         chunks, já com o `<div class="detail-panel" hidden>` e o marcador de fim. -->
     <details class="feature pending" open>
       <summary>2. refresh-token <span class="tag">a fazer</span></summary>
       <div class="flow">

@@ -13,23 +13,23 @@ class SyncChangeTool {
     return {
       name: 'sdd_sync_change',
       description:
-        'Espelha no banco do SDD o estado de uma mudança (feature ou bugfix) e suas features. ' +
-        'Chame na criação da mudança e em toda transição de estado. Campos omitidos preservam o valor atual.',
+        'Espelha a mudança e suas features. Chame na criação e em toda transição de estado. ' +
+        'Campo omitido preserva o valor atual. Ver mcp-guide.md.',
       inputSchema: {
         type: 'object',
         required: ['change_id', 'kind'],
         properties: {
-          change_id: { type: 'string', description: 'ID da pasta em .sdd/changes/, ex: "anonimizar-texto"' },
+          change_id: { type: 'string', description: 'Nome da pasta em .sdd/changes/' },
           kind: { type: 'string', enum: ['feature', 'bugfix'] },
           title: { type: 'string' },
-          state: { type: 'string', description: 'Estado da máquina, ex: "implementing", "bug-fixing"' },
+          state: { type: 'string', description: 'Ex: "implementing", "bug-fixing"' },
           chosen_solution: { type: 'string', description: 'Só bugfix: a opção escolhida' },
-          created: { type: 'string', description: 'Data de criação do .sdd.yaml (YYYY-MM-DD)' },
+          created: { type: 'string', description: 'YYYY-MM-DD' },
           updated: { type: 'string' },
-          archived: { type: 'string', description: 'Preenchido só no lp:archive' },
+          archived: { type: 'string', description: 'Só no lp:archive' },
           features: {
             type: 'array',
-            description: 'Lista completa e ordenada das features. Omita em bugfix.',
+            description: 'Lista completa e ordenada. Omita em bugfix.',
             items: {
               type: 'object',
               required: ['slug'],
@@ -44,16 +44,15 @@ class SyncChangeTool {
                 scenarios: {
                   type: 'array',
                   description:
-                    'Cenarios BDD e edge cases da spec desta feature. Mande ao gerar a spec: ' +
-                    'e o que permite depois dizer qual chunk implementou cada cenario e o que ' +
-                    'ficou sem cobertura.',
+                    'Cenários BDD e edge cases da spec. Mande ao gerar a spec — é o que revela ' +
+                    'depois o cenário sem chunk nenhum.',
                   items: {
                     type: 'object',
                     required: ['key'],
                     properties: {
-                      key: { type: 'string', description: 'Identificador curto e estavel, ex: "CT-03"' },
-                      title: { type: 'string', description: 'O cenario em uma linha' },
-                      body: { type: 'string', description: 'Dado/Quando/Entao, se houver' },
+                      key: { type: 'string', description: 'Curto e estável, ex: "CT-03"' },
+                      title: { type: 'string', description: 'O cenário em uma linha' },
+                      body: { type: 'string', description: 'Dado/Quando/Então, se houver' },
                       kind: { type: 'string', enum: ['scenario', 'edge'] }
                     }
                   }

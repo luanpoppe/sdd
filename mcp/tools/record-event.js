@@ -26,26 +26,25 @@ class RecordEventTool {
     return {
       name: 'sdd_record_event',
       description:
-        'Registra um evento pontual no histórico do SDD: transição de estado, decisão de modo ' +
-        '(sequencial/paralelo), onda planejada no paralelo, divergência detectada no auto-sync, ' +
-        'commit efetivado, ou nota livre.',
+        'Registra um evento pontual: transição de estado, decisão de modo, onda planejada, ' +
+        'divergência do auto-sync, commit efetivado ou nota livre.',
       inputSchema: {
         type: 'object',
         required: ['kind', 'summary'],
         properties: {
           kind: { type: 'string', enum: EVENT_KINDS },
-          summary: { type: 'string', description: 'Uma frase descrevendo o evento' },
+          summary: { type: 'string', description: 'O evento em uma frase' },
           actor: {
             type: 'string',
             enum: ['main', 'implementer', 'scribe', 'tester', 'explorer'],
-            description: 'Quem produziu o evento. Omitido = main.'
+            description: 'Omitido = main.'
           },
-          change_id: { type: 'string', description: 'Mudança relacionada, se houver' },
-          chunk_id: { type: 'string', description: 'Chunk relacionado, se houver' },
-          at: { type: 'string', description: 'ISO 8601 com hora. Omitido = agora.' },
+          change_id: { type: 'string', description: 'Se houver' },
+          chunk_id: { type: 'string', description: 'Se houver' },
+          at: { type: 'string', description: 'ISO 8601. Omitido = agora.' },
           detail: {
             type: 'object',
-            description: 'Dados estruturados livres (ex: os chunks da onda e o motivo de exclusão)',
+            description: 'Dados livres, ex: os chunks da onda e o motivo de exclusão',
             additionalProperties: true
           }
         }

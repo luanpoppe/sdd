@@ -6,8 +6,7 @@ const { Log } = require('../log');
 
 const IN_REVIEW_SCHEMA = {
   type: ['object', 'null'],
-  description:
-    'Chunk(s) aguardando revisão do usuário. Mande null para limpar quando a revisão fechar.',
+  description: 'Chunk(s) aguardando revisão. null limpa quando a revisão fecha.',
   properties: {
     chunks: { type: 'array', items: { type: 'string' } },
     files: { type: 'array', items: { type: 'string' }, description: 'Paths na ordem de revisão' },
@@ -26,10 +25,8 @@ class WriteStateTool {
     return {
       name: 'sdd_write_state',
       description:
-        'Grava no banco a parte do .sdd.yaml que muda a cada passo: state, current_feature, ' +
-        'current_chunk, in_review e o status de cada feature. Use SOMENTE com state_storage: mcp ' +
-        '— nesse modo esses campos não existem mais no arquivo e o banco é a fonte de verdade. ' +
-        'Campo ausente do payload é preservado; campo mandado como null é apagado.',
+        'Grava a parte do .sdd.yaml que muda a cada passo. Só com state_storage: mcp, modo em ' +
+        'que esses campos saem do arquivo. Campo ausente é PRESERVADO; campo null é APAGADO.',
       inputSchema: {
         type: 'object',
         required: ['change_id'],
@@ -37,7 +34,7 @@ class WriteStateTool {
           change_id: { type: 'string' },
           state: {
             type: ['string', 'null'],
-            description: 'Estado da máquina, ex: "implementing", "bug-fixing"'
+            description: 'Ex: "implementing", "bug-fixing"'
           },
           current_feature: { type: ['string', 'null'], description: 'Slug da feature em curso' },
           current_chunk: { type: ['string', 'null'], description: 'Ex: "F1.C2"' },
@@ -45,7 +42,7 @@ class WriteStateTool {
           updated: { type: 'string', description: 'ISO. Omita para usar o instante da chamada.' },
           features: {
             type: 'array',
-            description: 'Só o status de cada feature. Título, resumo e ordem vêm do sdd_sync_change.',
+            description: 'Só o status. Título, resumo e ordem vêm do sdd_sync_change.',
             items: {
               type: 'object',
               required: ['slug'],
@@ -84,9 +81,8 @@ class ReadStateTool {
     return {
       name: 'sdd_read_state',
       description:
-        'Lê do banco o bloco volátil de uma mudança: state, current_feature, current_chunk, ' +
-        'in_review e o status de cada feature. Use com state_storage: mcp no lugar de ler esses ' +
-        'campos do .sdd.yaml — no modo padrão leia o arquivo.',
+        'Lê o bloco volátil da mudança (state, current_feature, current_chunk, in_review, ' +
+        'status das features). Com state_storage: mcp, no lugar de ler o .sdd.yaml.',
       inputSchema: {
         type: 'object',
         required: ['change_id'],

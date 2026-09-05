@@ -11,8 +11,26 @@ Regras para gerar/atualizar `.sdd/changes/<id>/flow.html`: um diagrama **macro**
 ## Quando gerar / atualizar
 
 - **Criar**: quando o `plan.md` é aprovado (transição para `awaiting-feature-spec` a 1ª vez). Nesse momento só existem features → um nó macro por feature.
-- **Atualizar**: no FIM de cada `lp:continue` que muda o progresso (spec gerada, tasks gerados, chunk implementado, feature concluída). Regenere o `<main>` inteiro a partir do estado atual — é barato e evita dessincronia.
-- **Sob demanda**: a skill `lp:flow` regenera e reporta o caminho.
+- **Atualizar**: no FIM de cada `lp:continue` que muda o progresso. **Edição pontual, não reescrita** — ver a seção abaixo.
+- **Regenerar inteiro**: só na skill `lp:flow`, quando um `tasks.md` novo expande uma feature em chunks, ou quando o arquivo está visivelmente dessincronizado.
+
+## Atualização incremental (o caminho normal)
+
+> **Não reescreva o `<main>` para marcar um chunk como pronto.** O painel de detalhe de cada chunk é imutável depois de escrito, e num diagrama com 20 chunks o `<main>` passa de 15 mil tokens — reescrevê-lo a cada chunk custa mais que todo o resto do passo somado, e cresce quanto mais o projeto anda.
+
+Um chunk fechando são **três edições pontuais**, cada uma com âncora única no arquivo:
+
+1. **O nó do chunk anterior** vira `done`: troque `class="node current has-detail"` por `class="node done has-detail"` e o `<span class="badge">►</span>` por `<span class="badge">✓</span>`. Âncora: o `data-detail="<ID>"` daquele nó.
+2. **O nó deste chunk** deixa de ser `pending` e vira clicável: `class="node current has-detail"`, mais `data-detail="<ID>"`, `tabindex="0"`, o badge `►` e o `<span class="hint">detalhes</span>`. Âncora: o texto do `<div class="sub">` daquele nó, que já contém o ID.
+3. **O painel deste chunk** é acrescentado imediatamente antes do `<!-- /detail-panel: <slug> -->` da feature — um `<div class="detail" data-detail-for="<ID>" hidden>` novo, sem tocar nos que já estão lá.
+
+Mais a linha de progresso do cabeçalho (`{{PCT}}`, `{{PROGRESS_LABEL}}`, `{{UPDATED}}`), que é uma edição de uma linha.
+
+Quando a feature fecha, some uma quarta: a classe do `<details class="feature ...">` e a `<span class="tag">` do `<summary>`.
+
+**Nada mais muda.** Se você se pegar reescrevendo nós `pending` que não foram tocados, ou repetindo o painel de um chunk que já tinha um, parou de editar e voltou a regenerar.
+
+> **Regeneração é o plano B, não o padrão.** Se uma edição pontual falhar por âncora ambígua, regenere aquela feature inteira (o `<details>` dela), não o arquivo. Só regenere tudo se o `<main>` estiver realmente inconsistente com o estado.
 
 ## Bug-fix (`kind: bugfix`)
 
@@ -97,7 +115,7 @@ Conteúdo do detalhe (regras):
 
 ## Princípios
 
-- **Regenerar > remendar**: reescreva o `<main>` a cada update a partir do estado real. Não tente editar nós individualmente.
+- **Editar > regenerar**: no `lp:continue`, altere só os nós e o painel que mudaram (ver "Atualização incremental"). Regeneração inteira é para o `lp:flow`, para quando um `tasks.md` novo expande a feature em chunks, e para dessincronia real. O painel de um chunk fechado nunca é reescrito — o conteúdo dele não muda mais.
 - **Não inventar arquitetura**: nós e setas saem do `plan.md`/`spec`/`tasks.md` reais. Se não sabe qual componente um chunk é, use o nome do arquivo principal.
 - **Macro sempre**: se o diagrama está ficando com dezenas de nós, você desceu detalhe demais — agrupe.
 - **Silencioso quando `off`**: nunca gere o arquivo se o toggle estiver desligado.
