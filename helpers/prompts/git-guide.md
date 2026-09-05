@@ -36,6 +36,23 @@ Campo `auto_commit` do `.sdd/config.yaml`: `full` / `suggest-only` (default; aus
 
 Decidida pelo principal ao montar o plano de revisão do chunk (passo g), guardada em `in_review.commit_message` (mesmo pacote do escriba que grava o resto de `in_review` no passo g-bis). Curta, no imperativo, no padrão do projeto se ele já usa um (ex: Conventional Commits — `feat(<slug>): <resumo>` / `fix(<id>): <resumo>`); sem padrão detectado, `<tipo>: <resumo de 1 frase do chunk>` (tipo = `feat`/`fix`/`refactor` conforme o chunk).
 
+### Onde o bloco aparece — sempre no fim da ÚLTIMA mensagem
+
+Duas regras, e as duas existem porque o bloco serve para ser **copiado**:
+
+1. **Sempre por último.** O bloco fecha a resposta, depois do plano de revisão e de qualquer
+   observação. Bloco no meio do texto obriga o usuário a rolar para trás e procurar.
+2. **Reemita a cada resposta enquanto o chunk estiver em revisão.** Se o usuário pediu um
+   ajuste, tirou uma dúvida ou você mexeu em qualquer coisa do chunk, o bloco vai de novo no
+   fim da resposta nova — **mesmo que os comandos não tenham mudado**. Repetir dois comandos
+   idênticos custa nada; procurar a mensagem certa no histórico custa toda vez.
+
+Se o ajuste tocou arquivos novos, o `git add` reflete a lista atualizada, e a
+`in_review.commit_message` é reescrita junto se o resumo do chunk deixou de valer.
+
+O bloco só some quando o chunk é aprovado (o `/lp-continue` seguinte) ou quando
+`auto_commit: off`.
+
 ### Formato do bloco (suggest-only, ou full em branch protegida)
 
 ```

@@ -36,6 +36,8 @@ Uma onda por invocação de `lp:continue` (mesmo no paralelo): não dispare a pr
 
 Mesmo formato do plano de chunk único, mas agrupado por chunk. Ordene os chunks por prioridade de revisão; dentro de cada um, os arquivos na ordem, cada um com `Faz` → `Conecta` → `Revisar` (nessa ordem, `Revisar` por último), 1-2 frases cada — ver as regras em `./state-machine.md`.
 
+Com `auto_commit` ≠ `off`, o bloco de commit da onda fecha a mensagem, como no chunk único, e é reimpresso a cada resposta enquanto a onda estiver em revisão — ver `./git-guide.md`.
+
 ```
 ## Onda F<n>.[C<a>, C<b>, C<c>] — <resumo> (em revisão)
 

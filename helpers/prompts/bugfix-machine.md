@@ -55,7 +55,7 @@ in_review: <null | {chunks: [ids], files: [paths], updated: data}>
 
 1. Releia `diagnosis.md`. Se a causa raiz não estava clara, pode investigar mais um pouco o código antes.
 2. Escreva `solutions.(md/html)` com `../templates/solutions.*.tpl`: 2-4 opções, cada uma corrigindo a **causa raiz** (não o sintoma), com abordagem + prós + contras + esforço/risco. Sempre inclua sua recomendação. (Com `scribe: subagent`/ausente, delegue a escrita ao escriba.)
-3. **Imprima o plano de revisão** das opções no chat (ordem: Contexto → Opções → Recomendação), pra o usuário decidir sem precisar abrir o arquivo.
+3. **Imprima o plano de revisão** das opções no chat (ordem: Contexto → Opções → Recomendação), pra o usuário decidir sem precisar abrir o arquivo. Junto dele vai o **delta**: o que você assumiu ao montar as opções e ainda não conversou — a restrição que você deu por certa, a opção óbvia que descartou e por quê. Ver `./state-machine.md`, seção "Ao gerar um artefato".
 4. **Só então** pergunte qual opção seguir via `AskUserQuestion` (uma alternativa por opção + "Outro"). **Nunca pergunte antes de escrever o arquivo e imprimir o plano** — o usuário escolhe com as opções à vista.
 5. Grave `chosen_solution`, `state: bug-fixing`, `updated`. Com **`mcp: on`**, chame `sdd_sync_change` com o `chosen_solution` e o `state` novo — ver `./mcp-guide.md`. Avise: *"Escolhida `<opção>`. Próximo `/lp-continue` gera o tasks.md e começa a implementar."*
 

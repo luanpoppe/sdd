@@ -123,6 +123,40 @@ Sinais:
 
 Buckets: **decisão divergente** / **escopo extra** / **escopo faltante**. Propor diff por divergência. Não aplicar sem `OK`.
 
+## Ao gerar um artefato, diga no chat o que ele traz de novo
+
+Vale para `plan.md`, `spec.md`, `tasks.md`, `diagnosis.md` e `solutions.md` — todo arquivo
+que você escreve depois de uma conversa com o usuário.
+
+Boa parte do que entra nesses arquivos já foi combinada no grill. Mas parte **não**: é o que
+você preencheu sozinho — um default assumido, uma decisão de granularidade, um caso de borda
+que você notou, uma ordem que você escolheu. Essa parte só existe dentro do arquivo, e é
+justamente a que o usuário precisa aprovar.
+
+Então, ao anunciar o artefato, imprima o **delta**: o que está no arquivo e ainda **não** foi
+dito, perguntado ou respondido nesta conversa.
+
+```
+No arquivo, e que ainda não conversamos:
+- <decisão que você tomou sozinho> — <por quê>
+- <default assumido> — <o valor, e o que muda se estiver errado>
+- <caso de borda que você acrescentou>
+```
+
+Regras:
+
+- **É delta, não resumo.** O que já foi combinado no grill fica de fora — repetir o que o
+  usuário acabou de dizer é ruído, e afoga o que importa.
+- **Cada linha diz a decisão E o porquê.** *"Assumi paginação por offset"* não dá o que
+  discordar; *"assumi paginação por offset, porque a ordenação é por status e o total precisa
+  ser exato na tela"* dá.
+- **Nada a declarar é uma resposta válida.** Se o grill cobriu tudo e você não decidiu nada
+  por conta, diga isso em uma linha e siga. Não invente item para preencher o bloco.
+- **Não substitui a leitura do arquivo** — encurta. O usuário continua podendo abrir; o bloco
+  existe para ele não *precisar* abrir só para descobrir o que mudou desde a conversa.
+- **Teto de ~5 itens.** Se passou disso, você decidiu demais sozinho: o grill parou cedo, e o
+  caminho é perguntar em vez de listar.
+
 ## Plano de revisão (após cada chunk)
 
 **UMA lista só**: todos os arquivos tocados, já na ordem de revisão (não duas listas separadas). A lista é completa — serve de manifesto pra revert também. Arquivos de baixo valor de revisão (tipos gerados, config trivial, stubs) vão para o FIM, marcados "pode pular".
@@ -163,7 +197,7 @@ Próximo: /lp-continue (chunk F<n>.C<m+1>) ou — se foi o último da feature �
 Reverter: peça "reverte o chunk F<n>.C<m>".
 ```
 
-Se `auto_commit` ≠ `off`, acrescente ao final o bloco de commit (comando pronto em `suggest-only`, aviso de commit automático em `full`) — ver `./git-guide.md`.
+Se `auto_commit` ≠ `off`, acrescente **como último bloco da mensagem** o de commit (comando pronto em `suggest-only`, aviso de commit automático em `full`) — ver `./git-guide.md`. Ele fecha a resposta, sempre.
 
 Regras da lista:
 - **Um bloco por arquivo, separado por linha em branco.** Cabeçalho em negrito com número+caminho; `Faz` → `Conecta` → `Revisar` como bullets, **sempre nessa ordem**. Nada de blocos colados.
@@ -176,3 +210,5 @@ Regras da lista:
 ## Perguntas/alterações durante a revisão de um chunk
 
 Enquanto um chunk está em revisão (impresso, `[~]`, não aprovado), se o usuário perguntar algo ou pedir ajuste no chunk **sem** rodar `/lp-continue`: atenda, e **re-imprima a lista de revisão atualizada no fim da resposta** para ele continuar de onde parou. Se alterou arquivos, re-rode a validação e reflita novos arquivos/±linhas na lista. Não avance de chunk sem `/lp-continue` explícito.
+
+Com `auto_commit` ≠ `off`, o **bloco de commit vai junto**, depois da lista, fechando a resposta — **mesmo quando os comandos não mudaram**. Reimprimir dois comandos idênticos é barato; deixar o usuário caçar a mensagem antiga no scrollback, não. Ver `./git-guide.md`.

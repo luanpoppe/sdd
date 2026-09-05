@@ -95,8 +95,16 @@ Features (executadas sequencialmente):
 2. <slug-2> — <summary> [pending]
 ...
 
+No plan.md, e que ainda não conversamos:
+- <decisão macro que você tomou sozinho> — <por quê>
+- <o que ficou fora de escopo por sua decisão>
+
 Revise agora .sdd/changes/<id>/plan.md. Quer ajustar algo (contexto, decisões macro, lista/ordem de features, escopo)?
 ```
+
+O bloco "e que ainda não conversamos" é o **delta** entre o arquivo e esta conversa: o que
+você preencheu sozinho, não o resumo do que já foi combinado no grill. Se o grill cobriu tudo,
+diga isso em uma linha e omita o bloco. Ver a regra completa em `../../helpers/prompts/state-machine.md`.
 
 **Pare e aguarde resposta do usuário.** NÃO sugira `/lp-continue` ainda.
 

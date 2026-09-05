@@ -38,6 +38,7 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
 4. **Pare quando** todas as ambiguidades dessa feature estão resolvidas e nada foi "tanto faz" sem follow-up.
 5. Gere `specs/<slug>/spec.md` usando `../../helpers/templates/spec.md.tpl`. **Alvo: ≤ 100 linhas**.
 5-bis. **Respeite o `format` do `.sdd/config.yaml`**: se `format` ∈ {html, both}, gere também `specs/<slug>/spec.html` usando `../../helpers/templates/spec.html.tpl` (espelha o `.md`). Garanta `.sdd/assets/styles.css` (copie de `../../helpers/templates/styles.css` se faltar).
+5-ter. **Ao anunciar a spec, imprima o delta**: o que está no `spec.md` e ainda não foi dito nesta conversa — cenário que você acrescentou, contrato que você assumiu, borda que você decidiu tratar — cada item com o porquê. É delta, não resumo do grill. Nada a declarar é resposta válida. Ver `../../helpers/prompts/state-machine.md`, seção "Ao gerar um artefato".
 6. Atualize `.sdd.yaml`: `state: awaiting-feature-tasks`, `updated`. Com **`mcp: on`**, chame `sdd_sync_change` mandando em `features[].scenarios[]` os cenários BDD e edge cases que você acabou de escrever, cada um com uma `key` curta e estável (`CT-01`, `CT-02`…). É o que permite depois amarrar cada chunk ao cenário que ele implementa — e, mais útil, ver qual cenário ficou sem chunk nenhum. Com `mcp_record.scenarios: false`, pule. Ver `../../helpers/prompts/mcp-guide.md`.
 6-bis. Se `flowchart: on`, atualize `flow.html` (`../../helpers/prompts/flowchart-guide.md`) — a feature saiu de "spec ainda não gerada".
 7. Imprima plano de revisão:
@@ -70,6 +71,7 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
 5-bis. **Formato do tasks segue `tasks_format`** (default `md`), NÃO o `format` global. Só gere `specs/<current_feature>/tasks.html` (`../../helpers/templates/tasks.html.tpl`, espelho com `data-status` por chunk) se `tasks_format: follow` **e** `format` ∈ {html, both}. Com `tasks_format: md` (default), gere **só o `tasks.md`** — mesmo que `format` seja html/both. (Ausente → `md`.)
 6. Atualize `.sdd.yaml`: feature `tasking` → `implementing`, state global → `implementing`, `updated`.
 6-bis. Se `flowchart: on`, atualize `flow.html` (`../../helpers/prompts/flowchart-guide.md`) — **expanda a feature nos nós de componente** (um por chunk), todos `pending`. Este é um dos poucos momentos de reescrita, e ela é do `<details>` **daquela feature**, não do `<main>`: as outras features e os painéis já escritos ficam como estão.
+6-ter. **Delta do tasks**: junto do anúncio, diga o que você decidiu sozinho ao fatiar — onde cortou um chunk e por quê, qual dependência você inferiu, que ordem escolheu quando havia mais de uma válida. Ver `../../helpers/prompts/state-machine.md`, seção "Ao gerar um artefato".
 7. **Auto-continua por padrão** (`tasks_autocontinue`, default `on`): NÃO pause pedindo aprovação do tasks. Imprima uma linha curta (*"tasks.md gerado (N chunks, chunk_size=<x>) — seguindo direto pro F<n>.C1"*) e **siga na mesma invocação para o estado `implementing`**, executando o 1º chunk (seção `implementing` abaixo, passos a–h). O turno termina no plano de revisão DO CHUNK, não no do tasks.
    - Se `tasks_autocontinue: off`: comportamento clássico — imprima o plano de revisão das tasks (lista de chunks + tamanho de cada), avise *"Valide a granularidade. Próximo `/lp-continue` executa o chunk F<n>.C1."* e **pare aqui**.
 
@@ -202,7 +204,7 @@ Reverter: peça "reverte o chunk F<n>.C<m>".
 
 > Na linha "Próximo", diga **o que o próximo chunk faz** (leia o `Faz` dele no `tasks.md`), não só o ID — "próximo chunk `F2.C4`" não informa nada. O ID cru fica só na linha "Reverter" (é comando pra copiar). Ver a regra de citação de chunks em `../../helpers/prompts/state-machine.md`.
 
-**Commit do chunk** (se `auto_commit` ≠ `off`; ver `../../helpers/prompts/git-guide.md`): decida a mensagem sugerida agora e acrescente ao final do bloco acima. Com `suggest-only` (default) mostre o comando pronto pra copiar; com `full`, avise que será commitado automaticamente ao aprovar (ou, se a branch atual é protegida, caia pro comportamento de `suggest-only` com aviso). Com `off`, não mencione git.
+**Commit do chunk** (se `auto_commit` ≠ `off`; ver `../../helpers/prompts/git-guide.md`): decida a mensagem sugerida agora e acrescente-a como **último bloco da mensagem**, depois de tudo — é comando para copiar, e comando no meio do texto obriga a rolar para trás. Com `suggest-only` (default) mostre o comando pronto pra copiar; com `full`, avise que será commitado automaticamente ao aprovar (ou, se a branch atual é protegida, caia pro comportamento de `suggest-only` com aviso). Com `off`, não mencione git.
 
 Regras das 3 linhas:
 - **Um bloco por arquivo, separado por linha em branco.** Cabeçalho em negrito; `Faz` → `Conecta` → `Revisar` em bullets, **sempre nessa ordem** (`Revisar` é o último).
@@ -259,6 +261,8 @@ Vale enquanto há um chunk **em revisão**. A fonte de verdade é o `in_review` 
    - Conecta: <...>.
    - Revisar: <...>.
    ```
+
+4. **Com `auto_commit` ≠ `off`, reimprima o bloco de commit logo depois da lista, fechando a resposta** — **mesmo que os comandos estejam idênticos aos da resposta anterior**. É o mesmo motivo do passo 3: o bloco existe para ser copiado, e obrigar o usuário a caçar a mensagem antiga desfaz o propósito. Se o ajuste tocou arquivos novos, o `git add` reflete a lista nova. Ver `../../helpers/prompts/git-guide.md`.
 
 - Se o usuário já disse quais arquivos revisou, mova o "comece por aqui" para o primeiro ainda **não** revisado (ou marque os revisados com ✓). Não force se não souber.
 - **Não avance** para o próximo chunk aqui — isso só acontece com `/lp-continue` explícito.
