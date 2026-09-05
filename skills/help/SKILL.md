@@ -24,7 +24,7 @@ Formato sugerido:
 
 ```
 SDD: <projeto>
-Config: format=<f> · lang=<l> · chunk_size=<c> · flowchart=<on/off> · implementer=<subagent/main> · scribe=<subagent/main> · tasks_format=<md/follow> · tasks_autocontinue=<on/off> · context=<true/false> · parallel=<on/off> · chunk_order=<inside-out/outside-in/free> · auto_commit=<full/suggest-only/off> · tests=<off/on> · code_review=<off/on> · mcp=<off/on> · tasks_storage=<file/mcp> · state_storage=<file/mcp>
+Config: format=<f> · lang=<l> · chunk_size=<c> · flowchart=<on/off> · implementer=<subagent/main> · scribe=<subagent/main> · tasks_format=<md/follow> · tasks_autocontinue=<on/off> · context=<true/false> · parallel=<on/off> · chunk_order=<inside-out/outside-in/free> · auto_commit=<full/suggest-only/off> · tests=<off/on> · code_review=<off/on> · data_model=<off/on> · mcp=<off/on> · tasks_storage=<file/mcp> · state_storage=<file/mcp>
 Subagentes: <papel:modelo · papel:modelo>   (só esta linha se o bloco `subagents` existir; omita inteira se não)
 Config global: ~/.sdd/config.yaml (<N> campos)   (só se o arquivo existir; omita se não — não sugira criar)
 MCP: tools do SDD <disponíveis / NÃO disponíveis nesta sessão>   (só esta linha se mcp=on; omita inteira se off)
@@ -87,6 +87,8 @@ Comandos do SDD `lp-*` (via marketplace: `lp:init`; via installer/Cursor: `/lp-i
   /lp-memory [instrução]  Gerencia .sdd/memory.md (revisar, validar, editar, remover, dividir, mesclar).
   /lp-code-review [alvo]  Audita código recém-escrito: bug, borda, contrato divergente,
                       erro engolido, vazamento, segurança. Reporta com severidade, não corrige.
+  /lp-data-model [alvo|auditar]  Modela dados antes da migração: tabela, tipo, chave, índice,
+                      ordem da migração. Espera seu OK pra escrever. 'auditar' revisa o schema atual.
   /lp-review-walkthrough [tema]   Revisão guiada de código existente. Tour em chunks pelo fluxo. Permite modificações inline.
   /lp-audit      Lista divergências entre docs e código da feature ativa. Não aplica nada sem OK.
   /lp-archive    Finaliza: verifica + move a mudança para .sdd/archive/<id>/.

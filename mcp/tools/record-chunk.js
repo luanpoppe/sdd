@@ -99,6 +99,30 @@ class RecordChunkTool {
               }
             }
           },
+          data_model: {
+            type: 'array',
+            description:
+              'Entidades modeladas neste chunk (data_model: on). Substitui as anteriores. ' +
+              'O que não existe em nenhum outro lugar é decisions/rejected — mande sempre.',
+            items: {
+              type: 'object',
+              required: ['name', 'kind'],
+              properties: {
+                name: { type: 'string', description: 'Tabela, coleção ou entidade' },
+                kind: { type: 'string', enum: ['table', 'collection', 'entity'] },
+                operation: { type: 'string', enum: ['created', 'altered', 'dropped'] },
+                engine: { type: 'string', description: 'Ex: "PostgreSQL", "MongoDB", "Prisma"' },
+                shape: {
+                  type: 'string',
+                  description: 'Colunas/campos com tipo, nulidade e chaves, uma por linha'
+                },
+                decisions: { type: 'string', description: 'Cada decisão não-óbvia com o porquê' },
+                rejected: { type: 'string', description: 'Alternativa descartada e o motivo' },
+                index_notes: { type: 'string', description: 'Índice + a consulta que o justifica' },
+                migration: { type: 'string', description: 'Passos numerados e reversibilidade' }
+              }
+            }
+          },
           commit: {
             type: 'object',
             description: 'Commit sugerido ou efetivado',
@@ -129,6 +153,7 @@ class RecordChunkTool {
     if (args.mark) TasksStore.mark(ctx.db, chunkPk, args.mark);
     RecordChunkTool.linkScenarios(ctx.db, change.id, chunkPk, args.scenario_keys);
     RecordChunkTool.replaceFindings(ctx.db, chunkPk, args.code_review);
+    RecordChunkTool.replaceDataModels(ctx.db, chunkPk, args.data_model);
 
     const totals = RecordChunkTool.countDepth(files);
 
@@ -140,7 +165,8 @@ class RecordChunkTool {
       symbols: totals.symbols,
       examples: totals.examples,
       commit: Boolean(args.commit),
-      findings: Array.isArray(args.code_review) ? args.code_review.length : 0
+      findings: Array.isArray(args.code_review) ? args.code_review.length : 0,
+      entities: Array.isArray(args.data_model) ? args.data_model.length : 0
     });
 
     return { change_pk: change.id, chunk_pk: chunkPk, files_recorded: files.length };
@@ -291,6 +317,42 @@ class RecordChunkTool {
           finding.cause ?? null,
           finding.suggestion ?? null,
           finding.scope ?? 'chunk',
+          at
+        ]
+      );
+    });
+  }
+
+  /**
+   * Entidades modeladas. Mesma regra de substituição em bloco dos achados: campo ausente
+   * não apaga o que já existe, porque a rechamada só para gravar o commit não carrega o
+   * modelo junto.
+   */
+  static replaceDataModels(db, chunkPk, entities) {
+    if (!Array.isArray(entities)) return;
+
+    SddDb.run(db, 'DELETE FROM data_models WHERE chunk_pk = ?', [chunkPk]);
+
+    const at = SddRepo.nowIso();
+    entities.forEach((entity, index) => {
+      SddDb.run(
+        db,
+        `INSERT INTO data_models
+           (chunk_pk, position, name, kind, operation, engine, shape, decisions, rejected,
+            index_notes, migration, at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          chunkPk,
+          index,
+          entity.name,
+          entity.kind,
+          entity.operation ?? null,
+          entity.engine ?? null,
+          entity.shape ?? null,
+          entity.decisions ?? null,
+          entity.rejected ?? null,
+          entity.index_notes ?? null,
+          entity.migration ?? null,
           at
         ]
       );

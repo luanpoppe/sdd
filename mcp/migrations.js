@@ -61,7 +61,9 @@ const MIGRATIONS = {
   // banco antigo registrar que chegou na versão 6.
   6: [],
   // Idem: `review_findings` é tabela nova, criada pelo CREATE_TABLES nos dois casos.
-  7: []
+  7: [],
+  // Idem: `data_models` é tabela nova.
+  8: []
 };
 
 module.exports = { MIGRATIONS };

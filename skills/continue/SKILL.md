@@ -118,6 +118,20 @@ Curta (4-6 linhas, não é uma spec) — reaproveite o que o `tasks.md` já tem,
 - **`subagent` (padrão)**: lance o subagente PRIMEIRO (passo c, item 1) e escreva esta explicação na mesma resposta, logo em seguida — se o ambiente suportar execução em segundo plano/notificação assíncrona, ela sai enquanto o subagente roda, sem custo de tempo extra; se o ambiente for síncrono (espera o subagente terminar antes de continuar o texto), ela ainda assim abre a resposta, antes do relatório.
 - **`main`**: não há subagente rodando em paralelo — escreva a explicação ANTES de começar a editar, e só então implemente.
 
+**b-ter) Modelagem de dados** — só se **`data_model: on`** no `.sdd/config.yaml` **E** este chunk toca dados. Com `off`/ausente (padrão), este passo **não existe**: não modele, não comente que está desligado, não sugira ligar.
+
+**Toca dados?** Julgue pelos `Arquivos` do chunk: pasta de migração, schema de ORM (`schema.prisma`, `*.entity.ts`, `models.py`), SQL com `CREATE`/`ALTER TABLE`, coleção nova. Chunk que só lê por um repositório existente não conta. Na dúvida, rode — a tabela em `../../helpers/prompts/data-model-guide.md` tem os dois lados.
+
+O passo tem **três fases, e a do meio é sua**:
+
+1. **Propor** — lance UM subagente (papel `data-modeler` em `subagents` para modelo/thinking) seguindo o `data-model-guide.md`. Ele **desenha e explica, sem escrever arquivo nenhum**. Passe: o que o chunk precisa guardar e as consultas que vai fazer, o **schema que já existe** (migrações anteriores, schema do ORM — a convenção da casa vence o guia) e a `spec.md` da feature (ou `diagnosis.md` + `chosen_solution`, no bug-fix).
+2. **Aprovar** — imprima a proposta no formato do guia e **pare**. Bifurcação legítima (chave natural vs surrogate, embutir vs referenciar, enum vs lookup, soft vs hard delete) vira `AskUserQuestion`, no máximo **duas perguntas**. Não pergunte o que o checklist já decide — dinheiro em decimal e timestamp com fuso não são escolha do usuário.
+3. **Escrever** — só depois do OK, relance o subagente para escrever **apenas os arquivos de dados** (migração + schema do ORM), com o mesmo relatório `Faz`/`Conecta`/`Revisar` por arquivo.
+
+> **Este é o único passo do motor que bloqueia.** Migração aplicada não volta com `git checkout`, e é isso que paga o turno a mais. Recusado, não escreva nada: pergunte o que mudar e refaça a proposta.
+
+**Cada arquivo tem um dono só.** Os arquivos de dados são do `b-ter`; o passo `c` recebe o modelo já aplicado e escreve o código que o usa (repositório, serviço, rota), sem tocar na migração. Os dois relatórios entram juntos na lista única do plano de revisão (passo g).
+
 **c) Executar APENAS este chunk** — quem codifica depende de `implementer` no `.sdd/config.yaml` (default `subagent` se o campo não existir):
 
 - Respeite `chunk_size`. Se o chunk como descrito vai exceder, **pare e divida em sub-chunks** atualizando o tasks.md antes de codar (isso é decisão da conversa principal, mesmo no modo subagente).
@@ -139,7 +153,7 @@ Lance UM subagente (papel `code-reviewer` em `subagents` para modelo/thinking) s
 
 Ele **reporta e nunca corrige** — nem o typo óbvio. Todo achado vem com severidade, arquivo:linha e um **cenário concreto de falha**; sem cenário, não é achado. Leve o resultado para o bloco `Code review` do plano de revisão (passo g) e para o campo `code_review` do `sdd_record_chunk` (g-bis). Achado grave **destaca**, mas não bloqueia o `/lp-continue`.
 
-> Em ambos os modos, o principal **decide** a/c-bis/d/e/f/f-bis/f-ter/g/h (o subagente implementer só codifica o chunk e reporta). Execute c-bis→d→e→f→f-bis→f-ter→g→h **nesta ordem**, e só então "Pare aqui".
+> Em ambos os modos, o principal **decide** a/b-ter/c-bis/d/e/f/f-bis/f-ter/g/h (o subagente implementer só codifica o chunk e reporta). Execute c-bis→d→e→f→f-bis→f-ter→g→h **nesta ordem**, e só então "Pare aqui".
 >
 > **Atenção (scribe):** "ser do principal" = o principal DECIDE o quê escrever, **não** que ele dá `Write`/`Edit` inline. Com `scribe: subagent` (incl. campo ausente), as **escritas** de d) (`tasks.md`, `.sdd.yaml`), e) (`flow.html`), g-bis) (`in_review`) e g-ter) (troca de contrato provisório na `spec.md`, quando houver) + a de memória vão **todas juntas numa única chamada do escriba**, montada ao final (antes de imprimir o plano g). Não escreva nenhum desses inline. Ver a nota "Escrita de artefatos (scribe)" no topo e `../../helpers/prompts/scribe-guide.md`.
 
@@ -171,6 +185,8 @@ O tester **escreve os testes, roda, reporta — e nunca corrige** (nem o teste, 
 
 Mesma configuração do `c-bis`, alvo diferente: os arquivos de **todos** os chunks da feature. O que se procura aqui é a **incoerência entre chunks** — contrato que mudou no meio do caminho, duplicação que só aparece com o conjunto na mão, borda que cada chunk achou que o outro tratava. Não repita achado já apontado por chunk.
 
+> **Separador `  ||  `, nunca `;`** — vale no plano de revisão e em todo artefato. Afirmação independente vira linha própria; duas partes da mesma informação (valor e motivo, resultado e ressalva) se separam com `  ||  `. Regra completa em `../../helpers/prompts/state-machine.md`.
+
 **g) Plano de revisão obrigatório** (formato da state-machine.md):
 
 **UMA lista só** de arquivos, já na ordem de revisão (não separe "Arquivos" de "Ordem de revisão"). Inclua TODOS os arquivos tocados (serve de manifesto pra revert), ordenados por prioridade; triviais (tipos gerados, config, stubs) no FIM marcados "pode pular".
@@ -188,6 +204,9 @@ Cada arquivo que vale revisão leva **3 linhas, nesta ordem: `Faz` → `Conecta`
 
 Feature: <slug> (<i>/<total>)
 Estado da feature: <X de Y chunks concluídos>
+
+Modelo de dados: <N entidades — o essencial em uma linha>.   <- só com data_model: on e chunk que tocou dados; omita o bloco se não
+  Decidido com você: <a bifurcação que você respondeu na fase 2>.
 
 Revisão (na ordem — comece pelo topo):
 
@@ -246,7 +265,7 @@ in_review:
 ```
 Assim, mesmo que a conversa reinicie, o próximo turno sabe qual chunk está em revisão e consegue re-imprimir a lista. Ao aprovar (próximo `/lp-continue`) ou reverter, limpe `in_review`.
 
-Com **`mcp: on`**, registre o chunk no banco **no mesmo passo**, com `sdd_record_chunk`: um item de `files` por arquivo desta lista, na mesma ordem, com `does`/`connects`/`review_note` recebendo exatamente as linhas `Faz`/`Conecta`/`Revisar` que você acabou de imprimir (`is_test: true` nos arquivos vindos do f-bis), mais `summary`/`reasoning` do chunk e o `commit` sugerido. Este é o ponto certo porque é aqui que você tem tudo junto. Se a spec tem cenários registrados, mande também `scenario_keys` com os que este chunk implementa. Com **`code_review: on`**, mande também `code_review` — um item por achado dos passos `c-bis`/`f-ter`, com severidade, arquivo, linha, cenário, causa e sugestão (aí sim completos, ao contrário do plano de revisão, que é resumido). Com `mcp_record.code_review: false`, pule o campo.
+Com **`mcp: on`**, registre o chunk no banco **no mesmo passo**, com `sdd_record_chunk`: um item de `files` por arquivo desta lista, na mesma ordem, com `does`/`connects`/`review_note` recebendo exatamente as linhas `Faz`/`Conecta`/`Revisar` que você acabou de imprimir (`is_test: true` nos arquivos vindos do f-bis), mais `summary`/`reasoning` do chunk e o `commit` sugerido. Este é o ponto certo porque é aqui que você tem tudo junto. Se a spec tem cenários registrados, mande também `scenario_keys` com os que este chunk implementa. Com **`code_review: on`**, mande também `code_review` — um item por achado dos passos `c-bis`/`f-ter`, com severidade, arquivo, linha, cenário, causa e sugestão (aí sim completos, ao contrário do plano de revisão, que é resumido). Com `mcp_record.code_review: false`, pule o campo. Com **`data_model: on`** e um chunk que passou pelo `b-ter`, mande também `data_model` — um item por entidade modelada, com `shape`, `decisions`, `rejected`, `index_notes` e `migration`. `decisions` e `rejected` são o que não existe em nenhum outro lugar: a migração conta o formato, nunca o porquê. Com `mcp_record.data_model: false`, pule o campo.
 
 Mande também, **só para o banco e sem imprimir no chat**: o `detail` (explicação longa de cada arquivo que merece: mecanismo, decisão descartada, armadilha), os `highlights` (0-3 trechos de código decisivos por arquivo), os `symbols` (os métodos que carregam comportamento, cada um com assinatura e **exemplos de entrada e saída com dado plausível do domínio, incluindo ao menos um caso de borda**) e — **só quando `auto_commit` não for `full`** — o `diff` unificado dos arquivos modificados. Com `auto_commit: full` o chunk vira commit e o git já guarda esse diff inteiro; regravá-lo é pagar duas vezes pelo mesmo conteúdo. O resto é o que deixa o plano de revisão curto sem perder profundidade — quem abrir o histórico depois tem o arquivo explicado. Ver `../../helpers/prompts/mcp-guide.md`.
 

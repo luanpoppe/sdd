@@ -29,9 +29,11 @@ subagents:
     claude-code: { model: sonnet, effort: high }
   code-reviewer:
     claude-code: { model: opus, effort: high }
+  data-modeler:
+    claude-code: { model: opus, effort: high }
 ```
 
-- **Papéis válidos** (só estes cinco): `implementer`, `scribe`, `explorer`, `tester`, `code-reviewer`.
+- **Papéis válidos** (só estes seis): `implementer`, `scribe`, `explorer`, `tester`, `code-reviewer`, `data-modeler`.
 - **Chaves de harness canônicas**: `claude-code`, `cursor`, `codex`. Chaves desconhecidas são **ignoradas em silêncio** (permite deixar preparada a entrada de um harness que este guia ainda não nomeia).
 - `effort` (thinking/reasoning) é opcional e só vale onde o harness suporta configurar isso. Se o harness não suporta, use só o `model` e ignore o `effort`.
 - **Valores de modelo NÃO são validados contra uma lista fixa.** O catálogo de cada harness muda com o tempo; quem resolve o nome é o harness em runtime. Não recuse um valor por não reconhecê-lo — tente lançar e trate a falha pelo passo 4.
@@ -47,6 +49,7 @@ Mapa fixo — use-o para saber qual entrada da config se aplica ao subagente que
 | `explorer` | `Agent Explore` de investigação — reúso no `lp:new-feature`, causa raiz no `lp:bug-fix`, escopo amplo no `lp:review-walkthrough` · bootstrap de contexto do `lp:init` (3-bis) · semeadura do `lp:context` |
 | `tester` | passo **f-bis** do motor `implementing` — geração de testes ao concluir a feature/correção, só com `tests: on` (ver `./tester-guide.md`) |
 | `code-reviewer` | passos **c-bis** (por chunk) e **f-ter** (ao concluir a feature) do motor `implementing`, só com `code_review: on` · toda invocação de `lp:code-review` (ver `./code-review-guide.md`). É o papel em que subir o modelo mais se paga: revisor fraco produz achado genérico. |
+| `data-modeler` | passo **b-ter** do motor `implementing`, só com `data_model: on` e chunk que toca dados · toda invocação de `lp:data-model` (ver `./data-model-guide.md`). Como o `code-reviewer`, é papel em que subir o modelo se paga: o erro de schema é o mais caro de desfazer. |
 
 O checador de atualização do `lp:desktop` fica **fora** deste mapa — roda sempre no default.
 

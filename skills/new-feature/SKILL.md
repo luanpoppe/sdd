@@ -55,6 +55,8 @@ Com **`mcp: on`** no `.sdd/config.yaml`, chame `sdd_sync_change` logo depois de 
 5. **Ordem de execução** — pergunte a ordem em que as features devem ser implementadas (importa, porque o fluxo é sequencial). Recomende uma ordem baseada em dependências reais primeiro; quando duas ou mais features são independentes entre si, desempate pela heurística de `chunk_order` (default `inside-out`, ausente = `inside-out`): prioriza construir de dentro pra fora — o que é a base (domínio, persistência, lógica interna) antes do que expõe pro mundo externo (controller, consumer, endpoint) — porque isso é o que permite cada chunk compilar/validar incrementalmente. Justifique a ordem recomendada. Se o usuário pedir outra ordem (inclusive de fora pra dentro), siga a pedida.
 6. **Escopo dentro/fora** — "dentro" e "fora" são independentes; podem ir no mesmo batch.
 
+> **Modelagem de dados no grill** — só com `data_model: on` e só se a mudança claramente cria ou altera armazenamento. Aqui ela é **conversa, não artefato**: se uma resposta sua revelar uma decisão de dados que muda o desenho (uma entidade que não existia, um relacionamento que o usuário descreve como "um" e é "vários"), diga isso em uma linha e siga. **Nada disso entra no `plan.md`** — tipo, chave, índice e migração são decididos por chunk no passo `b-ter`, com o código na mão. Ver `../../helpers/prompts/data-model-guide.md`.
+
 **Pare o grill** quando:
 - Tudo acima está respondido SEM "tanto faz" pendente.
 - Você consegue listar as features na ordem correta.

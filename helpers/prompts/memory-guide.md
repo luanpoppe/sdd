@@ -198,6 +198,10 @@ A partir daí: `memory-map.md` sempre carrega; arquivos específicos só quando 
 
 **Pergunte ao usuário ANTES de dividir** apenas se a separação por tema não estiver clara (poucos itens em muitos temas diferentes). Caso contrário, divida.
 
+## Separador dentro da linha
+
+Cada sub-campo cabe em uma linha, e essa linha muitas vezes tem duas partes (o que fazer e o motivo). Separe com **`  ||  `**, nunca com `;` — a entrada é relida rápido, e ponto e vírgula some no meio do texto. Ver `./state-machine.md`.
+
 ## Anti-padrões
 
 - ❌ **Relato de incidente no lugar do princípio.** É o mais comum e o que mais estraga a memória: a regra fica na primeira linha e o resto conta a história. Extraia a regra, mande o caso para o `Exemplo`.

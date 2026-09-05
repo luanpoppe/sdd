@@ -74,6 +74,7 @@ class ReindexTool {
         'trechos de código destacados e símbolos com exemplos',
         'decisões e desvios (events), testes e commits',
         'steps de lp:review e conhecimento de context/explain',
+        'achados de code review e entidades modeladas no b-ter — só existem no banco',
         'com tasks_storage: mcp ou state_storage: mcp, o plano e o bloco volátil não têm ' +
           'origem em arquivo — o que já está no banco é preservado, mas nada é reconstruído'
       ]

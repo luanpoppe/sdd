@@ -20,6 +20,7 @@ mcp_record:
   explain: true      # temas globais do lp:explain no banco
   scenarios: true    # cenários da spec e o vínculo com os chunks
   code_review: true  # achados do code review, amarrados ao chunk
+  data_model: true   # entidades modeladas no b-ter, com as decisões e o que foi descartado
 ```
 
 Chave `false` → **omita aquele campo/chamada**, sem comentar. Chave ausente ou `true` → grave normalmente. Não trate desligado como erro nem sugira religar.
@@ -47,6 +48,7 @@ Chame a tool **junto** do passo, não num turno separado.
 | `lp:explain`, ao gerar/atualizar um tema | `sdd_record_explain` | o tema **global** (fora de projeto), com `question`, `origin` e o `detail` que a busca precisa alcançar (`mcp_record.explain`) |
 | `lp:explain`, ao dar baixa na fila | `sdd_record_explain` | o mesmo slug com `status: "estudado"` |
 | passos **c-bis** / **f-ter**, com `code_review: on` | `sdd_record_chunk` | campo `code_review` — um item por achado, com severidade, arquivo, linha, cenário, causa e sugestão (`mcp_record.code_review`) |
+| passo **b-ter**, com `data_model: on` | `sdd_record_chunk` | campo `data_model` — um item por entidade, com `shape`, `decisions`, `rejected`, `index_notes` e `migration` (`mcp_record.data_model`) |
 | `lp:archive` | `sdd_sync_change` | `archived` + `state: archived` |
 | banco perdido, ou período trabalhado com `mcp: off` | `sdd_reindex` | reconstrói o esqueleto a partir do `.sdd/`; não recupera explicação, exemplo nem decisão |
 

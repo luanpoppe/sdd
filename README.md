@@ -1,6 +1,6 @@
 # SDD — `lp:*` para Claude Code
 
-Spec-driven development em 18 skills. Chunks micro revisáveis, fluxo sequencial por feature, fluxo enxuto de bug-fix (causa raiz → opções → correção), diagrama macro da implementação, base de conhecimento viva do projeto (`.sdd/context/`), implementação por subagentes (com modo paralelo opcional), memória autônoma, grilling anti-assunção, revisão guiada de código existente, sugestão de branch + commits (automáticos ou sugeridos) por chunk, um MCP local opcional que persiste cada etapa num SQLite (histórico e memória entre conversas), e um app desktop opcional (SDD Viewer) pra visualizar os artefatos fora do chat.
+Spec-driven development em 20 skills. Chunks micro revisáveis, fluxo sequencial por feature, fluxo enxuto de bug-fix (causa raiz → opções → correção), diagrama macro da implementação, base de conhecimento viva do projeto (`.sdd/context/`), implementação por subagentes (com modo paralelo opcional), memória autônoma, grilling anti-assunção, revisão guiada de código existente, sugestão de branch + commits (automáticos ou sugeridos) por chunk, um MCP local opcional que persiste cada etapa num SQLite (histórico e memória entre conversas), e um app desktop opcional (SDD Viewer) pra visualizar os artefatos fora do chat.
 
 ## Instalação
 
@@ -51,6 +51,7 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 | `lp:continue` | Avança 1 passo. Feature: spec → tasks → chunks. Bug-fix: opções → tasks → chunks. Implementa via subagente. |
 | `lp:review-walkthrough` | Revisão guiada de código existente (walkthrough do fluxo real). Chamava-se `lp:review-walkthrough`, nome que continua sendo entendido. |
 | `lp:code-review` | Auditoria adversarial de código recém-escrito: acha defeito, classifica por severidade, exige cenário de falha e não corrige nada. |
+| `lp:data-model` | Modelagem de dados: desenha tabela, tipo, chave, constraint, índice e a ordem da migração, espera sua aprovação e só então escreve. `auditar` revisa o schema que já existe. |
 | `lp:flow` | Gera/regenera o diagrama macro (`flow.html`); nós implementados são clicáveis e abrem um mini-walkthrough (como funciona + código real + dados + conecta). Vale pra features e bug-fix. |
 | `lp:parallel` | Liga/desliga o modo paralelo (chunks independentes, um subagente cada). |
 | `lp:settings` | Lista e altera as configurações do `.sdd/config.yaml` (por campo/valor ou em linguagem natural). Com a palavra `global`, mexe na config global do usuário (`~/.sdd/config.yaml`). |
@@ -118,6 +119,26 @@ Explica um assunto e acumula a explicação num HTML por tema em **`~/.sdd/expla
 
 O estado mora no próprio HTML (`data-status`), então a fila funciona com o MCP desligado; ligado, ela também fica buscável e aparece no SDD Viewer.
 
+## Legibilidade dos artefatos
+
+Duas regras que valem em toda spec, tasks, diagnosis e plano de revisão gerados:
+
+- **Uma afirmação por linha.** No BDD, a primeira vai em `Então` e cada seguinte numa linha própria começando com `E`. Cada linha vira um caso de teste e um ponto de conferência na revisão — empilhadas, ninguém verifica item a item.
+- **`  ||  ` no lugar de `;`** quando duas partes são mesmo da mesma linha (o valor e o motivo, o resultado e a ressalva). Ponto e vírgula não marca nada visualmente; o separador com espaços dos dois lados, sim.
+
+## `lp:data-model` — modelagem antes da migração
+
+Com **`data_model: on`**, todo chunk que toca dados passa antes por um subagente `data-modeler`. Ele desenha o modelo, você aprova, e **só então** a migração é escrita.
+
+- **O que ele decide**: tipo exato (dinheiro em decimal, timestamp com fuso), nulidade, `PK`/`FK`/`UNIQUE`/`CHECK`, normalização e chave, índice — sempre com a consulta que o justifica ao lado — e a ordem segura da migração (expand-contract, backfill antes do `NOT NULL`, lock em tabela grande, reversibilidade).
+- **É o único passo do fluxo que bloqueia.** Migração aplicada não volta com `git checkout`, e é essa assimetria que paga o turno a mais. Nas bifurcações reais (chave natural vs surrogate, embutir vs referenciar, enum vs lookup) ele pergunta; no que o checklist já decide, não.
+- **Cada arquivo tem um dono só**: migração e schema do ORM são dele, o código que os usa é do implementer.
+- **A convenção do projeto vence o guia** — schema misto é pior que schema imperfeito.
+- Serve relacional, documento (embutir vs referenciar, chave de partição) e entidade de ORM.
+- `/lp-data-model auditar` revisa o schema que **já existe**: FK ausente, tipo errado, coluna nulável que nunca é nula, índice sem consulta. Aponta e não corrige — a correção vira chunk.
+
+Com `mcp: on`, cada entidade fica gravada junto do chunk, com as decisões e o que foi descartado. É o que responde depois *"por que essa coluna é nulável?"* sem arqueologia de migração.
+
 ## Configuração (`.sdd/config.yaml`)
 
 | Campo | Valores | Padrão | O que faz |
@@ -135,12 +156,13 @@ O estado mora no próprio HTML (`data-status`), então a fila funciona com o MCP
 | `parallel` | `on` / `off` | `off` | Chunks independentes em paralelo (um subagente cada). Ligar com `lp:parallel`. |
 | `chunk_order` | `inside-out` / `outside-in` / `free` | `inside-out` | Desempate de ordem entre features/chunks independentes (dependência real sempre manda primeiro). `inside-out`: domínio/persistência antes de controller/consumer. `outside-in`: prioriza mostrar o esqueleto do fluxo primeiro. `free`: só dependência. |
 | `code_review` | `off` / `on` | `off` | Auditoria adversarial do código recém-escrito. `on`: um subagente `code-reviewer` revisa cada chunk e, de novo, a feature inteira ao fechar — bug, borda não tratada, contrato divergente da spec, erro engolido, vazamento, segurança. Cada achado vem com severidade e **cenário concreto de falha**; sem cenário, não entra. Reporta, nunca corrige, nunca bloqueia. Acrescente critérios em `~/.sdd/code-review.md` (seus, todo projeto) e `.sdd/code-review.md` (do repo, versionado). |
+| `data_model` | `off` / `on` | `off` | Modelagem de dados antes da migração. `on`: em chunk que toca dados (migração, schema de ORM, coleção nova), um subagente `data-modeler` desenha tabela, tipo, nulidade, chave, constraint, índice e a ordem segura da migração, **mostra a proposta e espera sua aprovação** — só então escreve a migração; o implementer fica com o código que a usa. É o único passo do fluxo que bloqueia, porque migração aplicada não volta com `git checkout`. |
 | `tests` | `off` / `on` | `off` | Geração automática de testes. `on`: ao concluir cada feature (ou correção de bug-fix), um **subagente tester dedicado** escreve os testes da funcionalidade — foco explícito em cenários de borda e falha, não só o caminho feliz — roda, mede coverage e **reporta sem corrigir** (teste falhando é decisão sua: bug real ou teste mal escrito?). |
 | `subagents` | bloco aninhado (papel → harness → `{model, effort}`) | (ausente) | **Opcional.** Em qual modelo/thinking cada papel de subagente roda — `implementer`, `scribe`, `explorer`, `tester` — declarado por harness (`claude-code`, `cursor`, `codex`), já que cada um tem seu próprio catálogo de modelos. Ausente = cada subagente herda o modelo da conversa principal. Ex: escriba no modelo barato, implementer no forte com thinking alto. |
 | `mcp` | `off` / `on` | `off` | **Opcional.** Liga o MCP local do SDD: cada etapa (chunk implementado, arquivos tocados e o que revisar em cada um, testes, divergências, steps de `lp:review-walkthrough`) também é gravada num SQLite global (`~/.sdd/sdd.db`). Destrava a timeline no SDD Viewer e dá memória ao agente entre conversas e projetos. Exige Node 18+ e reiniciar a sessão. |
 | `tasks_storage` | `file` / `mcp` | `file` | Onde vive o plano de chunks. `file`: `tasks.md` no repo, versionado e revisável em PR. `mcp`: o `tasks.md` não é gerado e o plano fica no banco — **nesse modo o MCP deixa de ser opcional**, e o plano sai do repositório. |
 | `state_storage` | `file` / `mcp` | `file` | Onde vive a parte do `.sdd.yaml` que muda a cada passo (`state`, `current_feature`, `current_chunk`, `in_review`, `updated`, `status` de cada feature). `file`: tudo no arquivo. `mcp`: esses campos vão para o banco e o arquivo guarda só a identidade da mudança e a lista de features — **nesse modo o MCP deixa de ser opcional**. |
-| `mcp_record` | bloco aninhado (`symbols`, `diff`, `context`, `explain`, `scenarios`, `code_review`) | (ausente = tudo ligado) | **Opcional.** Desliga partes do registro sem desligar o MCP. Ex: `symbols: false` para de gravar métodos com exemplos de entrada/saída. O `diff` é pulado sozinho quando `auto_commit: full`, porque o git guarda o mesmo conteúdo. |
+| `mcp_record` | bloco aninhado (`symbols`, `diff`, `context`, `explain`, `scenarios`, `code_review`, `data_model`) | (ausente = tudo ligado) | **Opcional.** Desliga partes do registro sem desligar o MCP. Ex: `symbols: false` para de gravar métodos com exemplos de entrada/saída. O `diff` é pulado sozinho quando `auto_commit: full`, porque o git guarda o mesmo conteúdo. |
 | `auto_commit` | `full` / `suggest-only` / `off` | `suggest-only` | Git a cada chunk aprovado. `full`: commita de verdade (só os arquivos do chunk), exceto em branch protegida (main/master/develop/staging/...). `suggest-only`: mostra o comando pronto pra copiar. `off`: não menciona git. |
 
 > `flowchart`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue`, `context`, `parallel`, `chunk_order`, `auto_commit` e `tests` não são perguntados no grill (o `mcp` é) — vêm com o padrão e você edita no `.sdd/config.yaml` quando quiser (ou usa `lp:parallel`). `lp:new-feature`/`lp:bug-fix` também sugerem uma branch dedicada no início (aceitar/criar manual/continuar na atual). O bloco `subagents` nem é escrito no config — só existe se você ligar (`/lp-settings "roda o escriba no haiku"`).
@@ -170,7 +192,7 @@ sdd/
 ├── .claude-plugin/
 │   ├── marketplace.json   # catálogo (este repo é o marketplace)
 │   └── plugin.json        # manifesto do plugin "lp"
-├── skills/                # 18 skills (dir + frontmatter name sem prefixo lp-)
+├── skills/                # 20 skills (dir + frontmatter name sem prefixo lp-)
 ├── helpers/
 │   ├── prompts/           # prompts compartilhados (grill, memória, context, state-machine, bugfix-machine, flowchart, parallel, scribe, git, subagents, tester, global-config, mcp…)
 │   └── templates/         # templates de plan/spec/tasks/explain/flow + diagnosis/solutions (bug-fix) + styles.css

@@ -13,6 +13,7 @@ Cada linha tem o default entre parênteses; **campo ausente conta como o default
 | `scribe` (`subagent`) | `subagent`: TODAS as escritas de arquivo do passo vão num único pacote para o escriba — tudo-ou-nada, nunca parcial. `main`: você escreve inline. | `./scribe-guide.md` |
 | `implementer` (`subagent`) | Quem escreve o **código** do chunk. Ortogonal ao `scribe`. | `./subagents-guide.md` |
 | `tests` (`off`) | `on`: ao concluir uma feature (ou a correção), roda o passo **f-bis** — um tester dedicado escreve os testes da funcionalidade inteira, roda e **reporta sem corrigir**. Nunca por chunk. | `./tester-guide.md` |
+| `data_model` (`off`) | `on`: em chunk que toca dados, roda o passo **b-ter** — um modelador desenha tabela/tipo/chave/índice e a ordem da migração, **espera a aprovação do usuário** e só então escreve os arquivos de dados. É o único passo do motor que bloqueia. | `./data-model-guide.md` |
 | `mcp` (`off`) | `on`: cada ponto desta máquina também é registrado no banco global, pelo **agente principal** (não pelo escriba). Tool ausente → 1 linha de aviso e siga. | `./mcp-guide.md` |
 | `tasks_storage` (`file`) · `state_storage` (`file`) | Em `mcp`, o plano de chunks e/ou o bloco volátil do `.sdd.yaml` saem do arquivo e passam a viver no banco. São as **duas únicas** exceções a "o banco é índice derivado", e nesses modos o passo trava se a tool faltar. | `./mcp-guide.md` |
 | `subagents` (ausente) | Modelo/thinking por papel de subagente, por harness. Sem entrada, lance normal **em silêncio**. | `./subagents-guide.md` |
@@ -92,7 +93,7 @@ A **ordem da lista** define a ordem de execução. Não embaralhar.
 | `awaiting-plan` | fim de `lp:new-feature` | Gera `plan.md` com contexto + decisões macro + **lista de features** (apenas slug/título/1-frase). Define ordem. | `awaiting-feature-spec` |
 | `awaiting-feature-spec` | `lp:continue` | 1) Pega a próxima feature `pending` na ordem da lista. Marca `speccing` e `current_feature`. 2) **Grill profundo SÓ dela** (comportamento com ator externo, edge cases transversais, dependências — **não** pergunte contratos, e deduza do código o que for requisito técnico). Em batches de até 4 perguntas independentes. 3) Gera `specs/<slug>/spec.md`. 4) Imprime plano de revisão da spec. | `awaiting-feature-tasks` |
 | `awaiting-feature-tasks` | `lp:continue` (após usuário revisar spec) | 1) Grill curto se necessário. 2) Gera `specs/<slug>/tasks.md` (só `.md` por padrão — ver `tasks_format`) respeitando `chunk_size`. 3) Marca feature `tasking` → `implementing`. 4) **Auto-continua por padrão** (`tasks_autocontinue: on`): segue direto pro 1º chunk na mesma invocação, sem pausar; com `off`, imprime o plano de revisão das tasks e para. | `implementing` |
-| `implementing` | `lp:continue` | 1) Auto-sync. 2) Definir modo (paralelo se `parallel: on` ou usuário pediu; senão sequencial). 3a) **Sequencial**: próximo chunk `[ ]`, explicação breve do chunk (o quê/por quê/conecta com macro/anteriores/próximos — timing conforme `implementer`), implementar por subagente (default) ou main. 3b) **Paralelo** (`../parallel-guide.md`): uma onda de chunks independentes, um subagente cada (sem a explicação breve — comunicação é por onda). 4) Marcar `[~]`. 4-bis) Se a feature fechou e `tests: on`, gerar testes via subagente tester (f-bis). 5) Plano de revisão (combinado no paralelo) + commit/sugestão de commit conforme `auto_commit`. 6) Com `mcp: on`, registrar o chunk e os arquivos no banco (g-bis). | `implementing` (se há mais chunks/ondas) · `awaiting-feature-spec` (se feature done e há próxima) · `awaiting-archive` (se foi a última) |
+| `implementing` | `lp:continue` | 1) Auto-sync. 2) Definir modo (paralelo se `parallel: on` ou usuário pediu; senão sequencial). 3a) **Sequencial**: próximo chunk `[ ]`, explicação breve do chunk (o quê/por quê/conecta com macro/anteriores/próximos — timing conforme `implementer`), implementar por subagente (default) ou main. 3b) **Paralelo** (`./parallel-guide.md`): uma onda de chunks independentes, um subagente cada (sem a explicação breve — comunicação é por onda). 4) Marcar `[~]`. 4-bis) Se a feature fechou e `tests: on`, gerar testes via subagente tester (f-bis). 5) Plano de revisão (combinado no paralelo) + commit/sugestão de commit conforme `auto_commit`. 6) Com `mcp: on`, registrar o chunk e os arquivos no banco (g-bis). | `implementing` (se há mais chunks/ondas) · `awaiting-feature-spec` (se feature done e há próxima) · `awaiting-archive` (se foi a última) |
 | `awaiting-archive` | `lp:archive` | Verifica + arquiva. | `archived` |
 
 > Com `tasks_storage: mcp`, a geração do `tasks.md` na transição `awaiting-feature-tasks` é substituída por uma chamada `sdd_write_tasks`, e toda leitura de chunk passa a ser `sdd_read_tasks` — ver `./mcp-guide.md`. O padrão (`file`) mantém o arquivo.
@@ -156,6 +157,31 @@ Regras:
   existe para ele não *precisar* abrir só para descobrir o que mudou desde a conversa.
 - **Teto de ~5 itens.** Se passou disso, você decidiu demais sozinho: o grill parou cedo, e o
   caminho é perguntar em vez de listar.
+
+## Separar partes distintas numa linha: `  ||  `, nunca `;`
+
+Vale em **todo artefato gerado e em toda linha do chat** que o usuário vai reler: spec, tasks, diagnosis, solutions, plano de revisão, memória, contexto.
+
+Ponto e vírgula não marca nada visualmente. Numa linha com três informações separadas por `;`, o olho não acha onde uma acaba e a outra começa, e a linha vira parede.
+
+**A regra, na ordem:**
+
+1. **Linha própria primeiro.** Afirmações independentes se separam quebrando a linha — no BDD, cada uma vira sua própria linha começando com `E`; numa lista, cada uma vira seu próprio item. Isto resolve a maioria dos casos.
+2. **Mesma linha só quando as partes são a MESMA informação vista de ângulos diferentes** — o que acontece e a consequência, o valor e o motivo, a condição e o resultado. Aí separe com **`  ||  `** (dois espaços de cada lado; os espaços é que fazem o separador ser visto).
+3. **No máximo dois `||` por linha** (três partes). Passou disso, era lista desde o começo.
+
+```
+❌ Erro: Redis indisponível no boot → log; Fastify continua servindo HTTP; jobs não processam até o Redis voltar
+
+✅ - **Erro** Redis indisponível no boot → log de aviso
+   - **E** Fastify continua servindo HTTP normalmente
+   - **E** jobs ficam parados até o Redis voltar
+
+✅ (quando é mesmo uma linha só)
+   - **Saída** `true`  ||  não lança, mesmo com entrada malformada
+```
+
+**Onde `;` continua certo**: dentro de código, de comando e de qualquer trecho literal — ali ele é sintaxe, não pontuação. E na prosa comum de uma frase só, onde não há partes a separar visualmente.
 
 ## Plano de revisão (após cada chunk)
 

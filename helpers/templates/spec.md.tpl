@@ -53,6 +53,17 @@ verificar item a item — e nem o autor lembra quantas asserções prometeu.
 
 Linha ficando longa demais mesmo sozinha é sinal de que ela ainda tem duas
 afirmações dentro — quebre de novo.
+
+QUANDO DUAS PARTES SÃO MESMO DA MESMA LINHA (o valor e o motivo, o resultado e a
+ressalva), separe com "  ||  " — dois espaços de cada lado —, NUNCA com ";". Ponto
+e vírgula não marca nada: o olho não acha onde uma parte acaba e a outra começa.
+No máximo dois "||" por linha; passou disso, era lista.
+
+❌ - **Erro** Redis fora no boot → log; HTTP continua servindo; jobs param até voltar
+✅ - **Erro** Redis fora no boot → log de aviso
+   - **E** o HTTP continua servindo normalmente
+   - **E** os jobs ficam parados até o Redis voltar
+✅ - **Saída** `true`  ||  não lança, mesmo com entrada malformada
 -->
 
 ### REQ-1: {{req_1_title}}
@@ -81,7 +92,7 @@ quando o requisito não tem caso de erro.
 - **Entrada** `"123.456.789-09"`
 - **Saída** `true`
 - **E** normaliza a máscara antes de validar   <!-- "E" também aqui, quando a saída tem mais de uma afirmação -->
-- **Erro** entrada com dígito verificador inválido → `false` (não lança)
+- **Erro** entrada com dígito verificador inválido → `false`  ||  não lança, é retorno
 
 ## Edge cases
 
@@ -92,10 +103,13 @@ limite de volume, timeout, indisponibilidade de dependência externa.
 Borda de um requisito vai na linha `Erro` dele (formato técnico) ou como sub-cenário
 dele (formato BDD). Repetir aqui é duplicar o que o tester já vai cobrir.
 
-Lista enxuta. Cada item: condição → comportamento esperado.
+Lista enxuta. Cada item: condição → comportamento esperado. Um caso por bullet —
+dois casos no mesmo bullet separados por ";" é o erro mais comum aqui. Quando o item
+tem uma ressalva que pertence a ele, separe com "  ||  ", não com ";".
 -->
 
 - {{edge_case_1}}
+- Worker e HTTP no mesmo processo: o upsert é I/O  ||  o request HTTP não espera o job
 
 ## Contratos expostos
 

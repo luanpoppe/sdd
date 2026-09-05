@@ -39,7 +39,7 @@ Em qualquer chunk que não fecha a feature, f-bis não faz nada. No modo paralel
   - **Borda**: vazio, zero, um elemento, limite superior/inferior, coleção grande, string com unicode/espaço, data no limite do intervalo.
   - **Falha**: entrada inválida, dependência que lança, timeout, resposta malformada, permissão negada.
   - **Nulos** (`null`/`undefined`/`None`/`nil`) — **só quando o tipo realmente permite**. Não force caso impossível só pra ter mais um teste.
-- Cada requisito da spec (nos dois formatos, incluindo a linha `Erro` do formato técnico) e cada item de "Edge cases" precisa ter teste correspondente. **Cada linha `E` é uma afirmação própria**: ela vira asserção própria no teste, não some dentro da anterior. Se algum não for testável em unitário, diga no relatório em vez de fingir cobertura.
+- Cada requisito da spec (nos dois formatos, incluindo a linha `Erro` do formato técnico) e cada item de "Edge cases" precisa ter teste correspondente. **Cada linha `E` é uma afirmação própria**: ela vira asserção própria no teste, não some dentro da anterior. Numa linha com `  ||  `, a parte depois do separador costuma ser uma segunda asserção (*"não lança"*, *"não grava"*) — trate-a como tal. Se algum não for testável em unitário, diga no relatório em vez de fingir cobertura.
 
 **Qualidade**
 - **DRY por parametrização**: `it.each` (JS/TS), `pytest.mark.parametrize` (Python), table-driven (Go), `[Theory]/[InlineData]` (xUnit). Casos que só variam entrada/saída viram tabela, não N blocos copiados.

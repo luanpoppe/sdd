@@ -25,10 +25,11 @@ class RecallTool {
     return {
       name: 'sdd_recall',
       description:
-        'Busca no histórico do SDD por termo livre (arquivo, classe, método, conceito) em 9 ' +
-        'fontes: chunks, arquivos, destaques, métodos com exemplos, steps de review, cenários, ' +
-        'conhecimento, temas do lp:explain e achados de code review. Use antes de mexer em algo que talvez já tenha sido tocado, ou para ' +
-        'lembrar como uma parte do sistema funciona.',
+        'Busca no histórico do SDD por termo livre (arquivo, classe, método, conceito, tabela) em ' +
+        '10 fontes: chunks, arquivos, destaques, métodos com exemplos, steps de review, cenários, ' +
+        'conhecimento, temas do lp:explain, achados de code review e entidades modeladas. Use antes ' +
+        'de mexer em algo que talvez já tenha sido tocado, ou para lembrar como uma parte do ' +
+        'sistema funciona.',
       inputSchema: {
         type: 'object',
         required: ['query'],
@@ -63,6 +64,7 @@ class RecallTool {
         scenarios: [],
         decisions: [],
         findings: [],
+        data_models: [],
         explain: RecallTool.searchExplain(ctx.db, {
           pattern: RecallTool.likePattern(args.query),
           limit: RecallTool.clampLimit(args.limit)
@@ -88,7 +90,8 @@ class RecallTool {
       scenarios: RecallTool.searchScenarios(ctx.db, scope),
       decisions: RecallTool.searchEvents(ctx.db, scope),
       explain: RecallTool.searchExplain(ctx.db, scope),
-      findings: RecallTool.searchFindings(ctx.db, scope)
+      findings: RecallTool.searchFindings(ctx.db, scope),
+      data_models: RecallTool.searchDataModels(ctx.db, scope)
     };
 
     Log.info('recall executado', {
@@ -101,7 +104,8 @@ class RecallTool {
       scenarios: result.scenarios.length,
       decisions: result.decisions.length,
       explain: result.explain.length,
-      findings: result.findings.length
+      findings: result.findings.length,
+      data_models: result.data_models.length
     });
     return result;
   }
@@ -285,6 +289,32 @@ class RecallTool {
          JOIN projects p ON p.id = c.project_id
         WHERE ${clause} ${match.clause}
         ORDER BY f.at DESC
+        LIMIT ?`,
+      [...params, ...match.params, scope.limit]
+    );
+  }
+
+  /**
+   * Entidades modeladas pelo `data-modeler`. Responde a pergunta que a migração não
+   * responde: por que a coluna é nulável, e o que foi descartado antes de chegar aqui.
+   */
+  static searchDataModels(db, scope) {
+    const { clause, params } = RecallTool.projectClause(scope, 'c.project_id');
+    const match = RecallTool.anyColumnMatches(
+      ['d.name', 'd.shape', 'd.decisions', 'd.rejected', 'd.index_notes', 'd.migration'],
+      scope.pattern
+    );
+
+    return SddDb.all(
+      db,
+      `SELECT p.name AS project, c.change_id, k.chunk_id, d.name, d.kind, d.operation,
+              d.engine, d.shape, d.decisions, d.rejected, d.index_notes, d.migration, d.at
+         FROM data_models d
+         JOIN chunks k ON k.id = d.chunk_pk
+         JOIN changes c ON c.id = k.change_pk
+         JOIN projects p ON p.id = c.project_id
+        WHERE ${clause} ${match.clause}
+        ORDER BY d.at DESC
         LIMIT ?`,
       [...params, ...match.params, scope.limit]
     );
