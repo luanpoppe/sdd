@@ -179,7 +179,7 @@ function planCursor(skills, actions) {
     let c = readSkill(name);
     c = rewriteHelperRefs(c, helpersBase);
     // Cursor pode listar o comando pelo `name:` do frontmatter E pelo nome do
-    // arquivo — se divergirem (ex: name: new, arquivo lp-new.md), aparece
+    // arquivo — se divergirem (ex: name: new-feature, arquivo lp-continue.md), aparece
     // duplicado no menu. Mantém os dois sincronizados em lp-<nome>.
     c = setFrontmatterName(c, `lp-${name}`);
     actions.push(['write', `lp-${name}.md`, path.join(cmdDest, `lp-${name}.md`), c]);

@@ -6,7 +6,8 @@ const { DatabaseSync } = require('node:sqlite');
 
 const { Log } = require('./log');
 const { ProjectResolver } = require('./project');
-const { SCHEMA_VERSION, CREATE_TABLES, CREATE_INDEXES, MIGRATIONS } = require('./schema');
+const { SCHEMA_VERSION, CREATE_TABLES, CREATE_INDEXES } = require('./schema');
+const { MIGRATIONS } = require('./migrations');
 
 const DB_FILE_NAME = 'sdd.db';
 
@@ -48,19 +49,24 @@ class SddDb {
   }
 
   /**
-   * Idempotente. Ordem importa: os `CREATE ... IF NOT EXISTS` primeiro (criam as
-   * tabelas novas de uma versão nova sem tocar nas antigas), depois os degraus de
-   * migração, que cuidam do que `CREATE` não resolve — tipicamente `ADD COLUMN` numa
-   * tabela que já existia.
+   * Idempotente, e a ordem dos três passos não é intercambiável:
+   *
+   * 1. `CREATE TABLE IF NOT EXISTS` — cria as tabelas novas de uma versão nova sem
+   *    tocar nas que já existem (num banco antigo, é no-op para elas).
+   * 2. Migrações — fazem o que o `CREATE` não faz num banco antigo: `ADD COLUMN` e
+   *    reconstrução de tabela cuja constraint mudou.
+   * 3. `CREATE INDEX IF NOT EXISTS` — por último, porque um índice pode apontar para
+   *    coluna que só existe depois do passo 2, e porque a reconstrução do passo 2
+   *    derruba os índices da tabela antiga junto com ela.
    */
   static migrate(db) {
     const before = SddDb.readSchemaVersion(db);
 
-    for (const statement of [...CREATE_TABLES, ...CREATE_INDEXES]) {
-      db.exec(statement);
-    }
+    for (const statement of CREATE_TABLES) db.exec(statement);
 
     SddDb.applyMigrations(db, before);
+
+    for (const statement of CREATE_INDEXES) db.exec(statement);
 
     const current = SddDb.readSchemaVersion(db);
     if (current === SCHEMA_VERSION) return;

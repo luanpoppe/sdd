@@ -40,6 +40,23 @@ class SyncChangeTool {
                 status: {
                   type: 'string',
                   enum: ['pending', 'speccing', 'tasking', 'implementing', 'done']
+                },
+                scenarios: {
+                  type: 'array',
+                  description:
+                    'Cenarios BDD e edge cases da spec desta feature. Mande ao gerar a spec: ' +
+                    'e o que permite depois dizer qual chunk implementou cada cenario e o que ' +
+                    'ficou sem cobertura.',
+                  items: {
+                    type: 'object',
+                    required: ['key'],
+                    properties: {
+                      key: { type: 'string', description: 'Identificador curto e estavel, ex: "CT-03"' },
+                      title: { type: 'string', description: 'O cenario em uma linha' },
+                      body: { type: 'string', description: 'Dado/Quando/Entao, se houver' },
+                      kind: { type: 'string', enum: ['scenario', 'edge'] }
+                    }
+                  }
                 }
               }
             }
@@ -93,6 +110,45 @@ class SyncChangeTool {
           feature.summary ?? null,
           index + 1,
           feature.status ?? null
+        ]
+      );
+
+      SyncChangeTool.syncScenarios(db, changePk, feature);
+    });
+  }
+
+  /**
+   * Cenarios sao upsert por `key`, nunca apagados: um chunk ja pode estar amarrado a
+   * um deles, e regerar a spec nao pode desfazer essa rastreabilidade.
+   */
+  static syncScenarios(db, changePk, feature) {
+    const scenarios = Array.isArray(feature.scenarios) ? feature.scenarios : [];
+    if (scenarios.length === 0) return;
+
+    const stored = SddDb.one(db, 'SELECT id FROM features WHERE change_pk = ? AND slug = ?', [
+      changePk,
+      feature.slug
+    ]);
+
+    scenarios.forEach((scenario, index) => {
+      SddDb.run(
+        db,
+        `INSERT INTO scenarios (change_pk, feature_pk, key, title, body, kind, position)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT (change_pk, key) DO UPDATE SET
+           feature_pk = excluded.feature_pk,
+           title      = COALESCE(excluded.title, scenarios.title),
+           body       = COALESCE(excluded.body, scenarios.body),
+           kind       = COALESCE(excluded.kind, scenarios.kind),
+           position   = excluded.position`,
+        [
+          changePk,
+          stored ? stored.id : null,
+          scenario.key,
+          scenario.title ?? null,
+          scenario.body ?? null,
+          scenario.kind ?? 'scenario',
+          index + 1
         ]
       );
     });

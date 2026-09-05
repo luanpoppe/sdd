@@ -3,6 +3,9 @@
 const { SddDb } = require('../db');
 const { SddRepo } = require('../repo');
 const { Log } = require('../log');
+const { ExplainWriter, HIGHLIGHTS_SCHEMA, SYMBOLS_SCHEMA } = require('../explain');
+const { FileHash } = require('../file-hash');
+const { TasksStore } = require('../tasks-store');
 
 /**
  * Registra um chunk implementado e o relatório por arquivo. Chamada no passo g-bis,
@@ -32,6 +35,13 @@ class RecordChunkTool {
           feature_slug: { type: 'string', description: 'Slug da feature dona do chunk. Omita em bugfix.' },
           title: { type: 'string', description: 'Título do chunk como está no tasks.md' },
           status: { type: 'string', enum: ['pending', 'in_progress', 'done', 'deviated'] },
+          mark: {
+            type: 'string',
+            enum: [' ', '~', 'x'],
+            description:
+              'Só com tasks_storage: mcp — marca os checkboxes deste chunk no plano guardado ' +
+              'no banco, equivalente a trocar [ ] por [~] no tasks.md.'
+          },
           wave: { type: 'integer', description: 'Número da onda no modo paralelo. Omita no sequencial.' },
           started_at: { type: 'string', description: 'ISO 8601 com hora. Omitido = agora.' },
           finished_at: { type: 'string', description: 'ISO 8601 com hora. Omitido = agora.' },
@@ -58,29 +68,25 @@ class RecordChunkTool {
                     'o mecanismo, o fluxo de dados, o que foi decidido e descartado, armadilhas. ' +
                     'O leitor deve entender o arquivo sem abrir o código.'
                 },
-                highlights: {
-                  type: 'array',
+                diff: {
+                  type: 'string',
                   description:
-                    'Os trechos de código que valem ser lidos neste arquivo, na ordem de leitura. ' +
-                    'Inclua só o que é decisivo — não cole o arquivo inteiro.',
-                  items: {
-                    type: 'object',
-                    required: ['snippet'],
-                    properties: {
-                      label: { type: 'string', description: 'Título do trecho, ex: "Lookup em lote"' },
-                      lines: { type: 'string', description: 'Faixa de linhas, ex: "34-48"' },
-                      language: { type: 'string', description: 'Linguagem para destaque, ex: "csharp"' },
-                      snippet: { type: 'string', description: 'O código, recortado no essencial' },
-                      explanation: {
-                        type: 'string',
-                        description: 'O que este trecho faz e por que ele importa'
-                      }
-                    }
-                  }
+                    'Diff unificado do que mudou neste arquivo (so de arquivo modificado; ' +
+                    'em arquivo criado o diff seria o arquivo inteiro e os highlights ja bastam). ' +
+                    'Corte em ~200 linhas — o banco e indice, nao copia do repo.'
                 },
+                highlights: HIGHLIGHTS_SCHEMA,
+                symbols: SYMBOLS_SCHEMA,
                 is_test: { type: 'boolean', description: 'Arquivo de teste criado no passo f-bis' }
               }
             }
+          },
+          scenario_keys: {
+            type: 'array',
+            items: { type: 'string' },
+            description:
+              'Chaves dos cenarios da spec que este chunk implementa (ex: ["CT-01","CT-03"]). ' +
+              'E o que da rastreabilidade spec <-> codigo e revela cenario sem cobertura.'
           },
           commit: {
             type: 'object',
@@ -106,24 +112,66 @@ class RecordChunkTool {
     const chunkPk = RecordChunkTool.upsertChunk(ctx.db, change.id, feature, args);
 
     const files = Array.isArray(args.files) ? args.files : [];
-    RecordChunkTool.replaceFiles(ctx.db, chunkPk, files);
+    RecordChunkTool.replaceFiles(ctx.db, chunkPk, files, ctx.projectRoot);
 
     if (args.commit) RecordChunkTool.insertCommit(ctx.db, chunkPk, args.commit);
+    if (args.mark) TasksStore.mark(ctx.db, chunkPk, args.mark);
+    RecordChunkTool.linkScenarios(ctx.db, change.id, chunkPk, args.scenario_keys);
 
-    const highlightCount = files.reduce(
-      (total, file) => total + (Array.isArray(file.highlights) ? file.highlights.length : 0),
-      0
-    );
+    const totals = RecordChunkTool.countDepth(files);
 
     Log.info('chunk registrado', {
       change: args.change_id,
       chunk: args.chunk_id,
       files: files.length,
-      highlights: highlightCount,
+      highlights: totals.highlights,
+      symbols: totals.symbols,
+      examples: totals.examples,
       commit: Boolean(args.commit)
     });
 
     return { change_pk: change.id, chunk_pk: chunkPk, files_recorded: files.length };
+  }
+
+  /**
+   * Chave desconhecida é ignorada em silêncio: a spec pode ter sido escrita numa
+   * conversa em que o MCP estava desligado, e travar o registro do chunk por causa de
+   * uma referência solta seria pior que perder o vínculo.
+   */
+  static linkScenarios(db, changePk, chunkPk, keys) {
+    const list = Array.isArray(keys) ? keys : [];
+    SddDb.run(db, 'DELETE FROM chunk_scenarios WHERE chunk_pk = ?', [chunkPk]);
+
+    for (const key of list) {
+      const scenario = SddDb.one(db, 'SELECT id FROM scenarios WHERE change_pk = ? AND key = ?', [
+        changePk,
+        key
+      ]);
+      if (!scenario) continue;
+
+      SddDb.run(
+        db,
+        'INSERT OR IGNORE INTO chunk_scenarios (chunk_pk, scenario_pk) VALUES (?, ?)',
+        [chunkPk, scenario.id]
+      );
+    }
+  }
+
+  /** Só para o log: quanto de profundidade este chunk trouxe. */
+  static countDepth(files) {
+    const size = (list) => (Array.isArray(list) ? list.length : 0);
+
+    let highlights = 0;
+    let symbols = 0;
+    let examples = 0;
+
+    for (const file of files) {
+      highlights += size(file.highlights);
+      symbols += size(file.symbols);
+      for (const symbol of file.symbols ?? []) examples += size(symbol.examples);
+    }
+
+    return { highlights, symbols, examples };
   }
 
   static upsertChunk(db, changePk, feature, args) {
@@ -166,7 +214,7 @@ class RecordChunkTool {
    * uma foto completa: se o chunk for re-registrado depois de uma alteração inline,
    * um arquivo que saiu do escopo tem que sair do banco também.
    */
-  static replaceFiles(db, chunkPk, files) {
+  static replaceFiles(db, chunkPk, files, projectRoot) {
     SddDb.run(db, 'DELETE FROM file_changes WHERE chunk_pk = ?', [chunkPk]);
 
     files.forEach((file, index) => {
@@ -174,8 +222,8 @@ class RecordChunkTool {
         db,
         `INSERT INTO file_changes
            (chunk_pk, path, operation, lines_added, lines_removed, does, connects, review_note,
-            detail, review_order, is_test)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            detail, diff, content_hash, review_order, is_test)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           chunkPk,
           file.path,
@@ -186,37 +234,16 @@ class RecordChunkTool {
           file.connects ?? null,
           file.review_note ?? null,
           file.detail ?? null,
+          file.diff ?? null,
+          FileHash.of(projectRoot, file.path),
           index + 1,
           file.is_test ? 1 : 0
         ]
       );
 
-      const highlights = Array.isArray(file.highlights) ? file.highlights : [];
-      RecordChunkTool.insertHighlights(db, inserted.lastInsertRowid, highlights);
-    });
-  }
-
-  /**
-   * Não precisa apagar antes: os `file_changes` acabaram de ser recriados, e o
-   * `ON DELETE CASCADE` levou os destaques antigos junto.
-   */
-  static insertHighlights(db, fileChangePk, highlights) {
-    highlights.forEach((highlight, index) => {
-      SddDb.run(
-        db,
-        `INSERT INTO code_highlights
-           (file_change_pk, position, label, lines, language, snippet, explanation)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [
-          fileChangePk,
-          index + 1,
-          highlight.label ?? null,
-          highlight.lines ?? null,
-          highlight.language ?? null,
-          highlight.snippet,
-          highlight.explanation ?? null
-        ]
-      );
+      const anchor = { fileChangePk: inserted.lastInsertRowid };
+      ExplainWriter.replaceHighlights(db, anchor, file.highlights);
+      ExplainWriter.replaceSymbols(db, anchor, file.symbols);
     });
   }
 

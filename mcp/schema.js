@@ -9,7 +9,7 @@
  * Sem essa distinção os dois se confundem em toda query.
  */
 
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 5;
 
 const CREATE_TABLES = [
   `CREATE TABLE IF NOT EXISTS schema_meta (
@@ -29,6 +29,9 @@ const CREATE_TABLES = [
      last_seen_at TEXT NOT NULL
    )`,
 
+  // As tres ultimas colunas (`current_feature`, `current_chunk`, `in_review`) so sao a
+  // fonte de verdade com `state_storage: mcp`. No modo padrao elas espelham o
+  // `.sdd.yaml`, e servir apenas para o SDD Viewer mostrar onde a mudanca parou.
   `CREATE TABLE IF NOT EXISTS changes (
      id              INTEGER PRIMARY KEY AUTOINCREMENT,
      project_id      INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
@@ -40,6 +43,9 @@ const CREATE_TABLES = [
      created_at      TEXT,
      updated_at      TEXT,
      archived_at     TEXT,
+     current_feature TEXT,
+     current_chunk   TEXT,
+     in_review       TEXT,
      UNIQUE (project_id, change_id)
    )`,
 
@@ -66,7 +72,59 @@ const CREATE_TABLES = [
      finished_at TEXT,
      summary     TEXT,
      reasoning   TEXT,
+     position       INTEGER,
+     planned_files  TEXT,
+     depends_on     TEXT,
+     review_order   TEXT,
      UNIQUE (change_pk, chunk_id)
+   )`,
+
+  // Os checkboxes de um chunk no tasks. Só usados com `tasks_storage: mcp`, quando o
+  // tasks.md deixa de existir e o plano de execução passa a morar aqui.
+  `CREATE TABLE IF NOT EXISTS chunk_checks (
+     id        INTEGER PRIMARY KEY AUTOINCREMENT,
+     chunk_pk  INTEGER NOT NULL REFERENCES chunks(id) ON DELETE CASCADE,
+     position  INTEGER NOT NULL,
+     kind      TEXT NOT NULL CHECK (kind IN ('faz','validacao')),
+     text      TEXT NOT NULL,
+     done      TEXT NOT NULL DEFAULT ' ' CHECK (done IN (' ','~','x'))
+   )`,
+
+  // Cenários BDD e edge cases da spec de uma feature. Existem para dar
+  // rastreabilidade: qual cenário cada chunk implementa, e o que ficou sem chunk.
+  `CREATE TABLE IF NOT EXISTS scenarios (
+     id         INTEGER PRIMARY KEY AUTOINCREMENT,
+     change_pk  INTEGER NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
+     feature_pk INTEGER REFERENCES features(id) ON DELETE CASCADE,
+     key        TEXT NOT NULL,
+     title      TEXT,
+     body       TEXT,
+     kind       TEXT CHECK (kind IN ('scenario','edge')),
+     position   INTEGER,
+     UNIQUE (change_pk, key)
+   )`,
+
+  `CREATE TABLE IF NOT EXISTS chunk_scenarios (
+     chunk_pk    INTEGER NOT NULL REFERENCES chunks(id) ON DELETE CASCADE,
+     scenario_pk INTEGER NOT NULL REFERENCES scenarios(id) ON DELETE CASCADE,
+     PRIMARY KEY (chunk_pk, scenario_pk)
+   )`,
+
+  // Conhecimento de longo prazo: .sdd/context/ (como cada área funciona) e os HTMLs
+  // acumulativos do lp:explain. Os dois são pura explicação e eram, até aqui, os
+  // únicos produtores de entendimento invisíveis ao banco.
+  `CREATE TABLE IF NOT EXISTS knowledge_entries (
+     id         INTEGER PRIMARY KEY AUTOINCREMENT,
+     project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+     change_pk  INTEGER REFERENCES changes(id) ON DELETE SET NULL,
+     kind       TEXT NOT NULL CHECK (kind IN ('context','explain')),
+     slug       TEXT NOT NULL,
+     title      TEXT,
+     path       TEXT,
+     summary    TEXT,
+     detail     TEXT,
+     updated_at TEXT NOT NULL,
+     UNIQUE (project_id, kind, slug)
    )`,
 
   `CREATE TABLE IF NOT EXISTS file_changes (
@@ -80,6 +138,8 @@ const CREATE_TABLES = [
      connects      TEXT,
      review_note   TEXT,
      detail        TEXT,
+     diff          TEXT,
+     content_hash  TEXT,
      review_order  INTEGER,
      is_test       INTEGER NOT NULL DEFAULT 0,
      UNIQUE (chunk_pk, path)
@@ -90,13 +150,43 @@ const CREATE_TABLES = [
   // curto (3 linhas por arquivo), e a profundidade fica aqui.
   `CREATE TABLE IF NOT EXISTS code_highlights (
      id             INTEGER PRIMARY KEY AUTOINCREMENT,
-     file_change_pk INTEGER NOT NULL REFERENCES file_changes(id) ON DELETE CASCADE,
+     file_change_pk INTEGER REFERENCES file_changes(id) ON DELETE CASCADE,
+     review_step_pk INTEGER REFERENCES review_steps(id) ON DELETE CASCADE,
      position       INTEGER NOT NULL,
      label          TEXT,
      lines          TEXT,
      language       TEXT,
      snippet        TEXT NOT NULL,
-     explanation    TEXT
+     explanation    TEXT,
+     CHECK ((file_change_pk IS NULL) <> (review_step_pk IS NULL))
+   )`,
+
+  // Um por metodo/funcao/endpoint que carrega comportamento. Ancorado em arquivo de
+  // chunk OU em step de review, nunca nos dois — é o que faz o lp:review alimentar a
+  // mesma memoria que a implementacao, em vez de virar silo.
+  `CREATE TABLE IF NOT EXISTS symbols (
+     id             INTEGER PRIMARY KEY AUTOINCREMENT,
+     file_change_pk INTEGER REFERENCES file_changes(id) ON DELETE CASCADE,
+     review_step_pk INTEGER REFERENCES review_steps(id) ON DELETE CASCADE,
+     position       INTEGER NOT NULL,
+     name           TEXT NOT NULL,
+     kind           TEXT,
+     signature      TEXT,
+     purpose        TEXT,
+     CHECK ((file_change_pk IS NULL) <> (review_step_pk IS NULL))
+   )`,
+
+  // Entrada -> saida com dado que faz sentido. Responde "o que isso faz de verdade",
+  // pergunta que snippet de codigo nao responde.
+  `CREATE TABLE IF NOT EXISTS symbol_examples (
+     id         INTEGER PRIMARY KEY AUTOINCREMENT,
+     symbol_pk  INTEGER NOT NULL REFERENCES symbols(id) ON DELETE CASCADE,
+     position   INTEGER NOT NULL,
+     label      TEXT,
+     input      TEXT,
+     output     TEXT,
+     note       TEXT,
+     is_edge    INTEGER NOT NULL DEFAULT 0
    )`,
 
   `CREATE TABLE IF NOT EXISTS reviews (
@@ -120,6 +210,7 @@ const CREATE_TABLES = [
      position    INTEGER,
      done        INTEGER NOT NULL DEFAULT 0,
      summary     TEXT,
+     detail      TEXT,
      finished_at TEXT,
      UNIQUE (review_pk, step_id)
    )`,
@@ -175,20 +266,19 @@ const CREATE_INDEXES = [
   `CREATE INDEX IF NOT EXISTS idx_files_chunk        ON file_changes(chunk_pk)`,
   `CREATE INDEX IF NOT EXISTS idx_files_path         ON file_changes(path)`,
   `CREATE INDEX IF NOT EXISTS idx_highlights_file    ON code_highlights(file_change_pk)`,
+  `CREATE INDEX IF NOT EXISTS idx_highlights_step    ON code_highlights(review_step_pk)`,
+  `CREATE INDEX IF NOT EXISTS idx_symbols_file       ON symbols(file_change_pk)`,
+  `CREATE INDEX IF NOT EXISTS idx_symbols_step       ON symbols(review_step_pk)`,
+  `CREATE INDEX IF NOT EXISTS idx_symbols_name       ON symbols(name)`,
+  `CREATE INDEX IF NOT EXISTS idx_examples_symbol    ON symbol_examples(symbol_pk)`,
+  `CREATE INDEX IF NOT EXISTS idx_checks_chunk       ON chunk_checks(chunk_pk)`,
+  `CREATE INDEX IF NOT EXISTS idx_scenarios_change   ON scenarios(change_pk)`,
+  `CREATE INDEX IF NOT EXISTS idx_scenarios_feature  ON scenarios(feature_pk)`,
+  `CREATE INDEX IF NOT EXISTS idx_knowledge_project  ON knowledge_entries(project_id, kind)`,
   `CREATE INDEX IF NOT EXISTS idx_reviews_project    ON reviews(project_id)`,
   `CREATE INDEX IF NOT EXISTS idx_review_steps_rev   ON review_steps(review_pk)`,
   `CREATE INDEX IF NOT EXISTS idx_events_project_at  ON events(project_id, at)`,
   `CREATE INDEX IF NOT EXISTS idx_events_kind        ON events(kind)`
 ];
 
-/**
- * Degraus de migração, aplicados só a bancos que já existiam numa versão anterior.
- * Banco novo nasce direto na versão corrente pelo CREATE_TABLES acima, então o
- * degrau NÃO pode repetir o que já está lá (um `ADD COLUMN` de coluna existente
- * falha) — daí ser indexado pela versão de destino.
- */
-const MIGRATIONS = {
-  2: [`ALTER TABLE file_changes ADD COLUMN detail TEXT`]
-};
-
-module.exports = { SCHEMA_VERSION, CREATE_TABLES, CREATE_INDEXES, MIGRATIONS };
+module.exports = { SCHEMA_VERSION, CREATE_TABLES, CREATE_INDEXES };

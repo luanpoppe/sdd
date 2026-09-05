@@ -3,19 +3,26 @@
 const { SddDb } = require('../db');
 const { SddRepo } = require('../repo');
 const { Log } = require('../log');
+const { ExplainWriter, HIGHLIGHTS_SCHEMA, SYMBOLS_SCHEMA } = require('../explain');
 
 /**
  * Registra o progresso de um `lp:review` — o tour guiado de código existente, que
  * tem estado próprio em `.sdd/reviews/<slug>/.sdd.yaml` e não passa pela máquina de
  * changes.
+ *
+ * Um step grava a MESMA estrutura de explicação de um arquivo de chunk (destaques de
+ * código, símbolos com exemplos de entrada e saída). É de propósito: o `lp:review` é o
+ * fluxo que mais produz entendimento de código, e sem isso ele viraria um silo com
+ * formato próprio, invisível para a busca que já cobre a implementação.
  */
 class RecordReviewTool {
   static get definition() {
     return {
       name: 'sdd_record_review',
       description:
-        'Registra no banco do SDD um review (lp:review) e, opcionalmente, o step recém-fechado ' +
-        'com os arquivos percorridos. Chame ao marcar cada step como done.',
+        'Registra no banco do SDD um review (lp:review) e, opcionalmente, o step recem-fechado: ' +
+        'arquivos percorridos, explicacao longa, trechos de codigo destacados e os metodos com ' +
+        'exemplos de entrada e saida. Chame ao marcar cada step como done.',
       inputSchema: {
         type: 'object',
         required: ['slug'],
@@ -36,7 +43,15 @@ class RecordReviewTool {
               caller: { type: 'string', description: 'Ex: "RJController.criar() em RJController.java:34"' },
               position: { type: 'integer' },
               done: { type: 'boolean' },
-              summary: { type: 'string', description: 'O que o step explicou' },
+              summary: { type: 'string', description: 'O que o step explicou, em 1-2 frases' },
+              detail: {
+                type: 'string',
+                description:
+                  'Explicacao longa do step, sem limite de frases: o mecanismo, o fluxo de ' +
+                  'dados, as decisoes de projeto que dao pra inferir do codigo e as armadilhas.'
+              },
+              highlights: HIGHLIGHTS_SCHEMA,
+              symbols: SYMBOLS_SCHEMA,
               files: {
                 type: 'array',
                 items: {
@@ -68,13 +83,27 @@ class RecordReviewTool {
     const files = Array.isArray(args.step.files) ? args.step.files : [];
     RecordReviewTool.replaceStepFiles(ctx.db, stepPk, files);
 
+    const anchor = { reviewStepPk: stepPk };
+    const highlights = ExplainWriter.replaceHighlights(ctx.db, anchor, args.step.highlights);
+    const symbols = ExplainWriter.replaceSymbols(ctx.db, anchor, args.step.symbols);
+
     Log.info('step de review registrado', {
       slug: args.slug,
       step: args.step.step_id,
-      files: files.length
+      files: files.length,
+      highlights,
+      symbols: symbols.symbols,
+      examples: symbols.examples
     });
 
-    return { review_pk: reviewPk, step_pk: stepPk, files_recorded: files.length };
+    return {
+      review_pk: reviewPk,
+      step_pk: stepPk,
+      files_recorded: files.length,
+      highlights_recorded: highlights,
+      symbols_recorded: symbols.symbols,
+      examples_recorded: symbols.examples
+    };
   }
 
   static upsertReview(db, projectId, args) {
@@ -111,14 +140,16 @@ class RecordReviewTool {
   static upsertStep(db, reviewPk, step) {
     SddDb.run(
       db,
-      `INSERT INTO review_steps (review_pk, step_id, label, caller, position, done, summary, finished_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO review_steps
+         (review_pk, step_id, label, caller, position, done, summary, detail, finished_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (review_pk, step_id) DO UPDATE SET
          label       = COALESCE(excluded.label, review_steps.label),
          caller      = COALESCE(excluded.caller, review_steps.caller),
          position    = COALESCE(excluded.position, review_steps.position),
          done        = excluded.done,
          summary     = COALESCE(excluded.summary, review_steps.summary),
+         detail      = COALESCE(excluded.detail, review_steps.detail),
          finished_at = COALESCE(excluded.finished_at, review_steps.finished_at)`,
       [
         reviewPk,
@@ -128,6 +159,7 @@ class RecordReviewTool {
         step.position ?? null,
         step.done === false ? 0 : 1,
         step.summary ?? null,
+        step.detail ?? null,
         step.done === false ? null : SddRepo.nowIso()
       ]
     );
