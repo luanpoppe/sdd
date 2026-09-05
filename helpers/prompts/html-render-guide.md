@@ -66,6 +66,30 @@ Isso muda o que você escreve no `.md`: nada. O markdown continua sendo o de sem
 - **Não toca no `styles.css`.** As cores podem ter sido customizadas no `lp:init`, e sobrescrever destruiria isso.
 - O `.md` manda: o que estiver desatualizado no `.md` continua desatualizado no espelho.
 
+## O `styles.css` do projeto
+
+O CSS é **copiado** para `.sdd/assets/styles.css` de cada projeto, e por muito tempo nunca era atualizado: as skills diziam "copie se faltar", então correção de template não chegava nas cópias. Sobrescrever também não dava, porque a cópia podia ter as cores escolhidas no `lp:init` dentro dela.
+
+A saída é um marcador dentro do próprio arquivo:
+
+```css
+/* sdd-styles 2.12.0 — gerado pelo SDD. */
+   ... tudo do plugin, substituível ...
+/* >>> customização do projeto — preservada nas atualizações <<< */
+:root { --accent: #2563eb; }
+```
+
+- **Acima do marcador é do plugin** e pode ser trocado inteiro.
+- **Abaixo é do projeto** e é preservado sempre. É aí que o `lp:init` escreve as cores.
+
+```
+node <HOME>/.sdd/render/styles.js <projeto>            relatório: versão da cópia vs plugin
+node <HOME>/.sdd/render/styles.js <projeto> --update   atualiza preservando a customização
+node <HOME>/.sdd/render/styles.js <projeto> --force    cópia antiga, sem marcador (descarta edição inline)
+```
+
+**Cópia antiga não é atualizada em silêncio.** Sem o marcador, não há como saber o que ali foi customizado — o comando reporta quantas linhas do plugin faltam e **recusa** escrever até alguém pedir `--force`. Rode você o relatório, mostre ao usuário, e deixe a decisão com ele.
+
 ## Anti-padrões
 
 - ❌ **Escrever o HTML à mão com o conversor disponível.** É o custo que este guia existe para eliminar.
@@ -73,3 +97,5 @@ Isso muda o que você escreve no `.md`: nada. O markdown continua sendo o de sem
 - ❌ **Rodar `--all` por conta própria em projeto do usuário.** Regeneração em massa é decisão dele; um arquivo por vez é rotina.
 - ❌ **Delegar a chamada ao escriba.** Comando não é escrita de arquivo.
 - ❌ **Bloquear o passo porque o conversor falhou.** Escreva à mão e siga.
+- ❌ **Rodar `styles.js --force` por conta própria.** Descartar customização de cor é decisão do usuário, e é irreversível.
+- ❌ **Escrever cor no corpo do `styles.css`.** Vai abaixo do marcador, senão a próxima atualização a apaga.

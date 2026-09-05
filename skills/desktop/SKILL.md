@@ -40,7 +40,7 @@ Caminho fixo (instalação por-usuário, sem admin): `%LOCALAPPDATA%\Programs\sd
      > - Instalar agora (Recomendado)
      > - Não, obrigado
      - **Não** → pare.
-     - **Sim** → baixe o `.exe` da `browser_download_url` retornada pelo subagente e siga os passos 3-4 de "Instalar silenciosamente" (seção 5). Depois avise: *"Atualizado pra `<mais_recente>`. Fecha e abre o SDD Viewer de novo pra usar a versão nova."* (o Electron não troca o binário em execução sozinho — não precisa fechar a instância aberta por você, só avisar).
+     - **Sim** → siga a seção 6 (**atualizar pelo zip**, não pelo instalador). Depois avise: *"Atualizado pra `<mais_recente>`. Fecha e abre o SDD Viewer de novo pra usar a versão nova."*
 
 ## 3. Não instalado → perguntar
 
@@ -60,17 +60,37 @@ Use `AskUserQuestion`:
 3. Confirme que `%LOCALAPPDATA%\Programs\sdd-viewer\sdd-viewer.exe` existe.
 4. Abra o app (seção 2, passo 1) e informe: *"SDD Viewer instalado e aberto. Repo: https://github.com/luanpoppe/sdd-viewer"*
 
+## 6. Atualizar (app JÁ instalado) — pelo zip, nunca pelo instalador
+
+> **O instalador não substitui instalação existente.** Ele roda o desinstalador da versão antiga antes de copiar; quando esse desinstalador falha, o NSIS aborta com *"Falha ao desinstalar os arquivos do aplicativo antigo … : 2"* — e no modo `/S` isso é **invisível**: o processo termina sem ter instalado nada. Verificado nesta máquina, inclusive com o desinstalador funcionando sozinho (exit 0).
+
+Por isso a atualização usa o **zip** da release, que não tem desinstalador no caminho:
+
+1. Na release, pegue o asset que termina em `-win.zip` (o `.exe` continua lá, para a primeira instalação).
+2. Baixe para uma pasta temporária.
+3. **Feche o app** — `Get-Process | Where-Object { $_.Path -like '*sdd-viewer*' } | Stop-Process -Force`, e espere ~3s.
+4. **Extraia para uma pasta temporária** e só então **copie por cima** da instalação:
+   ```powershell
+   Expand-Archive -Path $zip -DestinationPath $temp -Force
+   Copy-Item "$temp\*" "$env:LOCALAPPDATA\Programs\sdd-viewer" -Recurse -Force
+   ```
+   **Nunca extraia direto sobre a pasta instalada.** `Expand-Archive -Force` apaga o arquivo antes de escrever: se um único arquivo estiver travado (antivírus, processo que não morreu), a extração para no meio e deixa a instalação quebrada. `Copy-Item -Force` sobrescreve no lugar e, se falhar, falha sem destruir.
+5. Confirme que `resourcespp.asar` mudou de data. Não mudou = a cópia não valeu; diga isso em vez de declarar sucesso.
+
+O desinstalador e o atalho do menu Iniciar continuam válidos: a cópia não os remove.
+
 ## 5. Buscar a última release / instalar silenciosamente (rotina reutilizada acima)
 
 1. `GET https://api.github.com/repos/luanpoppe/sdd-viewer/releases/latest` — API pública, sem auth (repo é público).
-2. No JSON: `tag_name` (prefixo `v` removido) é a versão mais recente; ache em `assets` o item cujo nome termina em `.exe` e pegue sua `browser_download_url`.
+2. No JSON: `tag_name` (prefixo `v` removido) é a versão mais recente. Em `assets` há dois arquivos: o que termina em **`.exe`** (primeira instalação) e o que termina em **`-win.zip`** (atualização — ver seção 6). Pegue a `browser_download_url` do que o caso pedir.
 3. Baixe esse `.exe` pra uma pasta temporária.
 4. Rode **em modo silencioso** — `<instalador> /S`. **Nunca rode sem `/S`**: o instalador tem wizard (Next/Instalar) que exige clique, e o agente não consegue interagir com a janela — ficaria travado esperando o usuário clicar em algo que ele nem vê. Instalação por-usuário, não pede elevação/UAC.
 
 ## Princípios
 
 - **Nunca instala/atualiza sem perguntar primeiro.**
-- **Sempre silencioso (`/S`)** ao instalar/atualizar — o agente não clica em wizards.
+- **Sempre silencioso (`/S`)** na primeira instalação — o agente não clica em wizards.
+- **Atualização é pelo zip**, nunca pelo instalador: ele aborta em silêncio quando já existe uma versão instalada (seção 6).
 - **Checagem de atualização nunca bloqueia o uso do app.** Roda em paralelo (subagente), o app já abriu antes do resultado voltar.
 - **100% opcional.** Nenhum fluxo `lp:*` (new/continue/bug-fix/review/context/...) depende do SDD Viewer estar instalado, atualizado ou aberto.
 - **Só Windows por enquanto.** Outros SOs: informe e aponte pro repo (rodar via `npm run dev`).

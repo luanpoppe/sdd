@@ -142,6 +142,19 @@ Com `format: html` ou `both`, o `.html` de `plan`, `spec`, `tasks`, `diagnosis` 
 
 `flow.html`, `explain.html` e `walkthrough.html` ficam de fora: os dois primeiros não têm `.md` de origem, e o terceiro é montado pelo `lp:review-walkthrough`.
 
+## O CSS dos projetos, atualizável sem perder as cores
+
+O `styles.css` é copiado para cada projeto, e nunca era atualizado — as skills diziam "copie se faltar". Correção de template não chegava nas cópias, e sobrescrever destruiria as cores escolhidas no `lp:init`.
+
+Agora a cópia carrega um marcador: **acima é do plugin** e pode ser trocado inteiro; **abaixo é do projeto** e é preservado sempre.
+
+```
+node ~/.sdd/render/styles.js <projeto>            relatório de versão
+node ~/.sdd/render/styles.js <projeto> --update   atualiza, preservando a customização
+```
+
+Cópia antiga (sem marcador) **não** é atualizada em silêncio: o comando reporta o tamanho da diferença e recusa até alguém pedir `--force`. O `lp:audit` aponta quando a cópia ficou para trás.
+
 ## Legibilidade dos artefatos
 
 Duas regras que valem em toda spec, tasks, diagnosis e plano de revisão gerados:

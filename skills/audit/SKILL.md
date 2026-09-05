@@ -52,6 +52,12 @@ Próximo passo sugerido: <resolver as N divergentes primeiro via diffs; depois r
 
 Se zero divergências: imprima "Sem divergências detectadas. Docs e código estão alinhados."
 
+## Cópia do CSS desatualizada
+
+Se `format` ∈ {html, both}, rode `node <HOME>/.sdd/render/styles.js <raiz do projeto>` (só o relatório, sem `--update`). Ele diz a versão da cópia do projeto e a do plugin.
+
+Desatualizada → **uma linha** no relatório da auditoria, com o comando para atualizar. Não atualize por conta própria: com cópia antiga (sem o marcador de customização) a atualização descarta edição inline, e isso é decisão do usuário. Ver `../../helpers/prompts/html-render-guide.md`.
+
 ## Princípios
 
 - Não aplique mudanças sem `OK` explícito.

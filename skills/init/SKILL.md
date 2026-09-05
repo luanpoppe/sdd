@@ -128,7 +128,9 @@ created: <YYYY-MM-DD>
 
 > **Não escreva o bloco `subagents`** (quando não veio do global). Existe também um campo opcional `subagents`, que escolhe em qual modelo/thinking cada papel de subagente roda (`implementer`/`scribe`/`explorer`/`tester`), por harness. Ele é **omitido de propósito** no config gerado — ausente significa "cada subagente herda o modelo do principal", que é o comportamento desejado pela maioria. Quem quiser ligar, usa `lp:settings` (ex: *"roda o escriba no haiku"*) ou edita à mão seguindo `../../helpers/prompts/subagents-guide.md`.
 
-Se `format` ∈ {html, both}: copie `../../helpers/templates/styles.css` para `.sdd/assets/styles.css` e pergunte se o usuário quer ajustar o esquema de cores (caso sim, faça um mini-grill sobre cor primária/fundo e edite o CSS).
+Se `format` ∈ {html, both}: **não copie o CSS à mão** — rode `node <HOME>/.sdd/render/styles.js <raiz do projeto> --update`, que escreve `.sdd/assets/styles.css` já com o carimbo de versão e o marcador de customização.
+
+Depois pergunte se o usuário quer ajustar o esquema de cores. Se sim, faça um mini-grill sobre cor primária/fundo e escreva as variáveis **abaixo do marcador** `/* >>> customização do projeto ... <<< */` — nunca no corpo do arquivo. É o que permite atualizar o CSS depois sem destruir a escolha dele. Ver `../../helpers/prompts/html-render-guide.md`.
 
 ## 3-bis. Bootstrap do contexto (só se `context: true`)
 
