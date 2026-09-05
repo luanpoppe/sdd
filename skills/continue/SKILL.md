@@ -7,11 +7,13 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
 
 > **Escrita de artefatos (scribe)**: com `scribe: subagent` (default), **TODAS as escritas de arquivo deste passo** — docs `.md`/`.html`, `flow.html`, `.sdd.yaml`, `memory.md`, marcação de checkboxes no `tasks.md` — vão para um **subagente escriba** numa **única** chamada por passo. **Ausência do campo `scribe` no config = `subagent`** (não trate ausência como inline). É **tudo-ou-nada**: proibido delegar só os `.html`/`flow.html` e fazer `tasks.md`/`.sdd.yaml`/`memory.md` inline — se for dar `Write`/`Edit` num artefato do SDD, ponha no pacote do escriba. Você (principal) decide o conteúdo (inclusive o texto exato da memória e os campos do YAML) e imprime o plano de revisão; o escriba renderiza/escreve e devolve a lista. Siga `../../helpers/prompts/scribe-guide.md`. Ortogonal ao `implementer` (que delega o **código**): num passo de `implementing`, o implementer escreve o código e o escriba faz TODA a contabilidade do SDD. Só escreva inline com `scribe: main` explícito ou se a chamada de subagente realmente falhar (não por "preferir controle do YAML").
 
+> **Estado no banco (`state_storage`)**: default `file` — tudo abaixo que fala em ler ou escrever o `.sdd.yaml` vale literalmente. Com **`state_storage: mcp`**, seis informações não existem mais no arquivo: `state`, `current_feature`, `current_chunk`, `in_review`, `updated` e o `status` de cada feature. Onde este passo **lê** qualquer uma delas, chame `sdd_read_state` (uma vez, na pré-checagem, e reuse no turno inteiro). Onde ele **escreve** qualquer uma delas, chame `sdd_write_state` em vez de mandar o campo ao escriba — mandando só os campos que mudaram, e `null` explícito no que precisa ser limpo. O resto do `.sdd.yaml` (identidade e lista de features) continua sendo escrita de arquivo normal, pelo escriba. Se as tools não estiverem disponíveis neste modo, **pare e diga isso**: sem elas você não sabe em que passo a mudança está, e chutar pelo que existe em disco é pior que parar. Ver `../../helpers/prompts/mcp-guide.md`.
+
 ## 0. Pré-checagem
 
-- Se `.sdd/config.yaml` não existir → "Rode `/lp-init` primeiro." Pare.
+- Se `.sdd/config.yaml` não existir → "Rode `/lp-init` primeiro." Pare. Leia-o inteiro: além de `implementer`, `scribe`, `flowchart` e `chunk_size`, o campo **`mcp`** (`off` por padrão, ausente = `off`) decide se este turno registra o que fizer no histórico. Ver `../../helpers/prompts/mcp-guide.md`.
 - Identifique a **mudança ativa**: pasta em `.sdd/changes/` com `.sdd.yaml` `state` ≠ `archived`.
-  - Nenhuma: imprima `"Nenhuma mudança ativa. Comece com /lp-new <id>."` e pare.
+  - Nenhuma: imprima `"Nenhuma mudança ativa. Comece com /lp-new-feature <id>."` e pare.
   - Mais de uma: prefira `state: implementing`; em empate, pergunte qual.
 - Leia `.sdd.yaml`. **Se `kind: bugfix`** → esta é uma mudança de bug-fix: siga `../../helpers/prompts/bugfix-machine.md` (estados `bug-proposing` → `bug-fixing`) em vez da máquina de features abaixo. O resto desta pré-checagem (in_review, memória) continua valendo; pule a leitura de `plan.md`/specs (bug-fix não os tem).
 - (fluxo normal de feature) Leia `plan.md` e os arquivos da **feature ativa atualmente** (se houver `current_feature`): `specs/<current_feature>/spec.md` e `tasks.md` se existirem.
@@ -36,7 +38,7 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
 4. **Pare quando** todas as ambiguidades dessa feature estão resolvidas e nada foi "tanto faz" sem follow-up.
 5. Gere `specs/<slug>/spec.md` usando `../../helpers/templates/spec.md.tpl`. **Alvo: ≤ 100 linhas**.
 5-bis. **Respeite o `format` do `.sdd/config.yaml`**: se `format` ∈ {html, both}, gere também `specs/<slug>/spec.html` usando `../../helpers/templates/spec.html.tpl` (espelha o `.md`). Garanta `.sdd/assets/styles.css` (copie de `../../helpers/templates/styles.css` se faltar).
-6. Atualize `.sdd.yaml`: `state: awaiting-feature-tasks`, `updated`.
+6. Atualize `.sdd.yaml`: `state: awaiting-feature-tasks`, `updated`. Com **`mcp: on`**, chame `sdd_sync_change` mandando em `features[].scenarios[]` os cenários BDD e edge cases que você acabou de escrever, cada um com uma `key` curta e estável (`CT-01`, `CT-02`…). É o que permite depois amarrar cada chunk ao cenário que ele implementa — e, mais útil, ver qual cenário ficou sem chunk nenhum. Com `mcp_record.scenarios: false`, pule. Ver `../../helpers/prompts/mcp-guide.md`.
 6-bis. Se `flowchart: on`, atualize `flow.html` (`../../helpers/prompts/flowchart-guide.md`) — a feature saiu de "spec ainda não gerada".
 7. Imprima plano de revisão:
    ```
@@ -75,6 +77,8 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
 
 Coração da skill. Execute na ordem:
 
+> **Com `tasks_storage: mcp`** (padrão é `file`), NÃO gere o `tasks.md`: chame `sdd_write_tasks` com um item por chunk (`chunk_id`, `title`, `files`, `depends_on`, `review_order`, e as listas `faz` e `validacao`). A leitura do próximo chunk passa a ser `sdd_read_tasks`, e a marcação vira `mark: "~"` no `sdd_record_chunk`. Neste modo o MCP **não é opcional**: tool indisponível trava o passo, e reconstruir o plano de cabeça é proibido. Ver `../../helpers/prompts/mcp-guide.md`.
+
 **a) Auto-sync** (detectar divergências contra `plan.md` + spec da feature ativa):
 - Liste em buckets se houver: decisão divergente / escopo extra / escopo faltante.
 - Proponha diffs nas docs (plan.md ou specs/<slug>/spec.md ou tasks.md).
@@ -90,7 +94,7 @@ Coração da skill. Execute na ordem:
 - Com **`mcp: on`**, registre a decisão com `sdd_record_event` (`kind: mode_decision`), dizendo o modo e o porquê. Ela é perguntada uma vez por feature e hoje não é persistida em lugar nenhum — reiniciar a conversa a perde.
 
 **b) Próximo chunk** (modo sequencial):
-- Primeiro `[ ]` em `specs/<current_feature>/tasks.md`.
+- Primeiro `[ ]` em `specs/<current_feature>/tasks.md`. Com **`tasks_storage: mcp`** não há arquivo: chame `sdd_read_tasks` e use o `next_pending`.
 - Marque-o como em andamento (opcional: troque para `[~]` apenas no final).
 
 **b-bis) Explicação breve do chunk** (ANTES de codar; **só modo sequencial** — no paralelo, a comunicação é por onda, ver `parallel-guide.md`):
@@ -127,6 +131,8 @@ Curta (4-6 linhas, não é uma spec) — reaproveite o que o `tasks.md` já tem,
 >
 > **Atenção (scribe):** "ser do principal" = o principal DECIDE o quê escrever, **não** que ele dá `Write`/`Edit` inline. Com `scribe: subagent` (incl. campo ausente), as **escritas** de d) (`tasks.md`, `.sdd.yaml`), e) (`flow.html`) e g-bis) (`in_review`) + a de memória vão **todas juntas numa única chamada do escriba**, montada ao final (antes de imprimir o plano g). Não escreva nenhum desses inline. Ver a nota "Escrita de artefatos (scribe)" no topo e `../../helpers/prompts/scribe-guide.md`.
 
+**d) Marcar + registrar** — com **`tasks_storage: mcp`** não há checkbox em arquivo para trocar; a marcação vai como `mark: "~"` no `sdd_record_chunk` do passo g-bis.
+
 **d) Marcar + registrar**:
 - tasks.md: marque os checkboxes do chunk (`Faz` e `Validação`) de `[ ]` → `[~]`. Os demais itens do chunk (`Arquivos`, `Depende de`, `Ordem de revisão`) são metadados em bullet simples, não checkboxes — não precisa marcar. Se o chunk tiver outros checkboxes, marque todos.
 - `.sdd.yaml`: `current_chunk: "F<n>.C<m>"`, `updated`.
@@ -140,6 +146,7 @@ Curta (4-6 linhas, não é uma spec) — reaproveite o que o `tasks.md` já tem,
   - Se há próxima feature `pending`: `state: awaiting-feature-spec`. Imprima: *"Feature `<X>` concluída (em revisão). Próximo `/lp-continue` inicia a feature `<Y>` — <summary dela> (spec)."*
   - Senão: `state: awaiting-archive`. Sugira `/lp-archive`.
   - Com **`mcp: on`**: `sdd_sync_change` com a feature em `done` e o `state` novo.
+- Com **`mcp: on`**, agora que você sabe quais arquivos o chunk toca (campo `Arquivos`), faça **uma** chamada `sdd_recall` com esses caminhos ou com o nome da classe/módulo. Serve para descobrir se aquele código já foi tocado antes, com que decisão e com quais exemplos de entrada e saída — inclusive em conversa que você não viu. Não achou nada: siga em silêncio. Achou algo que muda a decisão: diga em 1 linha o que achou e o que muda. Ver `../../helpers/prompts/mcp-guide.md`.
 - O resultado desta transição define a linha "Próximo:" do plano de revisão (passo g).
 
 **f-bis) Geração de testes** — só se **`tests: on`** no `.sdd/config.yaml` **E** o passo f acabou de concluir a feature (no bug-fix: foi o último chunk da correção). Nos demais chunks, pule sem mencionar nada. Com `tests: off`/ausente (padrão), este passo **não existe** — não gere testes nem comente que está desligado.
@@ -217,9 +224,9 @@ in_review:
 ```
 Assim, mesmo que a conversa reinicie, o próximo turno sabe qual chunk está em revisão e consegue re-imprimir a lista. Ao aprovar (próximo `/lp-continue`) ou reverter, limpe `in_review`.
 
-Com **`mcp: on`**, registre o chunk no banco **no mesmo passo**, com `sdd_record_chunk`: um item de `files` por arquivo desta lista, na mesma ordem, com `does`/`connects`/`review_note` recebendo exatamente as linhas `Faz`/`Conecta`/`Revisar` que você acabou de imprimir (`is_test: true` nos arquivos vindos do f-bis), mais `summary`/`reasoning` do chunk e o `commit` sugerido. Este é o ponto certo porque é aqui que você tem tudo junto.
+Com **`mcp: on`**, registre o chunk no banco **no mesmo passo**, com `sdd_record_chunk`: um item de `files` por arquivo desta lista, na mesma ordem, com `does`/`connects`/`review_note` recebendo exatamente as linhas `Faz`/`Conecta`/`Revisar` que você acabou de imprimir (`is_test: true` nos arquivos vindos do f-bis), mais `summary`/`reasoning` do chunk e o `commit` sugerido. Este é o ponto certo porque é aqui que você tem tudo junto. Se a spec tem cenários registrados, mande também `scenario_keys` com os que este chunk implementa.
 
-Mande também, **só para o banco e sem imprimir no chat**, o `detail` (explicação longa de cada arquivo que merece: mecanismo, decisão descartada, armadilha) e os `highlights` (0-3 trechos de código decisivos por arquivo, cada um com título, código recortado e explicação). É o que deixa o plano de revisão curto sem perder profundidade — quem abrir o histórico depois tem o arquivo explicado. Ver `../../helpers/prompts/mcp-guide.md`.
+Mande também, **só para o banco e sem imprimir no chat**: o `detail` (explicação longa de cada arquivo que merece: mecanismo, decisão descartada, armadilha), os `highlights` (0-3 trechos de código decisivos por arquivo), os `symbols` (os métodos que carregam comportamento, cada um com assinatura e **exemplos de entrada e saída com dado plausível do domínio, incluindo ao menos um caso de borda**) e o `diff` unificado dos arquivos modificados. É o que deixa o plano de revisão curto sem perder profundidade — quem abrir o histórico depois tem o arquivo explicado. Ver `../../helpers/prompts/mcp-guide.md`.
 
 **h) Context watch** — por último, antes de fechar o turno, siga `../../helpers/prompts/context-watch.md` usando `context_watch` do `.sdd/config.yaml`. Heurística: na faixa de 5-10 chunks implementados nesta MESMA conversa, comece a observar. Se julgar pesada → siga o protocolo (suggest/auto/off).
 

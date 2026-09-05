@@ -62,7 +62,7 @@ Teste rápido antes de gravar: *"Em outra feature/módulo deste projeto, essa en
 - **Carregar a memória** (ou o `memory-map.md` se existir) ANTES de qualquer grill ou geração de artefato.
 - Se relevante, citar inline: *"Vi na memória que você prefere X — vou seguir."* (Estilo) OU *"Vi na memória que neste projeto se usa Y — confirma para esta mudança?"* (Stack/Domínio).
 
-### Em fase de planejamento (`lp:new`, `awaiting-feature-spec`)
+### Em fase de planejamento (`lp:new-feature`, `awaiting-feature-spec`)
 
 - **Estilo / Processo**: aplique direto. Não pergunte sobre algo que já está na memória como estilo.
 - **Stack / Domínio**: NÃO assuma. Use sempre como *"vi X na memória, confirma?"*. A memória NÃO substitui o grill — só economiza 1 pergunta convertendo "como vai ser?" em "confirma manter?".

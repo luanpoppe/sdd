@@ -2,13 +2,13 @@
 
 > Fluxo: **sequencial por feature**. Nunca gere todas as specs/tasks de uma vez. Cada feature passa por spec → tasks → implementação → revisão antes da próxima começar.
 
-> **Dois tipos de mudança.** Sem `kind` (ou `kind: feature`) = fluxo completo desta página (`lp:new` → `lp:continue`). Com **`kind: bugfix`** = fluxo enxuto de correção de bug (`lp:bug-fix` → `lp:continue`), documentado em `./bugfix-machine.md` — diagnóstico → opções → correção, sem `plan.md` nem specs por feature. O `kind` vive no `.sdd.yaml` da mudança.
+> **Dois tipos de mudança.** Sem `kind` (ou `kind: feature`) = fluxo completo desta página (`lp:new-feature` → `lp:continue`). Com **`kind: bugfix`** = fluxo enxuto de correção de bug (`lp:bug-fix` → `lp:continue`), documentado em `./bugfix-machine.md` — diagnóstico → opções → correção, sem `plan.md` nem specs por feature. O `kind` vive no `.sdd.yaml` da mudança.
 
 > **Escrita de artefatos (scribe).** Com `scribe: subagent` (default; **campo ausente também conta como `subagent`**), TODAS as escritas de arquivo do SDD do passo (docs, `flow.html`, `.sdd.yaml`, marcação do `tasks.md`, `memory.md`) são delegadas a um subagente escriba numa única chamada — tudo-ou-nada, nunca parcial/inline. Veja `./scribe-guide.md`.
 
 > **Geração de testes (`tests`).** Campo `off` (padrão; **ausente = `off`**) ou `on`. Com `on`, ao concluir uma feature (ou a correção de um bug-fix) roda o passo **f-bis**: um subagente **tester** dedicado escreve os testes da funcionalidade inteira, focando borda e falha além do caminho feliz, roda e **reporta sem corrigir** (nem o teste, nem a implementação — a decisão é do usuário). Nunca roda por chunk. Ver `./tester-guide.md`.
 
-> **Histórico estruturado (`mcp`).** Campo `off` (padrão; **ausente = `off`**) ou `on`. Com `off`, o passo não existe: não chame tool, não mencione MCP. Com `on`, cada ponto da máquina também é registrado no banco global (`~/.sdd/sdd.db`) via as tools `sdd_*` do MCP local — quem chama é o **agente principal**, não o escriba, e o banco é **índice derivado**, nunca fonte de verdade (estado continua vindo do `.sdd.yaml` e do `tasks.md`). Tool ausente na sessão → 1 linha de aviso e siga. Ver `./mcp-guide.md`.
+> **Histórico estruturado (`mcp`).** Campo `off` (padrão; **ausente = `off`**) ou `on`. Com `off`, o passo não existe: não chame tool, não mencione MCP. Com `on`, cada ponto da máquina também é registrado no banco global (`~/.sdd/sdd.db`) via as tools `sdd_*` do MCP local — quem chama é o **agente principal**, não o escriba, e o banco é **índice derivado**, nunca fonte de verdade — com duas exceções declaradas em config: `tasks_storage: mcp` tira o plano de chunks do `tasks.md` e `state_storage: mcp` tira o bloco volátil do `.sdd.yaml`. Fora desses dois modos, o estado continua vindo dos arquivos. Tool ausente na sessão → 1 linha de aviso e siga. Ver `./mcp-guide.md`.
 
 > **Modelo dos subagentes (`subagents`).** Campo **opcional** do `.sdd/config.yaml` (ausente por padrão = tudo como hoje). Quando presente, define em qual modelo/thinking cada papel de subagente roda, por harness: `subagents.<implementer|scribe|explorer>.<claude-code|cursor|codex>: {model, effort}`. Ao lançar um subagente, use a entrada do seu papel + seu harness; se não houver entrada, lance normal **em silêncio**; se houver mas o modelo falhar, relance no default e avise em 1 linha. Ver `./subagents-guide.md`.
 
@@ -20,9 +20,9 @@
 >
 > Se a frase continua clara sem a etiqueta, prefira só a descrição; a etiqueta entra entre parênteses quando o usuário pode querer referenciá-la (revert, achar no `tasks.md`/`plan.md`). **Exceções** (etiqueta crua é o certo): cabeçalhos no formato `<ID> — <título>` (o título já vem ao lado), campos do `.sdd.yaml`/`tasks.md`, `data-*` do `flow.html`, e comandos que o usuário vai copiar ("reverte o chunk `F2.C3`").
 
-> **Git (branch + auto-commit).** `lp:new`/`lp:bug-fix` sugerem criar uma branch dedicada no início. No motor `implementing`, `auto_commit` (default `suggest-only`, ausente também conta) decide o que acontece a cada chunk: `suggest-only` mostra o comando de commit pronto pra copiar no plano de revisão; `full` commita de verdade quando o chunk é aprovado (exceto em branch protegida: main/master/develop/dev/staging/stg/prod/prd/production/homolog/hml/qa); `off` não menciona git. Ver `./git-guide.md`.
+> **Git (branch + auto-commit).** `lp:new-feature`/`lp:bug-fix` sugerem criar uma branch dedicada no início. No motor `implementing`, `auto_commit` (default `suggest-only`, ausente também conta) decide o que acontece a cada chunk: `suggest-only` mostra o comando de commit pronto pra copiar no plano de revisão; `full` commita de verdade quando o chunk é aprovado (exceto em branch protegida: main/master/develop/dev/staging/stg/prod/prd/production/homolog/hml/qa); `off` não menciona git. Ver `./git-guide.md`.
 
-> **Ordem de construção (`chunk_order`).** Default `inside-out` (ausente também conta como `inside-out`): entre features/chunks independentes (sem dependência real forçando ordem), prioriza construir de dentro pra fora — domínio/persistência/lógica interna antes de controller/consumer/endpoint — porque é a ordem que deixa cada chunk compilando e validando sozinho, sem precisar de stub. `outside-in` inverte esse desempate (útil se o usuário quer ver o esqueleto do fluxo primeiro, aceitando stubs temporários). `free` = só dependência real importa, sem preferência de direção. **Dependência real declarada em `Depende de:` sempre vence a heurística** — `chunk_order` só desempata quando a spec permite mais de uma ordem válida. Usado em `lp:new` (ordem das features) e `lp:continue` (ordem dos chunks ao gerar `tasks.md`).
+> **Ordem de construção (`chunk_order`).** Default `inside-out` (ausente também conta como `inside-out`): entre features/chunks independentes (sem dependência real forçando ordem), prioriza construir de dentro pra fora — domínio/persistência/lógica interna antes de controller/consumer/endpoint — porque é a ordem que deixa cada chunk compilando e validando sozinho, sem precisar de stub. `outside-in` inverte esse desempate (útil se o usuário quer ver o esqueleto do fluxo primeiro, aceitando stubs temporários). `free` = só dependência real importa, sem preferência de direção. **Dependência real declarada em `Depende de:` sempre vence a heurística** — `chunk_order` só desempata quando a spec permite mais de uma ordem válida. Usado em `lp:new-feature` (ordem das features) e `lp:continue` (ordem dos chunks ao gerar `tasks.md`).
 
 ## Estado por mudança (`.sdd/changes/<id>/.sdd.yaml`)
 
@@ -48,6 +48,8 @@ in_review: <null | {chunks: [ids], files: [paths na ordem], updated: data}>  # c
 ```
 
 A **ordem da lista** define a ordem de execução. Não embaralhar.
+
+> Com **`state_storage: mcp`** (padrão `file`), as seis últimas informações — `updated`, `state`, o `status` de cada feature, `current_feature`, `current_chunk` e `in_review` — saem deste arquivo e passam a viver no banco, lidas e escritas por `sdd_read_state`/`sdd_write_state`. O resto do bloco continua igual, versionado. Ver `./mcp-guide.md`.
 
 ## Layout de arquivos
 
@@ -81,12 +83,16 @@ A **ordem da lista** define a ordem de execução. Não embaralhar.
 
 | Estado | Gatilho | Ação | Próximo |
 |---|---|---|---|
-| (sem mudança ativa) | `lp:continue` | Imprime: "Nenhuma mudança ativa. Comece com `/lp-new <id>`." Para. | — |
-| `awaiting-plan` | fim de `lp:new` | Gera `plan.md` com contexto + decisões macro + **lista de features** (apenas slug/título/1-frase). Define ordem. | `awaiting-feature-spec` |
+| (sem mudança ativa) | `lp:continue` | Imprime: "Nenhuma mudança ativa. Comece com `/lp-new-feature <id>`." Para. | — |
+| `awaiting-plan` | fim de `lp:new-feature` | Gera `plan.md` com contexto + decisões macro + **lista de features** (apenas slug/título/1-frase). Define ordem. | `awaiting-feature-spec` |
 | `awaiting-feature-spec` | `lp:continue` | 1) Pega a próxima feature `pending` na ordem da lista. Marca `speccing` e `current_feature`. 2) **Grill profundo SÓ dela** (cenários BDD, edge cases, contratos). Em batches de até 4 perguntas independentes. 3) Gera `specs/<slug>/spec.md`. 4) Imprime plano de revisão da spec. | `awaiting-feature-tasks` |
 | `awaiting-feature-tasks` | `lp:continue` (após usuário revisar spec) | 1) Grill curto se necessário. 2) Gera `specs/<slug>/tasks.md` (só `.md` por padrão — ver `tasks_format`) respeitando `chunk_size`. 3) Marca feature `tasking` → `implementing`. 4) **Auto-continua por padrão** (`tasks_autocontinue: on`): segue direto pro 1º chunk na mesma invocação, sem pausar; com `off`, imprime o plano de revisão das tasks e para. | `implementing` |
 | `implementing` | `lp:continue` | 1) Auto-sync. 2) Definir modo (paralelo se `parallel: on` ou usuário pediu; senão sequencial). 3a) **Sequencial**: próximo chunk `[ ]`, explicação breve do chunk (o quê/por quê/conecta com macro/anteriores/próximos — timing conforme `implementer`), implementar por subagente (default) ou main. 3b) **Paralelo** (`../parallel-guide.md`): uma onda de chunks independentes, um subagente cada (sem a explicação breve — comunicação é por onda). 4) Marcar `[~]`. 4-bis) Se a feature fechou e `tests: on`, gerar testes via subagente tester (f-bis). 5) Plano de revisão (combinado no paralelo) + commit/sugestão de commit conforme `auto_commit`. 6) Com `mcp: on`, registrar o chunk e os arquivos no banco (g-bis). | `implementing` (se há mais chunks/ondas) · `awaiting-feature-spec` (se feature done e há próxima) · `awaiting-archive` (se foi a última) |
 | `awaiting-archive` | `lp:archive` | Verifica + arquiva. | `archived` |
+
+> Com `tasks_storage: mcp`, a geração do `tasks.md` na transição `awaiting-feature-tasks` é substituída por uma chamada `sdd_write_tasks`, e toda leitura de chunk passa a ser `sdd_read_tasks` — ver `./mcp-guide.md`. O padrão (`file`) mantém o arquivo.
+
+> Com `state_storage: mcp`, os campos `state`, `current_feature`, `current_chunk`, `in_review`, `updated` e o `status` das features **não existem no `.sdd.yaml`**: onde a tabela diz para escrevê-los, chame `sdd_write_state`; onde diz para lê-los, chame `sdd_read_state`. O resto do arquivo (identidade e lista de features) continua igual — ver `./mcp-guide.md`.
 
 > Com `mcp: on`, **toda** transição desta tabela também chama `sdd_sync_change` com o `state` novo, na mesma resposta. Ver o mapa passo → tool em `./mcp-guide.md`.
 
@@ -96,7 +102,7 @@ Quando todos os chunks de `current_feature` estão `[~]` ou `[x]`:
 1. Marca a feature como `done` no `.sdd.yaml`.
 1-bis. Se `tests: on`, roda o passo **f-bis**: subagente tester gera os testes da feature inteira, roda e reporta (ver `./tester-guide.md`). Com `tests: off`/ausente, pula em silêncio.
 2. Limpa `current_feature` e `current_chunk`.
-2-bis. Com `mcp: on`, chama `sdd_sync_change` (feature `done` + novo `state`) e, se o f-bis rodou, `sdd_record_tests`. Com `off`/ausente, pula em silêncio.
+2-bis. Com `mcp: on`, chama `sdd_sync_change` (feature `done` + novo `state`) e, se o f-bis rodou, `sdd_record_tests`. Com `state_storage: mcp`, os passos 1 e 2 acontecem numa única chamada `sdd_write_state` (feature `done`, `current_feature: null`, `current_chunk: null`) em vez de escrita no arquivo. Com `off`/ausente, pula em silêncio.
 3. Se há próxima feature `pending`: estado → `awaiting-feature-spec`. Imprime: *"Feature `<X>` concluída (em revisão). Próximo `/lp-continue` inicia a feature `<Y>` (spec)."*
 4. Senão: estado → `awaiting-archive`. Imprime sugestão de `/lp-archive`.
 

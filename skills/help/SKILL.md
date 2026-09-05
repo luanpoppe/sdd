@@ -8,13 +8,14 @@ Você está dando ao usuário um status report do SDD. **Apenas LEITURA** — nu
 ## 1. Coleta
 
 - Existe `.sdd/config.yaml`? Se não → "SDD não inicializado. Rode `/lp-init`." Pare.
-- Leia TODOS os campos do config: `format`, `lang`, `chunk_size`, `context_watch`, `flowchart`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue`, `context`, `parallel`, `chunk_order`, `auto_commit`, `mcp` (trate ausentes com o default: `flowchart: on`, `implementer: subagent`, `scribe: subagent`, `tasks_format: md`, `tasks_autocontinue: on`, `context: true`, `parallel: off`, `chunk_order: inside-out`, `auto_commit: suggest-only`, `tests: off`, `mcp: off`). Cheque também se existe a **config global** `~/.sdd/config.yaml` (preferências do usuário que semeiam projetos novos) — se existir, conte quantos campos tem; se não, ignore em silêncio. Leia também o bloco **opcional** `subagents` (modelo por papel de subagente) — se ausente, não é default nenhum: simplesmente não mencione.
+- Leia TODOS os campos do config: `format`, `lang`, `chunk_size`, `context_watch`, `flowchart`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue`, `context`, `parallel`, `chunk_order`, `auto_commit`, `mcp`, `tasks_storage`, `state_storage` (trate ausentes com o default: `flowchart: on`, `implementer: subagent`, `scribe: subagent`, `tasks_format: md`, `tasks_autocontinue: on`, `context: true`, `parallel: off`, `chunk_order: inside-out`, `auto_commit: suggest-only`, `tests: off`, `mcp: off`, `tasks_storage: file`, `state_storage: file`). Cheque também se existe a **config global** `~/.sdd/config.yaml` (preferências do usuário que semeiam projetos novos) — se existir, conte quantos campos tem; se não, ignore em silêncio. Leia também o bloco **opcional** `subagents` (modelo por papel de subagente) — se ausente, não é default nenhum: simplesmente não mencione.
 - Se `context: true`/ausente e `.sdd/context/index.md` existir: conte quantas áreas estão documentadas (linhas do índice) — reporte no status.
 - Liste pastas em `.sdd/changes/` (mudanças ativas) e conte `.sdd/archive/`.
 - Liste reviews ativos em `.sdd/reviews/` (criados por `lp:review`), se houver, com o `state`.
 - Verifique `.sdd/memory.md` (ou `.sdd/memory-map.md`): conte entradas por seção.
-- Para cada mudança ativa: leia `.sdd.yaml` (id, title, state, current_feature, current_chunk, features[], updated). **Cheque `kind`**: se `kind: bugfix`, é um bug-fix (estados `bug-diagnosing`/`bug-proposing`/`bug-fixing`) — não tem `features[]`; os chunks vivem em `tasks.md` na raiz da mudança. Veja `../../helpers/prompts/bugfix-machine.md`.
+- Para cada mudança ativa: leia `.sdd.yaml` (id, title, state, current_feature, current_chunk, features[], updated). **Com `state_storage: mcp`** esses campos não estão no arquivo: leia-os com `sdd_read_state`. Se as tools não estiverem disponíveis, diga que o estado está no banco e não pôde ser lido — não reporte a mudança como parada nem chute o passo. **Cheque `kind`**: se `kind: bugfix`, é um bug-fix (estados `bug-diagnosing`/`bug-proposing`/`bug-fixing`) — não tem `features[]`; os chunks vivem em `tasks.md` na raiz da mudança. Veja `../../helpers/prompts/bugfix-machine.md`.
 - Se há feature em `implementing` ou anterior: leia `specs/<current_feature>/tasks.md` (se existir).
+  - **Com `tasks_storage: mcp`** não existe `tasks.md`: leia o plano com `sdd_read_tasks` e conte a partir dele. Se as tools não estiverem disponíveis, diga que o plano está no banco e não pôde ser lido — não invente contagem nem sugira que a feature está vazia.
   - **Conte por CHUNK, não por checkbox**: cada chunk é um bloco `### F<n>.C<m>`. Um chunk está **concluído** quando todos os seus checkboxes estão `[~]`/`[x]`; **pendente** se ainda tem `[ ]`. Reporte "X/Y chunks" = chunks concluídos / total de blocos `### F<n>.C<m>`. (NÃO conte checkboxes crus — cada chunk tem vários.)
 
 ## 2. Output
@@ -23,7 +24,7 @@ Formato sugerido:
 
 ```
 SDD: <projeto>
-Config: format=<f> · lang=<l> · chunk_size=<c> · flowchart=<on/off> · implementer=<subagent/main> · scribe=<subagent/main> · tasks_format=<md/follow> · tasks_autocontinue=<on/off> · context=<true/false> · parallel=<on/off> · chunk_order=<inside-out/outside-in/free> · auto_commit=<full/suggest-only/off> · tests=<off/on> · mcp=<off/on>
+Config: format=<f> · lang=<l> · chunk_size=<c> · flowchart=<on/off> · implementer=<subagent/main> · scribe=<subagent/main> · tasks_format=<md/follow> · tasks_autocontinue=<on/off> · context=<true/false> · parallel=<on/off> · chunk_order=<inside-out/outside-in/free> · auto_commit=<full/suggest-only/off> · tests=<off/on> · mcp=<off/on> · tasks_storage=<file/mcp> · state_storage=<file/mcp>
 Subagentes: <papel:modelo · papel:modelo>   (só esta linha se o bloco `subagents` existir; omita inteira se não)
 Config global: ~/.sdd/config.yaml (<N> campos)   (só se o arquivo existir; omita se não — não sugira criar)
 MCP: tools do SDD <disponíveis / NÃO disponíveis nesta sessão>   (só esta linha se mcp=on; omita inteira se off)
@@ -51,7 +52,7 @@ Sugestões:
 
 Para uma mudança `kind: bugfix`, adapte o bloco: em vez de "Features (sequenciais)", mostre a etapa do bug (`diagnóstico` / `opções` / `correção — X/Y chunks`), o arquivo relevante (`diagnosis.md` / `solutions.md` / `tasks.md`) e a solução escolhida se houver. Próxima ação: `/lp-continue`.
 
-Se nenhuma mudança ativa: sugira `/lp-new <id>` (implementação do zero) ou `/lp-bug-fix <id>` (corrigir um bug).
+Se nenhuma mudança ativa: sugira `/lp-new-feature <id>` (implementação do zero) ou `/lp-bug-fix <id>` (corrigir um bug).
 Se `state == awaiting-archive`: sugira `/lp-archive`.
 Se `parallel=off` e a mudança está em `implementing`: mencione que dá pra acelerar com `/lp-parallel`.
 
@@ -65,7 +66,7 @@ Quando o usuário rodou `/lp-help` sem nenhum argumento, complemento o output ac
 Comandos do SDD `lp-*` (via marketplace: `lp:init`; via installer/Cursor: `/lp-init` — mesma skill):
 
   /lp-init       Setup do SDD no projeto. Cria .sdd/config.yaml.
-  /lp-new <id>   Inicia nova mudança (do zero). Grill macro + gera plan.md + flow.html.
+  /lp-new-feature <id>   Inicia nova mudança (do zero). Grill macro + gera plan.md + flow.html.
   /lp-bug-fix <id>  Fluxo enxuto pra corrigir bug: diagnóstico (causa raiz) → opções → correção.
   /lp-continue   Avança UM passo. Feature: spec → tasks → chunks. Bug-fix: opções → tasks → chunks.
   /lp-status     Resumo de handoff sob demanda (estado + próximos passos, pra retomar/nova conversa).
@@ -85,7 +86,7 @@ Comandos do SDD `lp-*` (via marketplace: `lp:init`; via installer/Cursor: `/lp-i
   /lp-desktop    Abre o SDD Viewer (app desktop opcional pra ver os artefatos fora do chat). Instala se preciso.
 
 Fluxo típico (feature do zero):
-  /lp-init → /lp-new <id> → revisa plan.md → /lp-continue (spec) → revisa →
+  /lp-init → /lp-new-feature <id> → revisa plan.md → /lp-continue (spec) → revisa →
   /lp-continue (tasks) → revisa → /lp-continue (chunks, um por vez) → ... → /lp-archive
 
 Fluxo típico (bug-fix, enxuto):

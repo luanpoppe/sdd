@@ -7,7 +7,7 @@ Você está registrando uma explicação persistente sobre um tema da mudança a
 
 ## 1. Coleta
 
-- Identifique a mudança ativa. Se não houver: diga "Sem mudança ativa. Use `/lp-new` primeiro." e pare.
+- Identifique a mudança ativa. Se não houver: diga "Sem mudança ativa. Use `/lp-new-feature` primeiro." e pare.
 - Leia `.sdd/config.yaml` para idioma e formato. **Observação**: `lp:explain` SEMPRE gera HTML, mesmo se `format == md` — esse é o ponto da skill. Se o CSS global não existir em `.sdd/assets/styles.css`, copie de `../../helpers/templates/styles.css`.
 
 ## 2. Identificar o tema
@@ -43,6 +43,10 @@ Atualizado: .sdd/changes/<id>/explain/<tema>.html
 Mudanças: <"criado" | "+1 sub-tópico em detalhes" | "+1 pergunta registrada" | etc>
 Abra no navegador para revisar.
 ```
+
+## Registro no histórico (só com `mcp: on`)
+
+Depois de gerar ou atualizar o HTML do tema, chame `sdd_record_knowledge` com `kind: explain`, o slug do tema, o caminho do arquivo e o essencial do que foi explicado. É o que permite achar aquela explicação depois por busca, em vez de depender de lembrar que o tema existe. Com `mcp_record.explain: false`, pule em silêncio. Ver `../../helpers/prompts/mcp-guide.md`.
 
 ## Princípios
 

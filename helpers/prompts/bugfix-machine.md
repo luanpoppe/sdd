@@ -1,6 +1,6 @@
 # Máquina de estados do bug-fix (`lp:bug-fix` + `lp:continue`)
 
-> Fluxo **enxuto** para corrigir um bug: **diagnóstico → opções → correção**. Não gera `plan.md` nem specs por feature — é mais curto e direto que o fluxo de `lp:new`.
+> Fluxo **enxuto** para corrigir um bug: **diagnóstico → opções → correção**. Não gera `plan.md` nem specs por feature — é mais curto e direto que o fluxo de `lp:new-feature`.
 >
 > Uma mudança de bug é uma mudança normal em `.sdd/changes/<id>/` marcada com `kind: bugfix`. Por isso `lp:status`, `lp:flow`, `lp:audit`, `lp:archive` e `lp:parallel` funcionam nela sem mudança.
 >
@@ -66,7 +66,7 @@ in_review: <null | {chunks: [ids], files: [paths], updated: data}>
 Reusa o **mesmo motor** da seção `implementing` de `../../skills/continue/SKILL.md` (passos **a–h**: auto-sync → modo → chunk → explicação breve do chunk (b-bis) → implementar por subagente/main → marcar → diagrama → plano de revisão → context-watch). Diferenças do bug-fix:
 
 - **1ª vez em `bug-fixing`**: gere `.sdd/changes/<id>/tasks.md` a partir da `chosen_solution` usando `../templates/tasks.md.tpl`. Chunks com IDs `C1`, `C2`, … (sem `F<n>.`). Cada chunk com `Arquivos` / `Depende de` / `Ordem de revisão` / `Faz` / `Validação`, igual ao fluxo normal. Respeite `chunk_size`. **Ordem dos chunks**: dependência real primeiro; desempate pela heurística de `chunk_order` (default `inside-out` — ver cabeçalho de `./state-machine.md`). **Só `tasks.md`** por padrão (`tasks_format: md`; só gere `tasks.html` com `tasks_format: follow` + `format` html/both). **Auto-continua** por padrão (`tasks_autocontinue: on`): não pause após o `tasks.md` — siga direto pro 1º chunk `C1` na mesma invocação. Defina modo paralelo vs sequencial pelo `parallel-guide.md`.
-- **Caminho dos chunks**: `tasks.md` na raiz da mudança (não em `specs/<slug>/`). Não há `current_feature`.
+- **Caminho dos chunks**: `tasks.md` na raiz da mudança (não em `specs/<slug>/`). Não há `current_feature`. Com `tasks_storage: mcp`, não há arquivo: o plano vai por `sdd_write_tasks` sem `feature_slug`, e a leitura por `sdd_read_tasks`. Ver `./mcp-guide.md`.
 - **Diagrama** (`flowchart: on`): uma única swimlane = a correção; nós = chunks `C<m>` (o `flowchart-guide.md` trata isso como uma "feature única"). Atualize a cada chunk.
 - **Testes** (se `tests: on`): no último chunk da correção, roda o passo **f-bis** — subagente tester gera os testes da correção inteira, e a **causa raiz do `diagnosis.md` obriga um teste de regressão** (o teste que teria pego o bug). Ver `./tester-guide.md`. Com `tests: off`/ausente (padrão), pule em silêncio.
 - **Transição final**: quando todos os chunks `C<m>` estão `[~]`/`[x]` → `state: awaiting-archive` (não há "próxima feature"). Sugira `/lp-archive`. **Contexto** (se `context: true`/ausente): atualize o arquivo de contexto da área afetada com a causa raiz e a decisão de correção (ou crie, se a área ainda não existir) + índice — no pacote do escriba. Ver `./context-guide.md`.

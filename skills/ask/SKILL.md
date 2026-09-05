@@ -19,6 +19,10 @@ Responda à pergunta do usuário usando como contexto a mudança ativa do SDD. *
 - Cite caminhos de arquivo e linhas quando aplicável (`src/foo.ts:42`).
 - Se a resposta merece persistência (ex: vai ser referenciada várias vezes, é um conceito complexo), termine com: *"Se quiser registrar isso de forma persistente, rode `/lp-explain <tema>`."*
 
+## Histórico (só com `mcp: on`)
+
+Se a pergunta é sobre **trabalho anterior** — *"o que já mexemos aqui?"*, *"onde paramos?"*, *"por que decidimos assim?"* — consulte o banco antes de responder: `sdd_query_history` para a linha do tempo, `sdd_recall` para um termo específico. É mais rápido e mais completo que reler `.sdd/`, e alcança conversas já compactadas. Com `mcp: off`/ausente, responda como sempre, sem mencionar. Ver `../../helpers/prompts/mcp-guide.md`.
+
 ## Princípios
 
 - Zero efeitos colaterais no filesystem.

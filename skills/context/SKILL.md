@@ -55,6 +55,10 @@ Toda escrita em `.sdd/context/` segue o `scribe` (com `scribe: subagent`/ausente
 
 Se `.sdd/context/` não existe e o usuário quer começar: rode uma análise **macro** do projeto (um subagente, se `scribe: subagent`; papel `explorer` para modelo/thinking — ver `../../helpers/prompts/subagents-guide.md`) e semeie o `index.md` + arquivos de contexto de topo das principais funcionalidades — igual ao bootstrap do `lp:init` (ver `context-guide.md`).
 
+## Registro no histórico (só com `mcp: on`)
+
+Ao criar ou atualizar um arquivo de contexto, chame também `sdd_record_knowledge` com `kind: context`, o slug da área, o caminho do arquivo e o essencial do conteúdo (o que é a área, como funciona, decisões e armadilhas). Sem isso o contexto — que é o material que envelhece melhor, porque descreve como o sistema funciona hoje — fica invisível para a busca. Com `mcp_record.context: false`, pule em silêncio. Não cole o arquivo inteiro: o banco é índice, não cópia. Ver `../../helpers/prompts/mcp-guide.md`.
+
 ## Princípios
 
 - **Só `.sdd/context/`.** Não toca em specs, tasks, código, `.sdd.yaml` de mudanças nem memória.

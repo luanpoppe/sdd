@@ -41,8 +41,8 @@ Mapa fixo — use-o para saber qual entrada da config se aplica ao subagente que
 | Papel | Onde é lançado |
 |---|---|
 | `implementer` | `../../skills/continue/SKILL.md` passo **c** (chunk sequencial) · cada subagente de uma onda do `./parallel-guide.md` |
-| `scribe` | toda chamada do escriba — `lp:continue`, `lp:new`, `lp:bug-fix`, `lp:flow`, `lp:context` (ver `./scribe-guide.md`) |
-| `explorer` | `Agent Explore` de investigação — reúso no `lp:new`, causa raiz no `lp:bug-fix`, escopo amplo no `lp:review` · bootstrap de contexto do `lp:init` (3-bis) · semeadura do `lp:context` |
+| `scribe` | toda chamada do escriba — `lp:continue`, `lp:new-feature`, `lp:bug-fix`, `lp:flow`, `lp:context` (ver `./scribe-guide.md`) |
+| `explorer` | `Agent Explore` de investigação — reúso no `lp:new-feature`, causa raiz no `lp:bug-fix`, escopo amplo no `lp:review` · bootstrap de contexto do `lp:init` (3-bis) · semeadura do `lp:context` |
 | `tester` | passo **f-bis** do motor `implementing` — geração de testes ao concluir a feature/correção, só com `tests: on` (ver `./tester-guide.md`) |
 
 O checador de atualização do `lp:desktop` fica **fora** deste mapa — roda sempre no default.
@@ -72,7 +72,7 @@ Um aviso por papel por turno — se três subagentes da mesma onda caíram no me
 
 - **Opcional de verdade.** O bloco ausente é o caso normal. Nenhum fluxo `lp:*` depende de `subagents` existir, e o `lp:init` não escreve o bloco.
 - **Nunca bloqueie por causa de modelo.** Modelo é preferência, não requisito: falhou, cai no default e segue. O trabalho do passo sempre acontece.
-- **O papel manda, não a skill.** O mesmo escriba lançado pelo `lp:new` ou pelo `lp:flow` usa a entrada `scribe` — não crie entradas por skill.
+- **O papel manda, não a skill.** O mesmo escriba lançado pelo `lp:new-feature` ou pelo `lp:flow` usa a entrada `scribe` — não crie entradas por skill.
 - **Não valide nomes de modelo.** Tentar adivinhar quais modelos existem envelhece mal; deixe o harness recusar e trate a recusa.
 - **Anti-padrão**: perguntar ao usuário qual modelo usar quando o configurado falha. Isso trava o fluxo, e no modo paralelo trava N vezes.
 - **Anti-padrão**: avisar "rodando no modelo padrão" quando o usuário simplesmente não configurou nada — é ruído em todo turno de todo projeto.

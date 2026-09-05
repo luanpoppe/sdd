@@ -19,6 +19,7 @@ Quando `scribe: subagent` (incl. ausência do campo), **TODAS** as escritas de a
 - gerar/editar `plan.md`, `spec.md`, `diagnosis.md`, `solutions.md` (+ `.html`);
 - (re)gerar `flow.html`;
 - atualizar o `.sdd.yaml` (state, `current_chunk`, `in_review`, checkboxes de feature/chunk, `chosen_solution`);
+  - Com **`tasks_storage: mcp`** o `tasks.md` não existe, e com **`state_storage: mcp`** os campos `state`, `current_feature`, `current_chunk`, `in_review`, `updated` e o `status` das features não existem no arquivo. Nesses modos, o que sai do pacote do escriba passa a ser chamada de tool do **principal** (`sdd_write_tasks`, `sdd_write_state`) — chamar tool MCP não é escrita de arquivo, e o escriba pode nem enxergar as tools da sessão. O que sobra de arquivo continua tudo-ou-nada no escriba; a regra não vira licença para escrever o resto inline.
 - gravar/editar `memory.md` (ou `memory/<tema>.md` + `memory-map.md`);
 - criar/editar arquivos e índices em `.sdd/context/` (base de conhecimento — ver `./context-guide.md`).
 
@@ -33,7 +34,7 @@ O escriba **renderiza e escreve** — nunca **decide**.
 
 ## Uma chamada por passo
 
-Agrupe **todas as escritas de um passo** do fluxo (`lp:new`, cada `lp:continue`, cada etapa do bug-fix) numa **única** invocação do escriba — não um subagente por arquivo. Ex.: no passo de tasks, uma chamada escreve `tasks.md` + `tasks.html` + regenera `flow.html` + atualiza `.sdd.yaml`.
+Agrupe **todas as escritas de um passo** do fluxo (`lp:new-feature`, cada `lp:continue`, cada etapa do bug-fix) numa **única** invocação do escriba — não um subagente por arquivo. Ex.: no passo de tasks, uma chamada escreve `tasks.md` + `tasks.html` + regenera `flow.html` + atualiza `.sdd.yaml`.
 
 ## O que o principal passa ao escriba
 

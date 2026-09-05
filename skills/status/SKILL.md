@@ -8,7 +8,7 @@ Você está gerando um **resumo de handoff** da mudança ativa: o suficiente pra
 ## 0. Pré-checagem
 
 - Se `.sdd/config.yaml` não existir → "SDD não inicializado. Rode `/lp-init`." Pare.
-- Identifique a mudança ativa (pasta em `.sdd/changes/` com `state` ≠ `archived`). Nenhuma → diga isso e sugira `/lp-new`. Mais de uma → pergunte qual (ou resuma todas, curto).
+- Identifique a mudança ativa (pasta em `.sdd/changes/` com `state` ≠ `archived`). Nenhuma → diga isso e sugira `/lp-new-feature`. Mais de uma → pergunte qual (ou resuma todas, curto).
 
 ## 1. Coleta
 

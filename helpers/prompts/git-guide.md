@@ -1,6 +1,6 @@
 # Guia de git (branch + auto-commit)
 
-> Compartilhado por `lp:new`, `lp:bug-fix` (sugestão de branch) e o motor `implementing` de `lp:continue`/bug-fix (auto-commit por chunk). Tudo aqui é **opcional e best-effort**: se o projeto não é um repo git (`git rev-parse --is-inside-work-tree` falha), pule esta seção inteira em silêncio — não mencione git nenhuma vez.
+> Compartilhado por `lp:new-feature`, `lp:bug-fix` (sugestão de branch) e o motor `implementing` de `lp:continue`/bug-fix (auto-commit por chunk). Tudo aqui é **opcional e best-effort**: se o projeto não é um repo git (`git rev-parse --is-inside-work-tree` falha), pule esta seção inteira em silêncio — não mencione git nenhuma vez.
 
 ## Branches protegidas
 
@@ -8,13 +8,13 @@ Nomes (case-insensitive, comparação exata, não prefixo): `main`, `master`, `d
 
 Rode `git branch --show-current` sempre que precisar decidir algo abaixo.
 
-## 1. Sugestão de branch (início de `lp:new` / `lp:bug-fix`)
+## 1. Sugestão de branch (início de `lp:new-feature` / `lp:bug-fix`)
 
 Depois que o **id** da mudança está definido (fim da pré-checagem, antes de criar `.sdd/changes/<id>/`):
 
 1. Se não é repo git → pule.
 2. Pegue a branch atual. Se o nome dela já contém o `<id>` da mudança, **não pergunte** — já parece dedicada, siga.
-3. Senão, sugira um nome: `feature/<id>` para mudanças normais (`lp:new`), `fix/<id>` para bug-fix (`lp:bug-fix`). Pergunte via `AskUserQuestion`:
+3. Senão, sugira um nome: `feature/<id>` para mudanças normais (`lp:new-feature`), `fix/<id>` para bug-fix (`lp:bug-fix`). Pergunte via `AskUserQuestion`:
    - **Criar a branch sugerida** (Recomendado) — roda `git checkout -b <nome>`.
    - **Vou criar manualmente** — não roda nada; só informe o nome sugerido pro usuário criar quando quiser.
    - **Continuar na branch atual** (`<branch-atual>`) — não roda nada.

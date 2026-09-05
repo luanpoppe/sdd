@@ -1,6 +1,6 @@
 ---
-name: new
-description: Inicia uma nova mudança no SDD `lp:*`. Cria `.sdd/changes/<id>/`, conduz grill agressivo (perguntas em batches de até 4 independentes) para resolver ambiguidades de alto nível, e gera o `plan.md` enxuto (contexto + decisões macro + LISTA de features). Não detalha features aqui — isso fica para `lp:continue`. Use quando o usuário pedir "lp:new", "nova mudança lp", ou ao iniciar qualquer trabalho novo via SDD.
+name: new-feature
+description: Inicia uma nova mudança no SDD `lp:*`. Cria `.sdd/changes/<id>/`, conduz grill agressivo (perguntas em batches de até 4 independentes) para resolver ambiguidades de alto nível, e gera o `plan.md` enxuto (contexto + decisões macro + LISTA de features). Não detalha features aqui — isso fica para `lp:continue`. Use quando o usuário pedir "lp:new-feature", "lp:new", "nova mudança lp", ou ao iniciar qualquer trabalho novo via SDD.
 ---
 
 Você está iniciando uma nova mudança no SDD `lp:*`. Siga `../../helpers/prompts/grill-snippet.md` para o estilo de grilling.
@@ -79,6 +79,7 @@ Se `format` ∈ {html, both}, gere também `plan.html` usando `../../helpers/tem
 - `features`: lista completa (slug, title, summary, status: `pending`) na ordem definida.
 - `updated`: hoje.
 - Com **`mcp: on`**: `sdd_sync_change` com o `title`, o `state` novo e o `features[]` completo — é o momento em que a estrutura da mudança fica conhecida.
+- Com **`state_storage: mcp`**: o `.sdd.yaml` nasce sem `state`, `updated`, `current_feature`, `current_chunk`, `in_review` e sem o `status` de cada feature; esses campos vão numa chamada `sdd_write_state` logo após o `sdd_sync_change`. O `.sdd.yaml` continua carregando a identidade e a lista ordenada de features.
 - Com **`mcp: on`**, registre também um `sdd_record_event` (`kind: note`) com o que o grill macro decidiu e o que ficou explicitamente fora de escopo. Ver `../../helpers/prompts/mcp-guide.md`.
 
 ## 6. Mensagem final e pausa para revisão

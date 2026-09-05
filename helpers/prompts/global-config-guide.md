@@ -15,7 +15,7 @@ Não é em `~/.claude/skills/lp-*` de propósito, por duas razões:
 
 O global aceita **exatamente o mesmo esquema** do `.sdd/config.yaml` do projeto — não é um subconjunto. Qualquer campo configurável num projeto é configurável globalmente:
 
-`format` · `lang` · `chunk_size` · `context_watch` · `flowchart` · `context` · `implementer` · `scribe` · `tasks_format` · `tasks_autocontinue` · `parallel` · `chunk_order` · `tests` · `auto_commit` · `subagents` (o bloco aninhado inteiro).
+`format` · `lang` · `chunk_size` · `context_watch` · `flowchart` · `context` · `implementer` · `scribe` · `tasks_format` · `tasks_autocontinue` · `parallel` · `chunk_order` · `tests` · `auto_commit` · `mcp` · `tasks_storage` · `state_storage` · `subagents` e `mcp_record` (os blocos aninhados inteiros).
 
 > **Regra permanente, não lista fixa**: qualquer campo novo que for adicionado ao `.sdd/config.yaml` no futuro é **automaticamente** válido no global. Não existe lista paralela pra manter em sincronia — se vale no projeto, vale aqui.
 

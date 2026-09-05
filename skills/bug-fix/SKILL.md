@@ -1,6 +1,6 @@
 ---
 name: bug-fix
-description: Fluxo enxuto do SDD `lp:*` para corrigir um bug, mais curto e direto que o `lp:new`. Cria uma mudança `kind: bugfix` em `.sdd/changes/<id>/`, foca em achar a CAUSA RAIZ (gera `diagnosis`), depois em opções de correção (`solutions`), e só então implementa (reusando o motor de chunks/paralelo do `lp:continue`). Use quando o usuário pedir "lp:bug-fix", "corrigir um bug", "resolver esse erro", "tem um bug em X".
+description: Fluxo enxuto do SDD `lp:*` para corrigir um bug, mais curto e direto que o `lp:new-feature`. Cria uma mudança `kind: bugfix` em `.sdd/changes/<id>/`, foca em achar a CAUSA RAIZ (gera `diagnosis`), depois em opções de correção (`solutions`), e só então implementa (reusando o motor de chunks/paralelo do `lp:continue`). Use quando o usuário pedir "lp:bug-fix", "corrigir um bug", "resolver esse erro", "tem um bug em X".
 ---
 
 Você está iniciando um **bug-fix** no SDD `lp:*` — o fluxo enxuto para corrigir um bug (não uma implementação do zero). Siga `../../helpers/prompts/bugfix-machine.md` (máquina de estados) e o estilo de grilling em `../../helpers/prompts/grill-snippet.md`.
@@ -50,10 +50,11 @@ Com **`mcp: on`** no `.sdd/config.yaml`, chame `sdd_sync_change` logo depois de 
    - Sintoma exato (o que acontece de errado) e o que era **esperado**.
    - Como **reproduzir** (passos, dados, ambiente prod/local). Se não reproduz sempre, o que se sabe.
    - Escopo/impacto (desde quando, quem é afetado, gravidade).
+1-bis. Com **`mcp: on`**, antes de investigar o código, faça **uma** chamada `sdd_recall` com o sintoma, o arquivo suspeito ou a área afetada. Um bug na mesma região pode já ter sido diagnosticado, e a causa raiz de antes costuma encurtar a investigação de agora. Não achou nada, siga sem comentar. Ver `../../helpers/prompts/mcp-guide.md`.
 2. **Investigue o código** (Read/Grep/Glob/Agent Explore — papel `explorer` para modelo/thinking, ver `../../helpers/prompts/subagents-guide.md`) para rastrear do sintoma até a **causa raiz**. Cite arquivos/funções reais (`arquivo:linha`). Distinga causa de sintoma — não pare no primeiro `catch`.
    - Se a causa não ficar clara, diga o que ainda falta investigar em vez de inventar. Pode fazer mais um batch de perguntas.
 3. Gere `diagnosis.md` usando `../../helpers/templates/diagnosis.md.tpl`. **Objetivo e sem repetição** (cabe em 1-2 telas, ~40 linhas). Cada seção tem UM trabalho: **Investigação** = a trilha/evidência (bullets "olhei X → constatei Y", arquivo:linha uma vez cada); **Causa raiz** = a conclusão em 1-3 frases, referenciando os arquivos já citados pelo nome curto — **não re-narre a trilha** nem repita o sintoma. **Nada de propor correção** aqui (fix vai pro `solutions.md`). Se `format` ∈ {html, both}: gere também `diagnosis.html` (`../../helpers/templates/diagnosis.html.tpl`) e garanta `.sdd/assets/styles.css` (copie de `../../helpers/templates/styles.css` se faltar).
-4. Atualize `.sdd.yaml`: `title`, `state: bug-proposing`, `updated`. Com **`mcp: on`**, chame `sdd_sync_change` com o `title` e o `state` novo, e mais um `sdd_record_event` (`kind: note`) com as decisões que o grill resolveu e os achados que reenquadraram o sintoma — é a informação que não cabe no `diagnosis.md` e que ninguém lembra depois. Ver `../../helpers/prompts/mcp-guide.md`.
+4. Atualize `.sdd.yaml`: `title`, `state: bug-proposing`, `updated`. Com **`state_storage: mcp`**, `state` e `updated` não vão para o arquivo: mande-os em `sdd_write_state`, e escreva no `.sdd.yaml` só o `title`. Com **`mcp: on`**, chame `sdd_sync_change` com o `title` e o `state` novo, e mais um `sdd_record_event` (`kind: note`) com as decisões que o grill resolveu e os achados que reenquadraram o sintoma — é a informação que não cabe no `diagnosis.md` e que ninguém lembra depois. Ver `../../helpers/prompts/mcp-guide.md`.
 5. Imprima plano de revisão:
 
    ```

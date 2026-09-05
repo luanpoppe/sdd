@@ -51,7 +51,7 @@ Após o grill, vá para seção 2.
 
 - Texto descrevendo tema (ex: `/lp-review como funciona o login`) → trate como resposta de Q1, pergunte Q2 e Q3 juntas num batch.
 - `pause` / `pausar` → marca review ativo como `state: paused` e termina.
-- `end` / `encerrar` / `terminar` → marca como `state: done`. **Contexto** (se `context: true`/ausente): destile o walkthrough num arquivo de contexto macro da área revisada em `.sdd/context/` (o que é / como funciona / decisões / notas) + atualize o índice — via escriba. Review é fonte ideal de contexto. Ver `../../helpers/prompts/context-guide.md`. Sugere o que fazer a seguir (ler walkthrough, abrir `/lp-new` se quiser refatorar).
+- `end` / `encerrar` / `terminar` → marca como `state: done`. **Contexto** (se `context: true`/ausente): destile o walkthrough num arquivo de contexto macro da área revisada em `.sdd/context/` (o que é / como funciona / decisões / notas) + atualize o índice — via escriba. Review é fonte ideal de contexto. Ver `../../helpers/prompts/context-guide.md`. Sugere o que fazer a seguir (ler walkthrough, abrir `/lp-new-feature` se quiser refatorar).
 - `list` / `listar` → mostra reviews em `.sdd/reviews/` com state.
 
 ## 2. Exploração + plano do walkthrough
@@ -128,6 +128,8 @@ Após o grill, vá para seção 2.
 
 6. Aplique ajustes que o usuário pedir e atualize `.sdd.yaml`. Quando aprovar, vá para seção 4.
 
+> **Antes de montar o plano, com `mcp: on`**: faça **uma** chamada `sdd_recall` com o tema do review. Se aquela área já foi implementada ou revisada antes, você recebe as explicações, os trechos destacados e os exemplos de entrada e saída que já existem — reaproveite em vez de reconstruir do zero, e diga ao usuário o que veio do histórico. Não achou nada, siga em silêncio. Ver `../../helpers/prompts/mcp-guide.md`.
+
 ## 3. Atualizar plano em runtime
 
 Se durante a revisão o usuário pedir mudança no plano ("pula esse step", "explica também X", "junta esses dois"), aplique no `.sdd.yaml` e informe — não precisa pedir confirmação para ajustes pequenos.
@@ -166,6 +168,8 @@ Cada `/lp-continue` ou `/lp-review` (sem args) avança 1 chunk:
    <!DOCTYPE html>
    <html lang="pt-BR">
    <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1">
      <link rel="stylesheet" href="../../assets/styles.css">
      <style>
        /* Hamburger: escondido por padrão, visível só em telas pequenas */
@@ -370,7 +374,7 @@ Cada `/lp-continue` ou `/lp-review` (sem args) avança 1 chunk:
    Step 0 usa `<summary>Step 0: Vocabulário</summary>` seguido de lista de definições com `**Termo**` + descrição curta, agrupada em sub-seções `###` se necessário. Sem ponte, sem exemplos de dado.
 
    Steps 1+ espelham a mesma hierarquia: `## Step N: <título>` (sub-steps: `## Step 5.1: <título>`), `**Arquivo**: \`caminho\``, logo abaixo a ponte de chamada: `**Chamado por:** \`NomeClasse.método()\` em \`arquivo:linha\` — Step M: <título do step anterior>` (step 1: `**Disparado por:** <gatilho externo>`, sem step anterior). Se houver condição/gate, frase própria numa linha abaixo, em itálico: `_Só executa quando <condição>._`. Depois, sub-seções com `###`, blocos de código com fences ` ```linguagem `, e **exemplos de dado real colados ao trecho** que os produz/consome (antes/depois quando há transformação) — nunca numa seção separada ao final —, listas de pontos não-óbvios.
-5. Marque o step como `done: true`, incremente `current_step`. Com **`mcp: on`** no `.sdd/config.yaml`, chame `sdd_record_review` com o review (slug, topic, state, current_step) e o step recém-fechado, incluindo os arquivos percorridos e o que cada um explicou. Ver `../../helpers/prompts/mcp-guide.md`; com `off`/ausente, não mencione MCP.
+5. Marque o step como `done: true`, incremente `current_step`. Com **`mcp: on`** no `.sdd/config.yaml`, chame `sdd_record_review` com o review (slug, topic, state, current_step) e o step recém-fechado. Grave a **mesma profundidade de um chunk implementado**: os arquivos percorridos, o `detail` (explicação longa do step), os `highlights` (trechos de código decisivos) e os `symbols` (os métodos do step com assinatura e exemplos de entrada e saída). Você acabou de escrever tudo isso no walkthrough — é reaproveitar, não produzir de novo. Sem isso o `lp:review` vira um silo: o entendimento que ele produz não alimenta a busca que já cobre a implementação. Ver `../../helpers/prompts/mcp-guide.md`; com `off`/ausente, não mencione MCP.
 6. Imprima no chat um **resumo do step + ponteiro para o próximo**:
    ```
    Step <N>/<total> concluído — <título>
@@ -386,7 +390,7 @@ Se foi o último step (retorno ao mundo externo) → marque review como `done`, 
 Fluxo completo revisado. Retorno ao mundo externo: <descrição do response/ack/evento final>.
 Walkthrough salvo em .sdd/reviews/<slug>/walkthrough.<ext>
 ```
-Sugira encerramento (`/lp-review end`) ou próximos passos (`/lp-new` se quiser refatorar).
+Sugira encerramento (`/lp-review end`) ou próximos passos (`/lp-new-feature` se quiser refatorar).
 
 ## 4-bis. Perguntas durante o review (integrar no ponto certo, NÃO em bloco no final)
 
@@ -435,12 +439,12 @@ Padrão: **aplicar inline sem ativar SDD formal**.
 3. **Atualize o walkthrough** se a explicação anterior ficou desatualizada (ajuste o trecho de código mostrado, registre nota "atualizado em <data>: <o que mudou>").
 4. **Após a modificação**, sempre retorne ao review: *"Modificação aplicada. Quer continuar a revisão do step <N>?"*
 
-**Sugira `/lp-new`** APENAS se perceber que a modificação:
+**Sugira `/lp-new-feature`** APENAS se perceber que a modificação:
 - Afeta múltiplos módulos não relacionados ao tema do review.
 - Implica mudança de arquitetura/contrato externo.
 - Exige specs/tasks formais para revisão estruturada.
 
-Sugira como **opção**, nunca exigência: *"Essa mudança parece substancial — vale abrir um `/lp-new` formal? Se preferir seguir aqui mesmo, sigo direto."* Se o usuário escolher continuar inline, **respeite e continue**.
+Sugira como **opção**, nunca exigência: *"Essa mudança parece substancial — vale abrir um `/lp-new-feature` formal? Se preferir seguir aqui mesmo, sigo direto."* Se o usuário escolher continuar inline, **respeite e continue**.
 
 ## 6. Memória (gatilho normal)
 

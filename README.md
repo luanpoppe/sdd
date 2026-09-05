@@ -9,7 +9,7 @@ Spec-driven development em 18 skills. Chunks micro revisáveis, fluxo sequencial
 /plugin install lp@sdd
 ```
 
-Pronto — as skills ficam disponíveis como `lp:init`, `lp:new`, `lp:continue`, `lp:review`, etc.
+Pronto — as skills ficam disponíveis como `lp:init`, `lp:new-feature`, `lp:continue`, `lp:review`, etc.
 
 > O plugin é distribuído direto por este repositório GitHub (o próprio repo é o marketplace). Não precisa npm.
 
@@ -34,7 +34,7 @@ npx github:luanpoppe/sdd --tool=cursor
 npx github:luanpoppe/sdd --tool=claude --dry-run
 ```
 
-- **Claude Code presente** → escreve só em `~/.claude/skills/lp-*/`; Cursor lê de lá também. Invoca `/lp-review`, `/lp-new`… nos dois.
+- **Claude Code presente** → escreve só em `~/.claude/skills/lp-*/`; Cursor lê de lá também. Invoca `/lp-review`, `/lp-new-feature`… nos dois.
 - **Só Cursor, sem Claude Code** → escreve em `~/.cursor/commands/lp-*.md` (+ `~/.cursor/lp-helpers/`) como fallback.
 
 > ⚠️ Não escreva nos dois lugares ao mesmo tempo — o Cursor lista o mesmo comando duas vezes (uma pela skill do Claude, outra pelo command próprio). O installer evita isso automaticamente; rodar `npx github:luanpoppe/sdd` de novo também limpa duplicatas de instalações anteriores a v1.0.2.
@@ -46,7 +46,7 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 | Skill | O que faz |
 |---|---|
 | `lp:init` | Inicializa o SDD no projeto (`.sdd/config.yaml`, CSS global, preferências). |
-| `lp:new` | Abre uma nova mudança (do zero) com grill anti-assunção; gera `plan.md` + `flow.html`. |
+| `lp:new-feature` | Abre uma nova mudança (do zero) com grill anti-assunção; gera `plan.md` + `flow.html`. |
 | `lp:bug-fix` | Fluxo enxuto pra corrigir bug: `diagnosis` (causa raiz) → `solutions` (opções) → correção em chunks. |
 | `lp:continue` | Avança 1 passo. Feature: spec → tasks → chunks. Bug-fix: opções → tasks → chunks. Implementa via subagente. |
 | `lp:review` | Revisão guiada de código existente (walkthrough do fluxo real). |
@@ -68,6 +68,7 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 
 [`luanpoppe/sdd-viewer`](https://github.com/luanpoppe/sdd-viewer) — app Electron read-only que lê `.sdd/` (mudanças, features, bug-fixes, reviews) e renderiza os artefatos `.md`/`.html` com fast refresh (atualiza sozinho quando o agente regrava um arquivo). Sidebar separa projeto → mudança/review → artefato. Não é dependência de nenhum fluxo `lp:*` — é só uma forma alternativa de ler o que o SDD já gera.
 
+- Com o MCP ligado, ganha uma aba **Timeline** por mudança (chunks em ordem, com duração, arquivos explicados, métodos com exemplos e diff) e uma **busca** que atravessa projetos.
 - Abrir/instalar/atualizar: `lp:desktop` (Windows por enquanto; checa update em paralelo sem travar o uso).
 - Instalador `.exe` (NSIS, por-usuário, sem admin) publicado em [GitHub Releases](https://github.com/luanpoppe/sdd-viewer/releases).
 - Rodar em outro SO / modo dev: clone o repo e `npm install && npm run dev`.
@@ -85,11 +86,22 @@ Duas vantagens, independentes:
 
 Detalhes:
 
+O que é registrado, em cada etapa:
+
+- **Chunk implementado** → um item por arquivo com o que faz, com o que conecta e o que revisar, mais a explicação longa, os trechos de código decisivos, os **métodos com exemplos de entrada e saída** (incluindo casos de borda) e o diff.
+- **Cenários da spec** → e qual chunk implementou cada um, o que revela cenário sem cobertura.
+- **Decisões** → grill, modo sequencial/paralelo, divergências do auto-sync, commits.
+- **`lp:review`** → os steps com a mesma profundidade de um chunk.
+- **`.sdd/context/` e `lp:explain`** → a base de conhecimento de longo prazo do projeto.
+
+Detalhes:
+
 - **Zero dependência**: usa `node:sqlite` e fala JSON-RPC direto, sem `npm install` na sua máquina. Requer **Node 23+**.
+- **`sdd_reindex`** reconstrói mudanças, features e chunks a partir do `.sdd/` — é o que sustenta a afirmação de que o banco é derivado. Explicações e decisões não voltam, porque não têm origem fora dele.
 - Instalado em `~/.sdd/mcp/` a cada `lp:auto-update` (fora do alcance da limpeza de `lp-*` que o installer faz).
 - O `lp:init` registra o servidor no `.mcp.json` do projeto (merge, nunca sobrescrita), então o time herda. As tools só aparecem **após reiniciar a sessão**.
 - Banco **global**, com uma tabela `projects` separando os repos: permite consulta cruzada e o histórico sobrevive a apagar o `.sdd/` de um projeto.
-- O banco é **índice e log derivado** — o markdown/YAML em `.sdd/` continua a fonte de verdade. Apagar o `sdd.db` degrada a visualização e não corrompe projeto nenhum, e nenhum fluxo `lp:*` depende dele para funcionar.
+- O banco é **índice e log derivado** — o markdown/YAML em `.sdd/` continua a fonte de verdade. As duas exceções são `tasks_storage: mcp` (o plano de chunks) e `state_storage: mcp` (o bloco volátil do `.sdd.yaml`), que passam a viver só no banco. Apagar o `sdd.db` degrada a visualização e não corrompe projeto nenhum, e nenhum fluxo `lp:*` depende dele para funcionar.
 
 ## Configuração (`.sdd/config.yaml`)
 
@@ -110,9 +122,12 @@ Detalhes:
 | `tests` | `off` / `on` | `off` | Geração automática de testes. `on`: ao concluir cada feature (ou correção de bug-fix), um **subagente tester dedicado** escreve os testes da funcionalidade — foco explícito em cenários de borda e falha, não só o caminho feliz — roda, mede coverage e **reporta sem corrigir** (teste falhando é decisão sua: bug real ou teste mal escrito?). |
 | `subagents` | bloco aninhado (papel → harness → `{model, effort}`) | (ausente) | **Opcional.** Em qual modelo/thinking cada papel de subagente roda — `implementer`, `scribe`, `explorer`, `tester` — declarado por harness (`claude-code`, `cursor`, `codex`), já que cada um tem seu próprio catálogo de modelos. Ausente = cada subagente herda o modelo da conversa principal. Ex: escriba no modelo barato, implementer no forte com thinking alto. |
 | `mcp` | `off` / `on` | `off` | **Opcional.** Liga o MCP local do SDD: cada etapa (chunk implementado, arquivos tocados e o que revisar em cada um, testes, divergências, steps de `lp:review`) também é gravada num SQLite global (`~/.sdd/sdd.db`). Destrava a timeline no SDD Viewer e dá memória ao agente entre conversas e projetos. Exige Node 23+ e reiniciar a sessão. |
+| `tasks_storage` | `file` / `mcp` | `file` | Onde vive o plano de chunks. `file`: `tasks.md` no repo, versionado e revisável em PR. `mcp`: o `tasks.md` não é gerado e o plano fica no banco — **nesse modo o MCP deixa de ser opcional**, e o plano sai do repositório. |
+| `state_storage` | `file` / `mcp` | `file` | Onde vive a parte do `.sdd.yaml` que muda a cada passo (`state`, `current_feature`, `current_chunk`, `in_review`, `updated`, `status` de cada feature). `file`: tudo no arquivo. `mcp`: esses campos vão para o banco e o arquivo guarda só a identidade da mudança e a lista de features — **nesse modo o MCP deixa de ser opcional**. |
+| `mcp_record` | bloco aninhado (`symbols`, `diff`, `context`, `explain`, `scenarios`) | (ausente = tudo ligado) | **Opcional.** Desliga partes do registro sem desligar o MCP. Ex: `symbols: false` para de gravar métodos com exemplos de entrada/saída. |
 | `auto_commit` | `full` / `suggest-only` / `off` | `suggest-only` | Git a cada chunk aprovado. `full`: commita de verdade (só os arquivos do chunk), exceto em branch protegida (main/master/develop/staging/...). `suggest-only`: mostra o comando pronto pra copiar. `off`: não menciona git. |
 
-> `flowchart`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue`, `context`, `parallel`, `chunk_order`, `auto_commit` e `tests` não são perguntados no grill (o `mcp` é) — vêm com o padrão e você edita no `.sdd/config.yaml` quando quiser (ou usa `lp:parallel`). `lp:new`/`lp:bug-fix` também sugerem uma branch dedicada no início (aceitar/criar manual/continuar na atual). O bloco `subagents` nem é escrito no config — só existe se você ligar (`/lp-settings "roda o escriba no haiku"`).
+> `flowchart`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue`, `context`, `parallel`, `chunk_order`, `auto_commit` e `tests` não são perguntados no grill (o `mcp` é) — vêm com o padrão e você edita no `.sdd/config.yaml` quando quiser (ou usa `lp:parallel`). `lp:new-feature`/`lp:bug-fix` também sugerem uma branch dedicada no início (aceitar/criar manual/continuar na atual). O bloco `subagents` nem é escrito no config — só existe se você ligar (`/lp-settings "roda o escriba no haiku"`).
 
 ### Configuração global (`~/.sdd/config.yaml`)
 
