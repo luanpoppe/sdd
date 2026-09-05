@@ -11,6 +11,8 @@ Não é em `~/.claude/skills/lp-*` de propósito, por duas razões:
 1. O installer (`bin/install.js`) **apaga tudo que começa com `lp-`** em `~/.claude/skills/` antes de recopiar, e deleta `~/.cursor/lp-helpers` inteiro. Config guardado ali sumiria a cada `lp:auto-update`.
 2. O plugin roda em harnesses diferentes (Claude Code, Cursor, Codex) e o installer escreve em pastas diferentes conforme detecta. `~/.sdd/` é neutro: sobrevive a trocar de ferramenta e serve os três.
 
+Pelos mesmos dois motivos, `~/.sdd/` também abriga o banco do MCP (`sdd.db`) e a **memória global** (`memory.md`) — as lições sobre o fluxo `lp:*` que valem em qualquer repositório. Ver `./memory-guide.md`. Este guia trata só do `config.yaml`.
+
 ## O que pode ir no global: tudo
 
 O global aceita **exatamente o mesmo esquema** do `.sdd/config.yaml` do projeto — não é um subconjunto. Qualquer campo configurável num projeto é configurável globalmente:

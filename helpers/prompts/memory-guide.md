@@ -2,10 +2,48 @@
 
 Mecanismo para o agente lembrar preferências e decisões recorrentes do usuário ao longo das mudanças.
 
-## Localização
+## Duas memórias, escopos diferentes
 
-- Padrão: `.sdd/memory.md` (arquivo único).
-- Se exceder ~150 linhas: dividir em `.sdd/memory/<tema>.md` + `.sdd/memory-map.md` (índice com 1 linha por arquivo). O `memory-map.md` é o que sempre carrega — os arquivos específicos só são lidos quando o tema é relevante.
+| Arquivo | Guarda | Versionado |
+|---|---|---|
+| `.sdd/memory.md` (do projeto) | preferências e decisões **deste repositório** | sim, o time herda |
+| `~/.sdd/memory.md` (global) | lições sobre **o fluxo `lp:*` e sobre como você trabalha**, que valem em qualquer projeto | não, é sua |
+
+**O teste de escopo**: a lição continuaria verdadeira num repositório completamente diferente?
+Sim → global. Não, depende deste código, deste time, desta stack → projeto.
+
+Na prática, vai para o global quase tudo que descreve **falha ou acerto do agente**: subagente
+que reportou build limpo sem compilar, escriba que gravou no arquivo errado, chunk emendado com
+outro no mesmo turno, briefing de subagente com lista de arquivos incompleta. Nada disso é sobre
+o repositório onde aconteceu.
+
+O global é lido junto com o do projeto, nas mesmas skills que já carregam memória
+(`lp:new-feature`, `lp:continue`, `lp:bug-fix`), e segue o mesmo formato, o mesmo teto por
+entrada e a mesma regra de divisão. Ele mora em `~/.sdd/` pelo mesmo motivo do
+`~/.sdd/config.yaml`: o instalador não apaga nada ali (ver `./global-config-guide.md`).
+
+### A terceira recorrência é sinal de defeito do plugin
+
+Se a mesma lição do global já foi registrada e volta a acontecer pela **terceira** vez, o
+problema provavelmente não é seu nem do projeto: é um guia do SDD que não está claro o
+bastante. Diga isso no plano de revisão do turno, em uma linha, nomeando o guia suspeito:
+
+```
+Memória global: esta lição ("subagente reporta build que não rodou") reapareceu pela 3ª vez
+— provavelmente falta uma regra em subagents-guide.md, não é caso de memória.
+```
+
+Não abra arquivo, não crie tarefa, não altere o plugin por conta própria. Só avise.
+
+## Localização e divisão
+
+- Padrão: arquivo único (`.sdd/memory.md`, `~/.sdd/memory.md`).
+- Divide em `<pasta>/memory/<tema>.md` + `memory-map.md` (índice de 1 linha por arquivo) quando passar de **25 entradas OU de 8 KB**, o que vier primeiro. O `memory-map.md` é o que sempre carrega; os arquivos de tema só quando o tema casa com a mudança.
+
+Os dois limites existem porque medem coisas diferentes, e o segundo é o que costuma estourar
+primeiro: memória vira relato de incidente muito antes de virar lista longa. Um arquivo com 60
+entradas curtas é saudável; um com 15 entradas de 2 KB cada custa 4.000 tokens em **toda**
+invocação e não cabe na cabeça de ninguém.
 
 ## Estrutura de `memory.md`
 
@@ -40,6 +78,34 @@ Mecanismo para o agente lembrar preferências e decisões recorrentes do usuári
 
 Teste rápido antes de gravar: *"Em outra feature/módulo deste projeto, essa entrada me ajudaria?"* Se a resposta é "só ajuda nesse módulo X" → você escreveu específico demais; generalize.
 
+### Teto duro — é o que faz a regra pegar
+
+O princípio cabe em **uma linha de até ~200 caracteres**. Cada sub-campo (`Quando`, `Por quê`,
+`Exemplo`) cabe em **uma linha**. A entrada inteira, com todos os campos, não passa de 5 linhas.
+
+O teto não é estética: é o detector. Princípio de verdade é curto porque não carrega o caso.
+Se você não conseguiu caber, o que está escrevendo é **relato do incidente**, não regra —
+e o caminho não é cortar palavras, é extrair a regra e mandar o caso para o `Exemplo`.
+
+O `Exemplo` cita o caso em uma linha: o quê aconteceu e onde. Ele não reconstitui a história,
+não lista o que foi corrigido e não explica como não repetir — isso tudo já está no princípio.
+Um `Exemplo` que precisa de duas linhas é sinal de que ele está fazendo o trabalho do princípio.
+
+```markdown
+❌ Relato (não salvar assim)
+- **Briefing de subagente: a lista de arquivos permitidos precisa cobrir o desenho pedido** —
+  vale em qualquer modo, não só no paralelo. Aconteceu duas vezes: no chunk do cruzamento de
+  tenant (F7.C5 de banco-julgados-upload), onde a lista tinha 2 arquivos mas o desenho exigia
+  alterar a porta e o serviço; e de novo no C3 de fix-precedentes, onde [...]
+
+✅ Princípio + exemplo
+- Briefing de subagente lista todos os arquivos que o desenho exige tocar, não só os óbvios.
+  - **Quando**: qualquer delegação de código, sequencial ou paralela
+  - **Por quê**: subagente não pede permissão — ele entrega incompleto
+  - **Exemplo**: F7.C5 de `banco-julgados-upload`, lista com 2 de 4 arquivos necessários
+  - **Registrado em**: 2026-09-05
+```
+
 ### Como generalizar
 
 1. **Identifique o princípio** por trás do que o usuário falou. Pergunte a si mesmo "qual é a regra geral aplicada aqui?".
@@ -59,7 +125,7 @@ Teste rápido antes de gravar: *"Em outra feature/módulo deste projeto, essa en
 
 ### Em qualquer fase
 
-- **Carregar a memória** (ou o `memory-map.md` se existir) ANTES de qualquer grill ou geração de artefato.
+- **Carregar as duas memórias** — a do projeto e a global `~/.sdd/memory.md` (ou o `memory-map.md` de cada uma, se existir) — ANTES de qualquer grill ou geração de artefato. Global ausente é o caso normal no começo: siga em silêncio, não crie o arquivo só para ele existir.
 - Se relevante, citar inline: *"Vi na memória que você prefere X — vou seguir."* (Estilo) OU *"Vi na memória que neste projeto se usa Y — confirma para esta mudança?"* (Stack/Domínio).
 
 ### Em fase de planejamento (`lp:new-feature`, `awaiting-feature-spec`)
@@ -94,15 +160,18 @@ Se sim a qualquer um → há entrada potencial.
 
 ### Pipeline (executar sozinho)
 
-1. **Generalize** seguindo a "Regra de generalização" acima. Aplique o teste reutilização: se a entrada como está só serve para o módulo/feature atual, reescreva como princípio + Exemplo. Se não der pra generalizar, NÃO salve.
-2. **Classifique**: Estilo/Processo (como trabalhar) ou Stack/Domínio (o que usar)?
-3. **Verifique duplicação**: já existe entrada parecida? Se sim → **atualize** a existente (refina texto/contexto, adiciona novo exemplo, ajusta data) em vez de criar nova.
-4. **Grave direto** em `.sdd/memory.md` (ou no arquivo de tema correto se já houver `memory-map.md`). Append na seção certa, ordenada por data desc.
-4. **Informe no plano de revisão** do turno:
+1. **Generalize** seguindo a "Regra de generalização" acima. Aplique o teste de reuso e o **teto duro**: princípio em uma linha de até ~200 caracteres, caso concreto só no `Exemplo`. Se não der pra generalizar, NÃO salve.
+2. **Escolha o arquivo**: a lição vale em qualquer repositório → `~/.sdd/memory.md`. Depende deste código, time ou stack → `.sdd/memory.md` do projeto.
+3. **Classifique**: Estilo/Processo (como trabalhar) ou Stack/Domínio (o que usar)?
+4. **Verifique duplicação**: já existe entrada parecida? Se sim → **atualize** a existente (refina texto/contexto, adiciona novo exemplo, ajusta data) em vez de criar nova. No global, entrada que se repete pela 3ª vez leva também a linha de "provável defeito do plugin" (ver acima).
+5. **Grave direto**, sem pedir confirmação. Append na seção certa, ordenada por data desc.
+6. **Mostre o TEXTO da entrada no plano de revisão** — não só um resumo dela. Você gravou sem perguntar; o mínimo é o usuário conseguir vetar lendo o que ficou escrito, sem abrir o arquivo:
    ```
-   Memória: +1 em Estilo/Processo — "<resumo>"
-   (ou: atualizei entrada existente "<resumo>")
+   Memória (projeto): +1 em Estilo/Processo
+   - Briefing de subagente lista todos os arquivos que o desenho exige tocar, não só os óbvios.
+     Quando: qualquer delegação de código · Exemplo: F7.C5 de `banco-julgados-upload`
    ```
+   Entrada atualizada em vez de criada: mostre o texto novo e diga o que mudou nele.
 
 ### Exceções — só estes casos pedem confirmação
 
@@ -115,7 +184,7 @@ Em todos os outros casos: grave e informe. Não interrompa o fluxo do usuário p
 
 ## Auto-split (autônomo)
 
-Quando `memory.md` passar de ~150 linhas, **divida sozinho** — sem perguntar:
+Quando o arquivo passar de **25 entradas ou 8 KB**, **divida sozinho** — sem perguntar. Vale para o do projeto e para o global; os caminhos abaixo usam `.sdd/` do projeto, no global troque por `~/.sdd/`:
 
 1. Crie `.sdd/memory/` com arquivos por tema. Agrupe semanticamente (não copie só os H2/H3 cegamente):
    - `estilo.md` — itens de Estilo/Processo.
@@ -123,7 +192,7 @@ Quando `memory.md` passar de ~150 linhas, **divida sozinho** — sem perguntar:
    - `dominio-<X>.md` — quando houver vários itens sobre um domínio específico (ex: `dominio-auth.md`, `dominio-pagamentos.md`).
 2. Crie `.sdd/memory-map.md` com 1 linha por arquivo: `- [tema](memory/<tema>.md) — <1 frase do que está lá>`.
 3. Renomeie o antigo `memory.md` para `memory.md.archived` (não deletar).
-4. Informe no plano de revisão do turno: *"Memória dividida em N arquivos (`.sdd/memory/`) + índice. Acima de 150 linhas — divisão automática."*
+4. Informe no plano de revisão do turno: *"Memória dividida em N arquivos (`.sdd/memory/`) + índice — passou de <25 entradas | 8 KB>."*
 
 A partir daí: `memory-map.md` sempre carrega; arquivos específicos só quando o tema casa com a mudança/feature atual.
 
@@ -131,8 +200,11 @@ A partir daí: `memory-map.md` sempre carrega; arquivos específicos só quando 
 
 ## Anti-padrões
 
-- ❌ Salvar parágrafos longos. Cada entrada cabe em ~3 linhas.
+- ❌ **Relato de incidente no lugar do princípio.** É o mais comum e o que mais estraga a memória: a regra fica na primeira linha e o resto conta a história. Extraia a regra, mande o caso para o `Exemplo`.
+- ❌ **Duas ou três ocorrências empilhadas na mesma entrada** ("aconteceu no F7.C5 e de novo no C3…"). Uma entrada guarda um exemplo; recorrência se registra atualizando a data, não acumulando narrativa.
+- ❌ **Fato de configuração disfarçado de preferência** (porta, variável de ambiente, versão de pacote, caminho de arquivo). Isso vive no `.sdd/config.yaml`, no `.env` ou no `.sdd/context/` — e envelhece sozinho lá.
 - ❌ Salvar fatos do código (use `git`/grep). Memória é para PREFERÊNCIAS e DECISÕES recorrentes.
+- ❌ **Lição sobre o fluxo `lp:*` gravada na memória do projeto.** Ela não é sobre aquele repositório e vai ficar invisível em todos os outros — vai no global.
 - ❌ Usar Stack/Domínio para pular grill em planejamento.
 - ❌ Duplicar entradas. Se já existe, atualize.
-- ❌ Salvar sem confirmar com o usuário.
+- ❌ **Gravar sem mostrar o texto no plano de revisão.** Gravar sozinho é o padrão; esconder o que foi gravado, não.

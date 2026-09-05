@@ -11,7 +11,7 @@ Você está iniciando um **bug-fix** no SDD `lp:*` — o fluxo enxuto para corri
 
 - Se `.sdd/config.yaml` não existir → "Rode `/lp-init` primeiro." Pare.
 - Leia `.sdd/config.yaml` (`format`, `lang`, `chunk_size`, `implementer`, `parallel`, `flowchart`).
-- **Carregue a memória**: `.sdd/memory.md` (ou `memory-map.md` + temas relevantes). Siga `../../helpers/prompts/memory-guide.md`. Itens de Estilo/Processo aplicam direto; Stack/Domínio só viram confirmação rápida.
+- **Carregue a memória**: a global `~/.sdd/memory.md` (lições sobre o fluxo `lp:*`; ausente é normal) e a do projeto `.sdd/memory.md` (ou `memory-map.md` + temas relevantes). Siga `../../helpers/prompts/memory-guide.md`. Itens de Estilo/Processo aplicam direto; Stack/Domínio só viram confirmação rápida.
 - **Carregue o contexto** (se `context: true`/ausente): leia `.sdd/context/index.md` e o arquivo da área provável do bug — ajuda a achar a causa raiz mais rápido. Siga `../../helpers/prompts/context-guide.md`.
 - Defina o **id** (kebab-case curto, ex: `fix-login-500`). Se o usuário passou só a descrição do bug, proponha um id e confirme. Valide unicidade contra `.sdd/changes/` e `.sdd/archive/`.
 - **Sugestão de branch**: com o id definido, siga `../../helpers/prompts/git-guide.md` (seção 1) — sugira `fix/<id>`, pergunte criar/manual/continuar. Pule em silêncio se não for repo git.

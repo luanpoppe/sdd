@@ -76,7 +76,7 @@ A **ordem da lista** define a ordem de execução. Não embaralhar.
     explain/                    # on-demand (lp:explain)
 ```
 
-> A memória vive no nível do **projeto** (`.sdd/memory.md`), não dentro de cada mudança. Persiste entre mudanças. Veja `./memory-guide.md`.
+> A memória vive no nível do **projeto** (`.sdd/memory.md`), não dentro de cada mudança, e tem uma companheira **global** (`~/.sdd/memory.md`) para o que vale em qualquer repositório — tipicamente lição sobre o próprio fluxo `lp:*`. As duas carregam juntas e persistem entre mudanças. Veja `./memory-guide.md`.
 
 > **Contexto** (`.sdd/context/`, se `context: true`/ausente): base de conhecimento por funcionalidade, no nível do projeto. Todo fluxo lê o `index.md` no início; features/bug-fix/review concluídos gravam/atualizam o contexto da área. Ver `./context-guide.md`. Não confundir com memória (preferências) nem com specs (detalhe de uma mudança).
 

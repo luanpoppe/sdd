@@ -1,6 +1,6 @@
 ---
 name: memory
-description: Gerencia a memória do SDD `lp:*` (`.sdd/memory.md` ou `.sdd/memory/` + `memory-map.md`). Sem argumentos, pergunta ao usuário o que quer fazer (revisar, validar, editar, dividir, mesclar). Com argumentos, segue a instrução do usuário. Use quando o usuário pedir "lp:memory", "ver minhas memórias", "limpar memória", "editar memória", "dividir memória", ou similar.
+description: Gerencia a memória do SDD `lp:*` — a do projeto (`.sdd/memory.md`) e a global (`~/.sdd/memory.md`), inclusive quando divididas em `memory/` + `memory-map.md`. Sem argumentos, pergunta ao usuário o que quer fazer (revisar, validar, auditar, editar, dividir, mesclar). Com argumentos, segue a instrução do usuário. Use quando o usuário pedir "lp:memory", "ver minhas memórias", "limpar memória", "auditar memória", "as memórias estão muito específicas", "editar memória", "dividir memória", ou similar.
 ---
 
 Você está gerenciando a memória do SDD. Siga `../../helpers/prompts/memory-guide.md` para regras de estrutura e classificação.
@@ -8,10 +8,11 @@ Você está gerenciando a memória do SDD. Siga `../../helpers/prompts/memory-gu
 ## 1. Pré-checagem
 
 - Se `.sdd/config.yaml` não existir → "SDD não inicializado. Rode `/lp-init` primeiro." Pare.
-- Carregue a memória:
-  - Se existir `.sdd/memory.md` → leia inteiro.
-  - Se existir `.sdd/memory-map.md` → leia o índice e todos os arquivos de tema referenciados.
-  - Se nenhum existir → diga "Sem memória registrada ainda. Ela é criada automaticamente pelo `/lp-continue` quando você corrige ou indica preferências." e pare.
+- Carregue as duas memórias — a do projeto (`.sdd/`) e a global (`~/.sdd/`). Em cada uma:
+  - Se existir `memory.md` → leia inteiro.
+  - Se existir `memory-map.md` → leia o índice e todos os arquivos de tema referenciados.
+- Se nenhuma das duas existir → diga "Sem memória registrada ainda. Ela é criada automaticamente pelo `/lp-continue` quando você corrige ou indica preferências." e pare.
+- **Todo modo abaixo pergunta em qual das duas atuar** quando as duas existem e o usuário não disse. Com só uma presente, use-a sem perguntar.
 
 ## 2. Decidir o modo
 
@@ -21,9 +22,10 @@ Pergunte ao usuário o que ele quer fazer. Use `AskUserQuestion` com opções:
 
 1. **Revisar** — mostra resumo estruturado da memória atual (contagens, últimas entradas, talvez duplicatas suspeitas).
 2. **Validar / limpar** — busca duplicatas, entradas vagas ou potencialmente obsoletas, e propõe ações.
+2-bis. **Auditar** — mede a memória contra as regras do guia (teto por entrada, generalização, escopo, tamanho) e propõe a reescrita do que estiver fora. É o modo para memória antiga, escrita antes das regras atuais.
 3. **Editar** — pergunta qual entrada editar e guia a alteração.
 4. **Remover** — pergunta qual entrada remover e confirma.
-5. **Dividir** (split) — força criação de `.sdd/memory/<tema>.md` + `memory-map.md` mesmo antes das 150 linhas.
+5. **Dividir** (split) — força criação de `.sdd/memory/<tema>.md` + `memory-map.md` mesmo antes de bater o teto.
 6. **Mesclar** (merge) — junta de volta `.sdd/memory/*` em um único `.sdd/memory.md` (só faz sentido se já estava dividido).
 
 Após resposta, execute o modo correspondente (ver seção 3).
@@ -33,6 +35,7 @@ Após resposta, execute o modo correspondente (ver seção 3).
 Interprete a instrução em linguagem natural. Exemplos:
 - "revisar" / "mostrar" / "listar" → modo Revisar.
 - "limpar" / "validar" / "tem duplicata?" → modo Validar/limpar.
+- "auditar" / "revisa se está no padrão" / "está muito específica" / "reescreve as memórias" → modo Auditar.
 - "edita a entrada sobre logs" / "muda X" → modo Editar (localize a entrada referenciada).
 - "remove a entrada sobre Y" / "apaga X" → modo Remover.
 - "dividir" / "split" → modo Dividir.
@@ -57,7 +60,7 @@ Total: X entradas em Estilo/Processo · Y entradas em Stack/Domínio
 - ...
 
 Possíveis duplicatas detectadas: <N> (rode /lp-memory limpar para revisar)
-Tamanho atual: <linhas>/150 (auto-split em <150)
+Tamanho atual: <N> entradas / <K> KB (auto-split em 25 entradas ou 8 KB)
 ```
 
 NÃO mostre a memória inteira. Quem quer ver o conteúdo bruto abre o arquivo.
@@ -69,6 +72,28 @@ NÃO mostre a memória inteira. Quem quer ver o conteúdo bruto abre o arquivo.
 3. **Possivelmente obsoletas**: entradas com data > 6 meses E sem reforço posterior (não citadas em mudanças recentes). Proponha revisar — não deletar automaticamente.
 
 Para cada proposta, peça `OK` antes de aplicar. Aplique em lote ao final.
+
+### Auditar
+
+Confere a memória contra `../../helpers/prompts/memory-guide.md` e propõe correções. Quatro checagens, nesta ordem:
+
+1. **Escopo errado** — entrada sobre o fluxo `lp:*` (subagente, escriba, chunk, plano de revisão) morando na memória do projeto, ou entrada sobre este código morando na global. Proponha **mover**.
+2. **Relato em vez de princípio** — princípio acima de ~200 caracteres, entrada acima de 5 linhas, ou duas ocorrências empilhadas no mesmo item. Proponha a **reescrita** já pronta: princípio curto + `Exemplo` de uma linha. Nunca jogue conteúdo fora sem mostrar o texto novo lado a lado com o antigo.
+3. **Não é memória** — fato de configuração (porta, env var, versão de pacote, caminho), fato do código, ou decisão de uma única feature. Proponha **remover**, dizendo para onde aquilo pertence (`.sdd/config.yaml`, `.env`, `.sdd/context/`).
+4. **Tamanho** — arquivo acima de 25 entradas ou 8 KB. Diga o número atual e proponha dividir.
+
+Imprima o resultado agrupado por checagem, com contagem no topo:
+
+```
+Auditoria de .sdd/memory.md — 14 entradas, 31,5 KB (teto: 25 entradas / 8 KB)
+
+Escopo errado (5): entradas sobre o fluxo lp:* que deveriam ir para ~/.sdd/memory.md
+  1. "Verificar aderência de subagente à spec aprovada" → mover
+  ...
+Relato em vez de princípio (7): ...
+```
+
+**Aplique só depois do `OK` do usuário**, e em lote no fim. Ele pode aprovar por grupo ou item a item. Reescrita muda a forma, **nunca** a regra: se você acha que a regra em si está errada, diga isso em vez de reescrever calado.
 
 ### Editar
 
