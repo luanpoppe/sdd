@@ -36,7 +36,9 @@
       <summary><h2>Requirements</h2></summary>
       <!--
         Espelha o spec.md, que mistura dois formatos na mesma lista numerada:
-        - BDD (há ator externo): <h3> título + bloco Dado/Quando/Então (Given/When/Then).
+        - BDD (há ator externo): <h3> título + bloco Dado/Quando/Então (Given/When/Then),
+          com uma afirmação por <li> — as seguintes começam com "E" ("And"), nunca
+          empilhadas com ponto e vírgula na mesma linha.
         - Entrada/Saída (comportamento interno): <h3> título + Entrada/Saída/Erro, com o
           valor literal em <code>. Payload longo em <pre><code>.
         A numeração é contínua entre os dois — não separe em duas listas.

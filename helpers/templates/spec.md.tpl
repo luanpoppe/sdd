@@ -31,8 +31,28 @@ Numeração CONTÍNUA entre os dois formatos — `REQ-1` BDD e `REQ-2` técnico 
 NÃO repita contexto do plan.md — só o comportamento esperado.
 
 PALAVRAS-CHAVE POR IDIOMA (use o `lang` do .sdd/config.yaml):
-- pt-BR → "Dado que" / "Quando" / "Então"   ·   "Entrada" / "Saída" / "Erro"
-- en    → "Given" / "When" / "Then"         ·   "Input" / "Output" / "Error"
+- pt-BR → "Dado que" / "Quando" / "Então" / "E"    ·   "Entrada" / "Saída" / "Erro"
+- en    → "Given" / "When" / "Then" / "And"        ·   "Input" / "Output" / "Error"
+
+UMA AFIRMAÇÃO POR LINHA. Nunca empilhe várias com ponto e vírgula dentro do mesmo
+"Então" — a primeira vai em "Então" e cada uma das seguintes numa linha própria
+começando com "E". Vale igual para "Dado que" e para "Quando".
+
+O motivo é prático: cada linha vira um caso de teste e um ponto de conferência na
+revisão. Empilhadas com ";", elas passam a ser uma parede que ninguém consegue
+verificar item a item — e nem o autor lembra quantas asserções prometeu.
+
+❌ - **Então** faz search TMDB, pega o 1º hit, resolve details na ordem Redis → banco
+     (se updatedAt < 30 dias) → TMDB; devolve a ficha; se veio do TMDB, grava só Redis
+
+✅ - **Então** faz search na TMDB e usa o 1º hit
+   - **E** resolve os details na ordem Redis → banco → TMDB
+   - **E** só consulta a TMDB quando o banco está com mais de 30 dias
+   - **E** devolve a ficha completa
+   - **E** grava só no Redis quando o dado veio da TMDB
+
+Linha ficando longa demais mesmo sozinha é sinal de que ela ainda tem duas
+afirmações dentro — quebre de novo.
 -->
 
 ### REQ-1: {{req_1_title}}
@@ -42,6 +62,7 @@ PALAVRAS-CHAVE POR IDIOMA (use o `lang` do .sdd/config.yaml):
 - **Dado que** {{given}}        <!-- ou "Given" se lang == en -->
 - **Quando** {{when}}            <!-- ou "When" -->
 - **Então** {{then}}             <!-- ou "Then" -->
+- **E** {{then_2}}               <!-- ou "And". Uma linha por afirmação; omita se houver só uma -->
 
 ### REQ-2: {{req_2_title}}
 
@@ -59,6 +80,7 @@ quando o requisito não tem caso de erro.
 
 - **Entrada** `"123.456.789-09"`
 - **Saída** `true`
+- **E** normaliza a máscara antes de validar   <!-- "E" também aqui, quando a saída tem mais de uma afirmação -->
 - **Erro** entrada com dígito verificador inválido → `false` (não lança)
 
 ## Edge cases
