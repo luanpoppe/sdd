@@ -33,10 +33,12 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
 3. **Grill profundo SÓ desta feature**, em batches de até 4 perguntas independentes via `AskUserQuestion` (dependentes em batches posteriores — ver `../../helpers/prompts/grill-snippet.md`). Cubra (apenas o que não dá pra inferir do código):
    - Cenários BDD principais — pelo menos 1, geralmente 2-4. **Palavras-chave conforme `lang` do `.sdd/config.yaml`**: `pt-BR` → "Dado que / Quando / Então"; `en` → "Given / When / Then".
    - Edge cases conhecidos.
-   - Contratos (tipos, schemas, eventos, endpoints) — referencie arquivos do projeto quando possível.
    - Dependências de outras features (já feitas, futuras, externas).
+
+   **Não pergunte sobre contratos.** Tipo, schema, endpoint e evento aparecem sozinhos nos cenários quando importam (*"Então retorna 422 com a lista de campos inválidos"*), e o que já existe no repositório você descobre lendo o código, não perguntando.
 4. **Pare quando** todas as ambiguidades dessa feature estão resolvidas e nada foi "tanto faz" sem follow-up.
 5. Gere `specs/<slug>/spec.md` usando `../../helpers/templates/spec.md.tpl`. **Alvo: ≤ 100 linhas**.
+5-quater. **A seção "Contratos expostos" é condicional** — releia os cenários que você acabou de escrever e decida sozinho, sem perguntar. Cenário citando status code, payload, tópico/evento, coluna de tabela ou assinatura pública de biblioteca = borda externa, a seção entra. Nenhum citando = feature interna, a seção **não é gerada** (não fica vazia, não vira "n/a", não entra na ordem de revisão do passo 7 nem no `spec.html`). Quando entrar: contrato que já existe no repositório vai por **referência** (`caminho:símbolo`), nunca copiado; só contrato novo, ainda sem arquivo, pode vir escrito — e é provisório até o passo `g-ter`.
 5-bis. **Respeite o `format` do `.sdd/config.yaml`**: se `format` ∈ {html, both}, gere também `specs/<slug>/spec.html` usando `../../helpers/templates/spec.html.tpl` (espelha o `.md`). Garanta `.sdd/assets/styles.css` (copie de `../../helpers/templates/styles.css` se faltar).
 5-ter. **Ao anunciar a spec, imprima o delta**: o que está no `spec.md` e ainda não foi dito nesta conversa — cenário que você acrescentou, contrato que você assumiu, borda que você decidiu tratar — cada item com o porquê. É delta, não resumo do grill. Nada a declarar é resposta válida. Ver `../../helpers/prompts/state-machine.md`, seção "Ao gerar um artefato".
 6. Atualize `.sdd.yaml`: `state: awaiting-feature-tasks`, `updated`. Com **`mcp: on`**, chame `sdd_sync_change` mandando em `features[].scenarios[]` os cenários BDD e edge cases que você acabou de escrever, cada um com uma `key` curta e estável (`CT-01`, `CT-02`…). É o que permite depois amarrar cada chunk ao cenário que ele implementa — e, mais útil, ver qual cenário ficou sem chunk nenhum. Com `mcp_record.scenarios: false`, pule. Ver `../../helpers/prompts/mcp-guide.md`.
@@ -50,7 +52,7 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
    1. Resumo (entendimento geral)
    2. Requirements (cenários BDD — o coração da spec)
    3. Edge cases
-   4. Contratos
+   4. Contratos expostos     <- só se a seção existe; se não foi gerada, a lista acaba no 3
 
    Quando aprovar, rode /lp-continue para gerar tasks.md desta feature.
    ```
@@ -131,7 +133,7 @@ Curta (4-6 linhas, não é uma spec) — reaproveite o que o `tasks.md` já tem,
 
 > Em ambos os modos, o principal **decide** a/d/e/f/f-bis/g/h (o subagente implementer só codifica o chunk e reporta). Execute d→e→f→f-bis→g→h **nesta ordem**, e só então "Pare aqui".
 >
-> **Atenção (scribe):** "ser do principal" = o principal DECIDE o quê escrever, **não** que ele dá `Write`/`Edit` inline. Com `scribe: subagent` (incl. campo ausente), as **escritas** de d) (`tasks.md`, `.sdd.yaml`), e) (`flow.html`) e g-bis) (`in_review`) + a de memória vão **todas juntas numa única chamada do escriba**, montada ao final (antes de imprimir o plano g). Não escreva nenhum desses inline. Ver a nota "Escrita de artefatos (scribe)" no topo e `../../helpers/prompts/scribe-guide.md`.
+> **Atenção (scribe):** "ser do principal" = o principal DECIDE o quê escrever, **não** que ele dá `Write`/`Edit` inline. Com `scribe: subagent` (incl. campo ausente), as **escritas** de d) (`tasks.md`, `.sdd.yaml`), e) (`flow.html`), g-bis) (`in_review`) e g-ter) (troca de contrato provisório na `spec.md`, quando houver) + a de memória vão **todas juntas numa única chamada do escriba**, montada ao final (antes de imprimir o plano g). Não escreva nenhum desses inline. Ver a nota "Escrita de artefatos (scribe)" no topo e `../../helpers/prompts/scribe-guide.md`.
 
 **d) Marcar + registrar** — com **`tasks_storage: mcp`** não há checkbox em arquivo para trocar; a marcação vai como `mark: "~"` no `sdd_record_chunk` do passo g-bis.
 
@@ -229,6 +231,10 @@ Assim, mesmo que a conversa reinicie, o próximo turno sabe qual chunk está em 
 Com **`mcp: on`**, registre o chunk no banco **no mesmo passo**, com `sdd_record_chunk`: um item de `files` por arquivo desta lista, na mesma ordem, com `does`/`connects`/`review_note` recebendo exatamente as linhas `Faz`/`Conecta`/`Revisar` que você acabou de imprimir (`is_test: true` nos arquivos vindos do f-bis), mais `summary`/`reasoning` do chunk e o `commit` sugerido. Este é o ponto certo porque é aqui que você tem tudo junto. Se a spec tem cenários registrados, mande também `scenario_keys` com os que este chunk implementa.
 
 Mande também, **só para o banco e sem imprimir no chat**: o `detail` (explicação longa de cada arquivo que merece: mecanismo, decisão descartada, armadilha), os `highlights` (0-3 trechos de código decisivos por arquivo), os `symbols` (os métodos que carregam comportamento, cada um com assinatura e **exemplos de entrada e saída com dado plausível do domínio, incluindo ao menos um caso de borda**) e — **só quando `auto_commit` não for `full`** — o `diff` unificado dos arquivos modificados. Com `auto_commit: full` o chunk vira commit e o git já guarda esse diff inteiro; regravá-lo é pagar duas vezes pelo mesmo conteúdo. O resto é o que deixa o plano de revisão curto sem perder profundidade — quem abrir o histórico depois tem o arquivo explicado. Ver `../../helpers/prompts/mcp-guide.md`.
+
+**g-ter) Contrato provisório que virou arquivo** — só quando a spec da `current_feature` tem a seção **"Contratos expostos"** com um contrato **escrito** (não referenciado), e um arquivo deste chunk passou a implementá-lo. Nesse caso, troque o bloco escrito pela referência ao arquivo real (`caminho:símbolo`), em uma linha. Nos demais chunks, pule em silêncio.
+
+É a única edição que a spec recebe depois de aprovada, e ela é sempre na mesma direção: cópia vira ponteiro. Se o que foi implementado **divergiu** do que estava escrito, não corrija a spec por conta própria — diga a divergência na linha `Revisar` daquele arquivo (passo g) e deixe a decisão com o usuário. Com `format` ∈ {html, both}, o `spec.html` acompanha. **Entra no pacote do escriba** deste passo.
 
 **h) Context watch** — por último, antes de fechar o turno, siga `../../helpers/prompts/context-watch.md` usando `context_watch` do `.sdd/config.yaml`. Heurística: na faixa de 5-10 chunks implementados nesta MESMA conversa, comece a observar. Se julgar pesada → siga o protocolo (suggest/auto/off).
 

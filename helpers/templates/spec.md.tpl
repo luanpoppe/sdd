@@ -40,11 +40,29 @@ PALAVRAS-CHAVE POR IDIOMA (use o `lang` do .sdd/config.yaml):
 
 - {{edge_case_1}}
 
-## Contratos (se aplicável)
+## Contratos expostos
 
 <!--
-Schemas, tipos, eventos. Pode referenciar arquivos do repo em vez de duplicar.
-Ex: "Body validado por `src/.../dto.ts:CreateXDto`".
+SEÇÃO CONDICIONAL — só existe quando esta feature cruza uma borda externa.
+
+Como decidir, sem perguntar ao usuário: releia os cenários BDD que você acabou de
+escrever. Se algum deles cita status code, payload, tópico/evento, coluna de tabela
+ou assinatura pública de biblioteca, há borda externa e a seção entra. Se nenhum
+cita, a feature é interna: APAGUE esta seção inteira do arquivo — não deixe vazia,
+não escreva "n/a", e não a inclua na ordem de revisão.
+
+"Exposto" é o que sai da feature para fora dela. Tipo interno, DTO de uso privado e
+helper de domínio ficam fora, mesmo que a feature os crie.
+
+CONTEÚDO — referência é a forma padrão, cópia é a exceção:
+- Contrato que JÁ existe no repositório → uma linha de referência, nunca o schema.
+  Ex: "Body validado por `src/users/dto/create-user.dto.ts:CreateUserDto`".
+- Contrato NOVO, sem arquivo a apontar ainda → pode vir escrito aqui, porque não há
+  referência possível. Ele é provisório: o chunk que criar o arquivo troca este bloco
+  pela referência (passo g-ter do lp:continue).
+
+Colar interface, JSON de exemplo ou schema de contrato que já tem arquivo é
+anti-padrão: duplica o que o código diz melhor, e envelhece sozinho.
 -->
 
 {{contracts}}

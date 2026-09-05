@@ -13,7 +13,8 @@
       <li><a href="#resumo">Resumo</a></li>
       <li><a href="#requirements">Requirements (BDD)</a></li>
       <li><a href="#edge-cases">Edge cases</a></li>
-      <li><a href="#contratos">Contratos</a></li>
+      <!-- A linha abaixo só entra se a seção "Contratos expostos" existir no spec.md. -->
+      <li><a href="#contratos-expostos">Contratos expostos</a></li>
     </ol>
   </aside>
 
@@ -41,9 +42,15 @@
       <ul><!-- <li> por caso --></ul>
     </details>
 
-    <details class="lp-sec" id="contratos" open>
-      <summary><h2>Contratos</h2></summary>
-      <!-- tipos, schemas, endpoints, eventos — em <pre><code> quando fizer sentido -->
+    <!--
+      Bloco CONDICIONAL: só gere se o spec.md desta feature tem a seção "Contratos
+      expostos". Feature sem borda externa não leva o bloco vazio — nem aqui, nem
+      no índice acima. Espelhe o .md: referência a arquivo em <code>, e <pre><code>
+      só no caso de contrato novo que ainda não tem arquivo para apontar.
+    -->
+    <details class="lp-sec" id="contratos-expostos" open>
+      <summary><h2>Contratos expostos</h2></summary>
+      <!-- endpoints, eventos, colunas, assinatura pública — por referência ao arquivo -->
     </details>
   </main>
 
