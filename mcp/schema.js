@@ -9,7 +9,7 @@
  * Sem essa distinção os dois se confundem em toda query.
  */
 
-const SCHEMA_VERSION = 8;
+const SCHEMA_VERSION = 9;
 
 const CREATE_TABLES = [
   `CREATE TABLE IF NOT EXISTS schema_meta (
@@ -76,6 +76,7 @@ const CREATE_TABLES = [
      planned_files  TEXT,
      depends_on     TEXT,
      review_order   TEXT,
+     component      TEXT,
      UNIQUE (change_pk, chunk_id)
    )`,
 

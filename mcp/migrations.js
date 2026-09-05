@@ -63,7 +63,10 @@ const MIGRATIONS = {
   // Idem: `review_findings` é tabela nova, criada pelo CREATE_TABLES nos dois casos.
   7: [],
   // Idem: `data_models` é tabela nova.
-  8: []
+  8: [],
+  // `component` é o rótulo curto do nó no fluxo ("Controller", "Repository"), e passou
+  // a existir com o modo `flow_storage: mcp`. Coluna nova em tabela antiga.
+  9: [`ALTER TABLE chunks ADD COLUMN component TEXT`]
 };
 
 module.exports = { MIGRATIONS };

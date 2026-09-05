@@ -5,8 +5,29 @@ Regras para gerar/atualizar `.sdd/changes/<id>/flow.html`: um diagrama **macro**
 ## Toggle
 
 - Só gere/atualize se `flowchart` no `.sdd/config.yaml` for `on` (default). Se `off`, **não faça nada** relativo ao diagrama.
+- Com `flowchart: on`, o campo `flow_storage` decide **onde** ele vive — ver a seção abaixo. O resto deste guia descreve o modo `file`.
 - O arquivo é **sempre HTML**, independente de `format` (igual `lp:explain`). Fica em `.sdd/changes/<id>/flow.html`.
 - Use o template `../templates/flow.html.tpl` (do ponto de vista das skills: `~/.claude/skills/lp-shared/templates/flow.html.tpl` ou o caminho equivalente do install). É autocontido — sem libs, offline.
+
+## Onde o fluxo vive: `flow_storage`
+
+| `flow_storage` | Onde | Quem desenha |
+|---|---|---|
+| `file` (padrão, ausente = `file`) | `.sdd/changes/<id>/flow.html` | o agente, seguindo este guia |
+| `mcp` | banco global (`chunks`) | o **SDD Viewer**, aba Fluxo |
+
+Com **`mcp`**, o `flow.html` **não é criado nem atualizado** — nem uma linha. O que era arquivo vira dois registros que o agente já faz de qualquer forma:
+
+1. **Ao gerar o `tasks.md`** de uma feature, semeie o esqueleto: `sdd_write_tasks` com **`mode: "plan"`**, um item por chunk com `chunk_id`, `title`, `files`, `depends_on` e o **`component`** (o rótulo curto do nó — regra em "Modelo de nós", abaixo). É isso que faz o fluxo mostrar o que **ainda não foi feito**.
+2. **No `g-bis`**, o `sdd_record_chunk` que você já chama passa a levar `component` também.
+
+`mode: "plan"` **nunca apaga** — chunk já implementado mantém relatório, achados e modelagem. Reexecutar depois de editar o `tasks.md` é seguro.
+
+O painel de detalhe não precisa de nada novo: ele é montado no Viewer a partir do `summary`, do `reasoning`, dos `highlights` e dos `symbols` que o `g-bis` já grava.
+
+> **`flow_storage: mcp` exige `mcp: on`.** Mesma regra do `tasks_storage`/`state_storage`: sem servidor, não há onde gravar. Se o MCP estiver desligado, trate como `file` e diga isso em uma linha.
+
+**Nada é migrado.** `flow.html` que já existe fica onde está, congelado — não apague, não converta, não atualize.
 
 ## Quando gerar / atualizar
 

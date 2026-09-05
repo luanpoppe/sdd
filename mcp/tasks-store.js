@@ -25,8 +25,8 @@ class TasksStore {
         db,
         `INSERT INTO chunks
            (change_pk, feature_pk, chunk_id, title, status, position,
-            planned_files, depends_on, review_order)
-         VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
+            planned_files, depends_on, review_order, component)
+         VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)`,
         [
           changePk,
           featurePk,
@@ -35,11 +35,53 @@ class TasksStore {
           index + 1,
           JSON.stringify(chunk.files ?? []),
           JSON.stringify(chunk.depends_on ?? []),
-          chunk.review_order ?? null
+          chunk.review_order ?? null,
+          chunk.component ?? null
         ]
       );
 
       TasksStore.insertChecks(db, inserted.lastInsertRowid, chunk);
+    });
+
+    return chunks.length;
+  }
+
+  /**
+   * Esqueleto do plano para o modo `flow_storage: mcp` com o `tasks.md` ainda em arquivo.
+   *
+   * Diferente do `replace`, este **nunca apaga**: o chunk que já foi implementado carrega
+   * relatório por arquivo, achados de review e modelagem pendurados por `ON DELETE
+   * CASCADE`, e um DELETE aqui levaria tudo junto. Só os campos de plano são atualizados;
+   * `status`, `summary` e `reasoning` de quem já rodou ficam intactos.
+   */
+  static plan(db, changePk, featurePk, chunks) {
+    chunks.forEach((chunk, index) => {
+      SddDb.run(
+        db,
+        `INSERT INTO chunks
+           (change_pk, feature_pk, chunk_id, title, status, position,
+            planned_files, depends_on, review_order, component)
+         VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)
+         ON CONFLICT (change_pk, chunk_id) DO UPDATE SET
+           feature_pk    = COALESCE(excluded.feature_pk, chunks.feature_pk),
+           title         = COALESCE(excluded.title, chunks.title),
+           position      = excluded.position,
+           planned_files = excluded.planned_files,
+           depends_on    = excluded.depends_on,
+           review_order  = COALESCE(excluded.review_order, chunks.review_order),
+           component     = COALESCE(excluded.component, chunks.component)`,
+        [
+          changePk,
+          featurePk,
+          chunk.chunk_id,
+          chunk.title ?? null,
+          index + 1,
+          JSON.stringify(chunk.files ?? []),
+          JSON.stringify(chunk.depends_on ?? []),
+          chunk.review_order ?? null,
+          chunk.component ?? null
+        ]
+      );
     });
 
     return chunks.length;
@@ -86,24 +128,30 @@ class TasksStore {
     let scope = '';
     let scopeParams = [];
 
-    if (featurePk === null) scope = 'AND feature_pk IS NULL';
+    if (featurePk === null) scope = 'AND c.feature_pk IS NULL';
     else if (featurePk !== undefined) {
-      scope = 'AND feature_pk = ?';
+      scope = 'AND c.feature_pk = ?';
       scopeParams = [featurePk];
     }
 
+    // O slug da feature entra na leitura porque a mesma consulta serve ao fluxo
+    // (`flow_storage: mcp`), onde os chunks saem agrupados por swimlane.
     const chunks = SddDb.all(
       db,
-      `SELECT id, chunk_id, title, status, position, planned_files, depends_on, review_order
-         FROM chunks
-        WHERE change_pk = ? ${scope}
-        ORDER BY position ASC, id ASC`,
+      `SELECT c.id, c.chunk_id, c.title, c.status, c.position, c.planned_files,
+              c.depends_on, c.review_order, c.component, f.slug AS feature
+         FROM chunks c
+         LEFT JOIN features f ON f.id = c.feature_pk
+        WHERE c.change_pk = ? ${scope}
+        ORDER BY c.position ASC, c.id ASC`,
       [changePk, ...scopeParams]
     );
 
     return chunks.map((chunk) => ({
       chunk_id: chunk.chunk_id,
+      feature: chunk.feature ?? null,
       title: chunk.title,
+      component: chunk.component ?? null,
       status: chunk.status,
       files: TasksStore.parseList(chunk.planned_files),
       depends_on: TasksStore.parseList(chunk.depends_on),

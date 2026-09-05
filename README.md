@@ -119,6 +119,18 @@ Explica um assunto e acumula a explicação num HTML por tema em **`~/.sdd/expla
 
 O estado mora no próprio HTML (`data-status`), então a fila funciona com o MCP desligado; ligado, ela também fica buscável e aparece no SDD Viewer.
 
+## Fluxo no banco, sem `flow.html`
+
+O diagrama macro é o maior artefato do SDD: entre **7 mil e 32 mil tokens** nos projetos reais medidos. Cada chunk fechado precisa abri-lo para achar as âncoras das edições pontuais.
+
+Com **`flow_storage: mcp`** ele deixa de existir como arquivo:
+
+- **Ao gerar o `tasks.md`**, o esqueleto do fluxo vai para o banco (`sdd_write_tasks` com `mode: "plan"`) — um nó por chunk, com o rótulo da camada (`Config`, `Controller`, `UseCase`). É o que faz o fluxo mostrar o que **ainda não foi feito**.
+- **No `g-bis`**, o `component` acompanha o registro do chunk que você já faz.
+- **O SDD Viewer desenha**, na aba Fluxo: swimlane por feature, nó por chunk com cor de status, clique abre o detalhe com o relatório por arquivo.
+
+`mode: "plan"` nunca apaga — chunk implementado mantém relatório, achados e modelagem, então re-semear depois de editar o `tasks.md` é seguro. Exige `mcp: on`, e `flow.html` que já existe fica intocado.
+
 ## `format: both` sem pagar duas vezes
 
 Com `format: html` ou `both`, o `.html` de `plan`, `spec`, `tasks`, `diagnosis` e `solutions` é gerado **por código** — `~/.sdd/render/html.js`, instalado junto do plugin, sem dependência nenhuma.
@@ -171,6 +183,7 @@ Com `mcp: on`, cada entidade fica gravada junto do chunk, com as decisões e o q
 | `tests` | `off` / `on` | `off` | Geração automática de testes. `on`: ao concluir cada feature (ou correção de bug-fix), um **subagente tester dedicado** escreve os testes da funcionalidade — foco explícito em cenários de borda e falha, não só o caminho feliz — roda, mede coverage e **reporta sem corrigir** (teste falhando é decisão sua: bug real ou teste mal escrito?). |
 | `subagents` | bloco aninhado (papel → harness → `{model, effort}`) | (ausente) | **Opcional.** Em qual modelo/thinking cada papel de subagente roda — `implementer`, `scribe`, `explorer`, `tester` — declarado por harness (`claude-code`, `cursor`, `codex`), já que cada um tem seu próprio catálogo de modelos. Ausente = cada subagente herda o modelo da conversa principal. Ex: escriba no modelo barato, implementer no forte com thinking alto. |
 | `mcp` | `off` / `on` | `off` | **Opcional.** Liga o MCP local do SDD: cada etapa (chunk implementado, arquivos tocados e o que revisar em cada um, testes, divergências, steps de `lp:review-walkthrough`) também é gravada num SQLite global (`~/.sdd/sdd.db`). Destrava a timeline no SDD Viewer e dá memória ao agente entre conversas e projetos. Exige Node 18+ e reiniciar a sessão. |
+| `flow_storage` | `file` \ `mcp` | `file` | Onde vive o diagrama. `file`: `flow.html` na pasta da mudança. `mcp`: o arquivo **não existe** — o fluxo é gravado no banco (rótulo do nó + status) e desenhado pela aba Fluxo do SDD Viewer, o que tira do caminho quente o maior artefato do SDD. Exige `mcp: on`; `flow.html` já existente fica intocado. |
 | `tasks_storage` | `file` / `mcp` | `file` | Onde vive o plano de chunks. `file`: `tasks.md` no repo, versionado e revisável em PR. `mcp`: o `tasks.md` não é gerado e o plano fica no banco — **nesse modo o MCP deixa de ser opcional**, e o plano sai do repositório. |
 | `state_storage` | `file` / `mcp` | `file` | Onde vive a parte do `.sdd.yaml` que muda a cada passo (`state`, `current_feature`, `current_chunk`, `in_review`, `updated`, `status` de cada feature). `file`: tudo no arquivo. `mcp`: esses campos vão para o banco e o arquivo guarda só a identidade da mudança e a lista de features — **nesse modo o MCP deixa de ser opcional**. |
 | `mcp_record` | bloco aninhado (`symbols`, `diff`, `context`, `explain`, `scenarios`, `code_review`, `data_model`) | (ausente = tudo ligado) | **Opcional.** Desliga partes do registro sem desligar o MCP. Ex: `symbols: false` para de gravar métodos com exemplos de entrada/saída. O `diff` é pulado sozinho quando `auto_commit: full`, porque o git guarda o mesmo conteúdo. |

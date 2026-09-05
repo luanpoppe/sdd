@@ -11,13 +11,31 @@ Objetivo: **manter o contexto do agente principal limpo**. As escritas dos próp
 - **Modelo/thinking do escriba**: se o config tiver `subagents.scribe.<seu harness>`, lance o escriba nesse modelo — ver `./subagents-guide.md`. Escrita mecânica costuma render bem em modelo barato. Bloco ausente = lance normal, sem comentar.
 - **Fallback**: só caia para inline se o ambiente realmente não suporta lançar subagente (a chamada de Agent/Task falha). Aí avise no plano de revisão (*"artefatos escritos no agente principal — subagente indisponível"*). "Preferir controle direto do YAML" NÃO é motivo válido de fallback.
 
+## O que o escriba realmente economiza
+
+Vale saber, porque muda quando ele importa: **o ganho não está na escrita, está na leitura**.
+
+Escrevendo inline, o conteúdo entra no contexto uma vez (no `Write`). Delegando, entra uma vez também — no prompt do escriba. O custo é praticamente o mesmo.
+
+O que só o escriba evita é o principal **abrir arquivo grande existente para editá-lo**. As três edições pontuais do `flow.html` exigem achar âncoras dentro dele, e num projeto real ele tem de 7 mil a 32 mil tokens. É o maior artefato do SDD por uma ordem de grandeza, e é ele que paga o subagente.
+
+Consequência prática: quanto menos arquivo de estado o projeto tiver (`tasks_storage: mcp`, `state_storage: mcp`, `flow_storage: mcp`), menor o pacote — até chegar a zero.
+
+## Pacote vazio: não lance o escriba
+
+Se, depois de aplicar os toggles, **nenhuma escrita de arquivo sobrou** no passo, não invoque o escriba. Spawnar um subagente para não escrever nada é custo puro.
+
+Isso acontece de verdade: com `tasks_storage: mcp` + `state_storage: mcp` + `flow_storage: mcp`, um passo de chunk comum não tem nenhum arquivo a escrever — tudo virou chamada de tool do principal. Nesse caso siga direto para o plano de revisão, sem comentar que o escriba não rodou.
+
+Não confunda com o fallback: aqui não houve falha nenhuma, simplesmente não havia trabalho.
+
 ## Regra dura: tudo-ou-nada por passo
 
 Quando `scribe: subagent` (incl. ausência do campo), **TODAS** as escritas de artefato SDD do passo vão para o escriba, numa **única** chamada. É proibido delegar só uma parte (ex.: só os `.html` pesados) e fazer o resto inline. Especificamente, **estas escritas NÃO podem ser feitas inline pelo principal**:
 
 - marcar/editar checkboxes e metadados no `tasks.md` (e `tasks.html` se houver);
 - gerar/editar `plan.md`, `spec.md`, `diagnosis.md`, `solutions.md` (+ `.html`);
-- (re)gerar `flow.html`;
+- (re)gerar `flow.html` — **exceto com `flow_storage: mcp`**, quando ele não existe e o fluxo vira `sdd_write_tasks`/`sdd_record_chunk` do principal (ver `./flowchart-guide.md`);
 - atualizar o `.sdd.yaml` (state, `current_chunk`, `in_review`, checkboxes de feature/chunk, `chosen_solution`);
   - Com **`tasks_storage: mcp`** o `tasks.md` não existe, e com **`state_storage: mcp`** os campos `state`, `current_feature`, `current_chunk`, `in_review`, `updated` e o `status` das features não existem no arquivo. Nesses modos, o que sai do pacote do escriba passa a ser chamada de tool do **principal** (`sdd_write_tasks`, `sdd_write_state`) — chamar tool MCP não é escrita de arquivo, e o escriba pode nem enxergar as tools da sessão. O que sobra de arquivo continua tudo-ou-nada no escriba; a regra não vira licença para escrever o resto inline.
 - gravar/editar `memory.md` (ou `memory/<tema>.md` + `memory-map.md`);

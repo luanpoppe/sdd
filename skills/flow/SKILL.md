@@ -11,8 +11,27 @@ Você está gerando/atualizando o diagrama macro da implementação da mudança 
 - Leia `.sdd/config.yaml`. Se `flowchart: off` → informe: *"O diagrama está desligado (`flowchart: off` no config). Ligue com `/lp-init` ou editando o config para usar `/lp-flow`."* e pare.
 - Identifique a **mudança ativa**: pasta em `.sdd/changes/` com `state` ≠ `archived`. Nenhuma → "Nenhuma mudança ativa." e pare. Mais de uma → pergunte qual.
 - Leia `.sdd.yaml`, `plan.md`, e os `specs/<slug>/tasks.md` que já existirem.
+- Veja o **`flow_storage`** (default `file`): em `mcp` o diagrama vive no banco e esta skill vira leitura — ver o passo 1.
 
-## 1. Gerar
+## 1. Com `flow_storage: mcp`, não há arquivo para gerar
+
+Leia o fluxo do banco (`sdd_read_tasks` sem `feature_slug`, que devolve os chunks da mudança inteira com `feature`, `component` e `status`) e **imprima o mapa no chat**:
+
+```
+auth · 3 de 7 chunks
+
+login                 3/4
+  Config ✓ · Controller ✓ · UseCase ► · Repository ○
+perfil                0/3   (spec ainda não gerada)
+
+Visão completa com os detalhes de cada nó: aba Fluxo do SDD Viewer.
+```
+
+Símbolos: `✓` done · `►` em andamento · `○` pendente · `!` deviated. Feature sem chunk registrado aparece com o motivo entre parênteses.
+
+Não escreva `flow.html`, não sugira ligar o modo `file`, e não chame o escriba — não há escrita de arquivo neste modo. Pare aqui.
+
+## 1-bis. Com `flow_storage: file` (padrão), gerar
 
 Siga `../../helpers/prompts/flowchart-guide.md` para montar o `flow.html` a partir do estado atual (features do plan, chunks dos tasks.md existentes, status pelos checkboxes + `current_chunk`, desvios conhecidos).
 

@@ -24,7 +24,7 @@ Formato sugerido:
 
 ```
 SDD: <projeto>
-Config: format=<f> · lang=<l> · chunk_size=<c> · flowchart=<on/off> · implementer=<subagent/main> · scribe=<subagent/main> · tasks_format=<md/follow> · tasks_autocontinue=<on/off> · context=<true/false> · parallel=<on/off> · chunk_order=<inside-out/outside-in/free> · auto_commit=<full/suggest-only/off> · tests=<off/on> · code_review=<off/on> · data_model=<off/on> · mcp=<off/on> · tasks_storage=<file/mcp> · state_storage=<file/mcp>
+Config: format=<f> · lang=<l> · chunk_size=<c> · flowchart=<on/off> · implementer=<subagent/main> · scribe=<subagent/main> · tasks_format=<md/follow> · tasks_autocontinue=<on/off> · context=<true/false> · parallel=<on/off> · chunk_order=<inside-out/outside-in/free> · auto_commit=<full/suggest-only/off> · tests=<off/on> · code_review=<off/on> · data_model=<off/on> · mcp=<off/on> · flow_storage=<file/mcp> · tasks_storage=<file/mcp> · state_storage=<file/mcp>
 Subagentes: <papel:modelo · papel:modelo>   (só esta linha se o bloco `subagents` existir; omita inteira se não)
 Conversor md->html: ~/.sdd/render (só cite a linha se format for html/both)
 Config global: ~/.sdd/config.yaml (<N> campos)   (só se o arquivo existir; omita se não — não sugira criar)

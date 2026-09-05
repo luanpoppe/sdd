@@ -33,6 +33,12 @@ class RecordChunkTool {
           chunk_id: { type: 'string', description: 'Ex: "F2.C3" (feature) ou "C3" (bugfix)' },
           feature_slug: { type: 'string', description: 'Omita em bugfix.' },
           title: { type: 'string', description: 'Título do chunk' },
+          component: {
+            type: 'string',
+            description:
+              'Rótulo curto do nó no fluxo: a camada/componente, não o título. ' +
+              'Ex: "Controller", "Repository", "UseCase". Só com flow_storage: mcp.'
+          },
           status: { type: 'string', enum: ['pending', 'in_progress', 'done', 'deviated'] },
           mark: {
             type: 'string',
@@ -219,8 +225,8 @@ class RecordChunkTool {
 
     SddDb.run(
       db,
-      `INSERT INTO chunks (change_pk, feature_pk, chunk_id, title, status, wave, started_at, finished_at, summary, reasoning)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO chunks (change_pk, feature_pk, chunk_id, title, status, wave, started_at, finished_at, summary, reasoning, component)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (change_pk, chunk_id) DO UPDATE SET
          feature_pk  = COALESCE(excluded.feature_pk, chunks.feature_pk),
          title       = COALESCE(excluded.title, chunks.title),
@@ -229,7 +235,8 @@ class RecordChunkTool {
          started_at  = COALESCE(chunks.started_at, excluded.started_at),
          finished_at = COALESCE(excluded.finished_at, chunks.finished_at),
          summary     = COALESCE(excluded.summary, chunks.summary),
-         reasoning   = COALESCE(excluded.reasoning, chunks.reasoning)`,
+         reasoning   = COALESCE(excluded.reasoning, chunks.reasoning),
+         component   = COALESCE(excluded.component, chunks.component)`,
       [
         changePk,
         featurePk,
@@ -240,7 +247,8 @@ class RecordChunkTool {
         args.started_at ?? now,
         args.finished_at ?? now,
         args.summary ?? null,
-        args.reasoning ?? null
+        args.reasoning ?? null,
+        args.component ?? null
       ]
     );
 
