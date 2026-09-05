@@ -51,7 +51,7 @@ Chame a tool **junto** do passo, não num turno separado.
 | passo **b-ter**, com `data_model: on` | `sdd_record_chunk` | campo `data_model` — um item por entidade, com `shape`, `decisions`, `rejected`, `index_notes` e `migration` (`mcp_record.data_model`) |
 | passo de **tasks**, com `flow_storage: mcp` | `sdd_write_tasks` (`mode: "plan"`) | o esqueleto do fluxo — um item por chunk com `component`, sem apagar o que já foi implementado |
 | `lp:archive` | `sdd_sync_change` | `archived` + `state: archived` |
-| banco perdido, ou período trabalhado com `mcp: off` | `sdd_reindex` | reconstrói o esqueleto a partir do `.sdd/`; não recupera explicação, exemplo nem decisão |
+| banco perdido, ou período trabalhado com `mcp: off` | `sdd_reindex` | reconstrói o esqueleto a partir do `.sdd/` **e os temas do `lp:explain` a partir de `~/.sdd/explain/`** (globais, varridos mesmo fora de projeto); não recupera explicação por arquivo, exemplo nem decisão |
 
 O **passo g-bis** é o ponto certo para `sdd_record_chunk` porque é o único momento em que você já tem tudo junto: o relatório do implementer, a ordem de revisão e a `commit_message`. É o mesmo passo em que você já grava `in_review` — as duas escritas andam juntas.
 

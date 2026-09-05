@@ -115,5 +115,5 @@ E volte ao que a conversa estava fazendo. Esta skill resolve o desvio e sai de c
 - **Registro automático só dentro de fluxo `lp:*` ativo.** Fora dele, só se o usuário pedir.
 - **Pergunta de operação não é conhecimento.** Na dúvida, não registre.
 - **Um tema por assunto, não por projeto.** A origem é metadado, não parte do nome.
-- **O arquivo é a verdade, o banco é índice.** Com o banco apagado, `sdd_reindex` não recupera isto — mas os HTMLs continuam lá, e o estado junto.
+- **O arquivo é a verdade, o banco é índice.** Com o banco apagado ou com temas escritos enquanto o MCP estava desligado, `sdd_reindex` varre `~/.sdd/explain/` e reconstrói o índice a partir dos HTMLs — slug, título, status, resumo, contagem de perguntas e origens. É por isso que a fila do SDD Viewer volta a aparecer sem você reescrever nada.
 - Não confunda com `lp:ask`, que responde sem gravar nada, e é justamente como o usuário pede uma resposta sem rastro.

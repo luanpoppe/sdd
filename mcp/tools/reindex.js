@@ -6,6 +6,7 @@ const path = require('node:path');
 const { SddDb } = require('../db');
 const { SddRepo } = require('../repo');
 const { Log } = require('../log');
+const { ExplainScanner } = require('../explain-scan');
 
 const CHUNK_HEADING = /^###\s+((?:F\d+\.)?C\d+)\s*(?:—|-)?\s*(.*)$/;
 const CHECKBOX = /^\s*-\s*\[([ ~x])\]\s*(.+)$/i;
@@ -44,12 +45,24 @@ class ReindexTool {
   }
 
   static run(ctx, args) {
+    const dryRun = args.dry_run === true;
+
+    // Os temas do `lp:explain` são globais e existem mesmo fora de projeto, então a
+    // varredura deles vem antes da checagem do `.sdd/` — e vale sozinha.
+    const explainTopics = ExplainScanner.scan();
+    const explain = dryRun
+      ? { scanned: explainTopics.length, inserted: 0, updated: 0 }
+      : ExplainScanner.sync(ctx.db, explainTopics);
+
     const sddDir = path.join(ctx.projectRoot, '.sdd');
     if (!fs.existsSync(sddDir)) {
-      return { indexed: false, reason: 'projeto sem .sdd/ — nada a reconstruir' };
+      return {
+        indexed: false,
+        explain,
+        reason: 'projeto sem .sdd/ — só os temas globais foram varridos'
+      };
     }
 
-    const dryRun = args.dry_run === true;
     const found = ReindexTool.scanChanges(sddDir);
 
     if (!dryRun) {
