@@ -81,6 +81,24 @@ class RecordChunkTool {
             items: { type: 'string' },
             description: 'Cenários da spec que este chunk implementa, ex: ["CT-01","CT-03"].'
           },
+          code_review: {
+            type: 'array',
+            description: 'Achados do code review deste chunk (code_review: on). Substitui os anteriores.',
+            items: {
+              type: 'object',
+              required: ['severity', 'title'],
+              properties: {
+                severity: { type: 'string', enum: ['grave', 'medio', 'menor'] },
+                path: { type: 'string' },
+                line: { type: 'integer' },
+                title: { type: 'string', description: 'O que está errado, em uma linha' },
+                scenario: { type: 'string', description: 'Entrada concreta e o resultado errado' },
+                cause: { type: 'string' },
+                suggestion: { type: 'string' },
+                scope: { type: 'string', enum: ['chunk', 'feature'] }
+              }
+            }
+          },
           commit: {
             type: 'object',
             description: 'Commit sugerido ou efetivado',
@@ -110,6 +128,7 @@ class RecordChunkTool {
     if (args.commit) RecordChunkTool.insertCommit(ctx.db, chunkPk, args.commit);
     if (args.mark) TasksStore.mark(ctx.db, chunkPk, args.mark);
     RecordChunkTool.linkScenarios(ctx.db, change.id, chunkPk, args.scenario_keys);
+    RecordChunkTool.replaceFindings(ctx.db, chunkPk, args.code_review);
 
     const totals = RecordChunkTool.countDepth(files);
 
@@ -120,7 +139,8 @@ class RecordChunkTool {
       highlights: totals.highlights,
       symbols: totals.symbols,
       examples: totals.examples,
-      commit: Boolean(args.commit)
+      commit: Boolean(args.commit),
+      findings: Array.isArray(args.code_review) ? args.code_review.length : 0
     });
 
     return { change_pk: change.id, chunk_pk: chunkPk, files_recorded: files.length };
@@ -237,6 +257,43 @@ class RecordChunkTool {
       const anchor = { fileChangePk: inserted.lastInsertRowid };
       ExplainWriter.replaceHighlights(db, anchor, file.highlights);
       ExplainWriter.replaceSymbols(db, anchor, file.symbols);
+    });
+  }
+
+  /**
+   * Achados do code review. Substitui em bloco, como `replaceFiles`: rechamar a tool
+   * para o mesmo chunk (ex: depois do commit) tem que deixar a lista igual, não somar
+   * os mesmos achados de novo.
+   *
+   * Campo ausente NÃO apaga o que já existe — é o caso da rechamada só para gravar o
+   * commit, que não carrega os achados junto.
+   */
+  static replaceFindings(db, chunkPk, findings) {
+    if (!Array.isArray(findings)) return;
+
+    SddDb.run(db, 'DELETE FROM review_findings WHERE chunk_pk = ?', [chunkPk]);
+
+    const at = SddRepo.nowIso();
+    findings.forEach((finding, index) => {
+      SddDb.run(
+        db,
+        `INSERT INTO review_findings
+           (chunk_pk, position, severity, path, line, title, scenario, cause, suggestion, scope, at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          chunkPk,
+          index,
+          finding.severity,
+          finding.path ?? null,
+          Number.isInteger(finding.line) ? finding.line : null,
+          finding.title,
+          finding.scenario ?? null,
+          finding.cause ?? null,
+          finding.suggestion ?? null,
+          finding.scope ?? 'chunk',
+          at
+        ]
+      );
     });
   }
 

@@ -9,7 +9,7 @@ Spec-driven development em 18 skills. Chunks micro revisáveis, fluxo sequencial
 /plugin install lp@sdd
 ```
 
-Pronto — as skills ficam disponíveis como `lp:init`, `lp:new-feature`, `lp:continue`, `lp:review`, etc.
+Pronto — as skills ficam disponíveis como `lp:init`, `lp:new-feature`, `lp:continue`, `lp:review-walkthrough`, etc.
 
 > O plugin é distribuído direto por este repositório GitHub (o próprio repo é o marketplace). Não precisa npm.
 
@@ -34,7 +34,7 @@ npx github:luanpoppe/sdd --tool=cursor
 npx github:luanpoppe/sdd --tool=claude --dry-run
 ```
 
-- **Claude Code presente** → escreve só em `~/.claude/skills/lp-*/`; Cursor lê de lá também. Invoca `/lp-review`, `/lp-new-feature`… nos dois.
+- **Claude Code presente** → escreve só em `~/.claude/skills/lp-*/`; Cursor lê de lá também. Invoca `/lp-review-walkthrough`, `/lp-new-feature`… nos dois.
 - **Só Cursor, sem Claude Code** → escreve em `~/.cursor/commands/lp-*.md` (+ `~/.cursor/lp-helpers/`) como fallback.
 
 > ⚠️ Não escreva nos dois lugares ao mesmo tempo — o Cursor lista o mesmo comando duas vezes (uma pela skill do Claude, outra pelo command próprio). O installer evita isso automaticamente; rodar `npx github:luanpoppe/sdd` de novo também limpa duplicatas de instalações anteriores a v1.0.2.
@@ -49,7 +49,8 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 | `lp:new-feature` | Abre uma nova mudança (do zero) com grill anti-assunção; gera `plan.md` + `flow.html`. |
 | `lp:bug-fix` | Fluxo enxuto pra corrigir bug: `diagnosis` (causa raiz) → `solutions` (opções) → correção em chunks. |
 | `lp:continue` | Avança 1 passo. Feature: spec → tasks → chunks. Bug-fix: opções → tasks → chunks. Implementa via subagente. |
-| `lp:review` | Revisão guiada de código existente (walkthrough do fluxo real). |
+| `lp:review-walkthrough` | Revisão guiada de código existente (walkthrough do fluxo real). Chamava-se `lp:review-walkthrough`, nome que continua sendo entendido. |
+| `lp:code-review` | Auditoria adversarial de código recém-escrito: acha defeito, classifica por severidade, exige cenário de falha e não corrige nada. |
 | `lp:flow` | Gera/regenera o diagrama macro (`flow.html`); nós implementados são clicáveis e abrem um mini-walkthrough (como funciona + código real + dados + conecta). Vale pra features e bug-fix. |
 | `lp:parallel` | Liga/desliga o modo paralelo (chunks independentes, um subagente cada). |
 | `lp:settings` | Lista e altera as configurações do `.sdd/config.yaml` (por campo/valor ou em linguagem natural). Com a palavra `global`, mexe na config global do usuário (`~/.sdd/config.yaml`). |
@@ -91,7 +92,8 @@ O que é registrado, em cada etapa:
 - **Chunk implementado** → um item por arquivo com o que faz, com o que conecta e o que revisar, mais a explicação longa, os trechos de código decisivos, os **métodos com exemplos de entrada e saída** (incluindo casos de borda) e o diff.
 - **Cenários da spec** → e qual chunk implementou cada um, o que revela cenário sem cobertura.
 - **Decisões** → grill, modo sequencial/paralelo, divergências do auto-sync, commits.
-- **`lp:review`** → os steps com a mesma profundidade de um chunk.
+- **`lp:review-walkthrough`** → os steps com a mesma profundidade de um chunk.
+- **Achados do code review** → amarrados ao chunk que os gerou, com severidade e cenário — dá para perguntar depois o que foi apontado e nunca corrigido.
 - **`.sdd/context/`** → a base de conhecimento de longo prazo do projeto.
 - **`lp:explain`** → os temas globais, com o estado da fila de estudo. É a única tabela do banco sem projeto: o que você entendeu sobre um assunto num repositório vale no próximo.
 
@@ -132,12 +134,13 @@ O estado mora no próprio HTML (`data-status`), então a fila funciona com o MCP
 | `tasks_autocontinue` | `on` / `off` | `on` | Após gerar o `tasks.md`, seguir direto pro 1º chunk sem pausar (`on`) ou pausar pro usuário revisar a granularidade e esperar `/lp-continue` (`off`). |
 | `parallel` | `on` / `off` | `off` | Chunks independentes em paralelo (um subagente cada). Ligar com `lp:parallel`. |
 | `chunk_order` | `inside-out` / `outside-in` / `free` | `inside-out` | Desempate de ordem entre features/chunks independentes (dependência real sempre manda primeiro). `inside-out`: domínio/persistência antes de controller/consumer. `outside-in`: prioriza mostrar o esqueleto do fluxo primeiro. `free`: só dependência. |
+| `code_review` | `off` / `on` | `off` | Auditoria adversarial do código recém-escrito. `on`: um subagente `code-reviewer` revisa cada chunk e, de novo, a feature inteira ao fechar — bug, borda não tratada, contrato divergente da spec, erro engolido, vazamento, segurança. Cada achado vem com severidade e **cenário concreto de falha**; sem cenário, não entra. Reporta, nunca corrige, nunca bloqueia. Acrescente critérios em `~/.sdd/code-review.md` (seus, todo projeto) e `.sdd/code-review.md` (do repo, versionado). |
 | `tests` | `off` / `on` | `off` | Geração automática de testes. `on`: ao concluir cada feature (ou correção de bug-fix), um **subagente tester dedicado** escreve os testes da funcionalidade — foco explícito em cenários de borda e falha, não só o caminho feliz — roda, mede coverage e **reporta sem corrigir** (teste falhando é decisão sua: bug real ou teste mal escrito?). |
 | `subagents` | bloco aninhado (papel → harness → `{model, effort}`) | (ausente) | **Opcional.** Em qual modelo/thinking cada papel de subagente roda — `implementer`, `scribe`, `explorer`, `tester` — declarado por harness (`claude-code`, `cursor`, `codex`), já que cada um tem seu próprio catálogo de modelos. Ausente = cada subagente herda o modelo da conversa principal. Ex: escriba no modelo barato, implementer no forte com thinking alto. |
-| `mcp` | `off` / `on` | `off` | **Opcional.** Liga o MCP local do SDD: cada etapa (chunk implementado, arquivos tocados e o que revisar em cada um, testes, divergências, steps de `lp:review`) também é gravada num SQLite global (`~/.sdd/sdd.db`). Destrava a timeline no SDD Viewer e dá memória ao agente entre conversas e projetos. Exige Node 18+ e reiniciar a sessão. |
+| `mcp` | `off` / `on` | `off` | **Opcional.** Liga o MCP local do SDD: cada etapa (chunk implementado, arquivos tocados e o que revisar em cada um, testes, divergências, steps de `lp:review-walkthrough`) também é gravada num SQLite global (`~/.sdd/sdd.db`). Destrava a timeline no SDD Viewer e dá memória ao agente entre conversas e projetos. Exige Node 18+ e reiniciar a sessão. |
 | `tasks_storage` | `file` / `mcp` | `file` | Onde vive o plano de chunks. `file`: `tasks.md` no repo, versionado e revisável em PR. `mcp`: o `tasks.md` não é gerado e o plano fica no banco — **nesse modo o MCP deixa de ser opcional**, e o plano sai do repositório. |
 | `state_storage` | `file` / `mcp` | `file` | Onde vive a parte do `.sdd.yaml` que muda a cada passo (`state`, `current_feature`, `current_chunk`, `in_review`, `updated`, `status` de cada feature). `file`: tudo no arquivo. `mcp`: esses campos vão para o banco e o arquivo guarda só a identidade da mudança e a lista de features — **nesse modo o MCP deixa de ser opcional**. |
-| `mcp_record` | bloco aninhado (`symbols`, `diff`, `context`, `explain`, `scenarios`) | (ausente = tudo ligado) | **Opcional.** Desliga partes do registro sem desligar o MCP. Ex: `symbols: false` para de gravar métodos com exemplos de entrada/saída. O `diff` é pulado sozinho quando `auto_commit: full`, porque o git guarda o mesmo conteúdo. |
+| `mcp_record` | bloco aninhado (`symbols`, `diff`, `context`, `explain`, `scenarios`, `code_review`) | (ausente = tudo ligado) | **Opcional.** Desliga partes do registro sem desligar o MCP. Ex: `symbols: false` para de gravar métodos com exemplos de entrada/saída. O `diff` é pulado sozinho quando `auto_commit: full`, porque o git guarda o mesmo conteúdo. |
 | `auto_commit` | `full` / `suggest-only` / `off` | `suggest-only` | Git a cada chunk aprovado. `full`: commita de verdade (só os arquivos do chunk), exceto em branch protegida (main/master/develop/staging/...). `suggest-only`: mostra o comando pronto pra copiar. `off`: não menciona git. |
 
 > `flowchart`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue`, `context`, `parallel`, `chunk_order`, `auto_commit` e `tests` não são perguntados no grill (o `mcp` é) — vêm com o padrão e você edita no `.sdd/config.yaml` quando quiser (ou usa `lp:parallel`). `lp:new-feature`/`lp:bug-fix` também sugerem uma branch dedicada no início (aceitar/criar manual/continuar na atual). O bloco `subagents` nem é escrito no config — só existe se você ligar (`/lp-settings "roda o escriba no haiku"`).

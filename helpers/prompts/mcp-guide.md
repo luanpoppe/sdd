@@ -19,6 +19,7 @@ mcp_record:
   context: true      # .sdd/context/ no banco
   explain: true      # temas globais do lp:explain no banco
   scenarios: true    # cenários da spec e o vínculo com os chunks
+  code_review: true  # achados do code review, amarrados ao chunk
 ```
 
 Chave `false` → **omita aquele campo/chamada**, sem comentar. Chave ausente ou `true` → grave normalmente. Não trate desligado como erro nem sugira religar.
@@ -40,11 +41,12 @@ Chame a tool **junto** do passo, não num turno separado.
 | passo **f-bis**, tester rodou | `sdd_record_tests` | runner, passou/falhou, cobertura, o relatório e os arquivos criados |
 | passo **g-bis** | `sdd_record_chunk` | **a chamada principal** — o chunk e um item por arquivo, com `does`/`connects`/`review_note` mais `detail`, `highlights`, `symbols` e `diff` (ver abaixo) |
 | commit efetivado no `auto_commit: full` | `sdd_record_chunk` | rechame com o `commit` preenchido (`mode: full`, `branch`, `sha`) |
-| `lp:review`, step fechado | `sdd_record_review` | o step com arquivos, `detail`, `highlights` e `symbols` — **a mesma profundidade de um chunk** |
+| `lp:review-walkthrough`, step fechado | `sdd_record_review` | o step com arquivos, `detail`, `highlights` e `symbols` — **a mesma profundidade de um chunk** |
 | geração da spec de uma feature | `sdd_sync_change` | `features[].scenarios[]` — os requisitos (BDD ou entrada/saída) e edge cases, com `key` estável (`mcp_record.scenarios`) |
 | `lp:context`, ao criar/atualizar uma área | `sdd_record_knowledge` | `kind: context`, o que é a área e como funciona (`mcp_record.context`) |
 | `lp:explain`, ao gerar/atualizar um tema | `sdd_record_explain` | o tema **global** (fora de projeto), com `question`, `origin` e o `detail` que a busca precisa alcançar (`mcp_record.explain`) |
 | `lp:explain`, ao dar baixa na fila | `sdd_record_explain` | o mesmo slug com `status: "estudado"` |
+| passos **c-bis** / **f-ter**, com `code_review: on` | `sdd_record_chunk` | campo `code_review` — um item por achado, com severidade, arquivo, linha, cenário, causa e sugestão (`mcp_record.code_review`) |
 | `lp:archive` | `sdd_sync_change` | `archived` + `state: archived` |
 | banco perdido, ou período trabalhado com `mcp: off` | `sdd_reindex` | reconstrói o esqueleto a partir do `.sdd/`; não recupera explicação, exemplo nem decisão |
 
@@ -128,7 +130,7 @@ Sem os pontos abaixo, o SDD grava uma memória que nunca consulta.
 | `lp:continue`, **antes de implementar um chunk** (passo b, depois de saber quais arquivos ele toca) | `sdd_recall` com os caminhos ou o nome da classe/módulo | Descobre que aqueles arquivos já foram tocados, com que decisão e com quais exemplos. Evita refazer escolha já feita ou contradizê-la sem perceber. |
 | `lp:bug-fix`, na investigação da causa raiz | `sdd_recall` com o sintoma, o arquivo suspeito ou a área | Um bug na mesma área pode já ter sido diagnosticado — inclusive em conversa que você não viu. |
 | `lp:new-feature`, durante o grill macro | `sdd_recall` com o tema da mudança | Mostra o que já existe antes de você perguntar ao usuário coisas que o histórico responde. |
-| `lp:review`, ao montar o plano de steps | `sdd_recall` com o tema do review | Reaproveita explicação e exemplos já escritos em vez de reconstruí-los do zero. |
+| `lp:review-walkthrough`, ao montar o plano de steps | `sdd_recall` com o tema do review | Reaproveita explicação e exemplos já escritos em vez de reconstruí-los do zero. |
 | `lp:ask` / `lp:status`, pergunta sobre trabalho anterior | `sdd_query_history` | Responde "onde paramos" e "o que foi feito" sem reler `.sdd/`. |
 | `lp:explain`, antes de criar tema novo | `sdd_read_explain` com `status: "todos"` | Evita `jwt` e `json-web-token` como dois temas. |
 | o usuário pergunta o que tem para estudar | `sdd_read_explain` | A fila do que ficou `aberto`, do mais antigo. |

@@ -59,7 +59,9 @@ const MIGRATIONS = {
   // Nada a fazer: `explain_topics` é tabela nova, criada pelo CREATE_TABLES em banco
   // novo e em banco antigo (o `IF NOT EXISTS` roda sempre). O degrau existe só para o
   // banco antigo registrar que chegou na versão 6.
-  6: []
+  6: [],
+  // Idem: `review_findings` é tabela nova, criada pelo CREATE_TABLES nos dois casos.
+  7: []
 };
 
 module.exports = { MIGRATIONS };

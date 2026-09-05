@@ -9,7 +9,7 @@
  * Sem essa distinção os dois se confundem em toda query.
  */
 
-const SCHEMA_VERSION = 6;
+const SCHEMA_VERSION = 7;
 
 const CREATE_TABLES = [
   `CREATE TABLE IF NOT EXISTS schema_meta (
@@ -246,6 +246,25 @@ const CREATE_TABLES = [
      mode     TEXT CHECK (mode IN ('full','suggest-only'))
    )`,
 
+  // Achados do code review adversarial (`code_review: on`), amarrados ao chunk que os
+  // gerou — e não a uma tabela própria de review, porque o valor deles está em aparecer
+  // junto do código revisado. `scenario` é a entrada concreta que faz o defeito acontecer:
+  // achado sem ele não deveria ter sido gravado.
+  `CREATE TABLE IF NOT EXISTS review_findings (
+     id         INTEGER PRIMARY KEY AUTOINCREMENT,
+     chunk_pk   INTEGER NOT NULL REFERENCES chunks(id) ON DELETE CASCADE,
+     position   INTEGER NOT NULL,
+     severity   TEXT NOT NULL CHECK (severity IN ('grave','medio','menor')),
+     path       TEXT,
+     line       INTEGER,
+     title      TEXT NOT NULL,
+     scenario   TEXT,
+     cause      TEXT,
+     suggestion TEXT,
+     scope      TEXT CHECK (scope IN ('chunk','feature')),
+     at         TEXT NOT NULL
+   )`,
+
   // Única tabela do banco sem `project_id`, e de propósito: o `lp:explain` é global.
   // O que você entendeu sobre JWT num projeto continua valendo no próximo, então
   // amarrar o tema a um repositório esconderia justamente o que motivou globalizar.
@@ -296,6 +315,8 @@ const CREATE_INDEXES = [
   `CREATE INDEX IF NOT EXISTS idx_knowledge_project  ON knowledge_entries(project_id, kind)`,
   `CREATE INDEX IF NOT EXISTS idx_reviews_project    ON reviews(project_id)`,
   `CREATE INDEX IF NOT EXISTS idx_review_steps_rev   ON review_steps(review_pk)`,
+  `CREATE INDEX IF NOT EXISTS idx_findings_chunk     ON review_findings(chunk_pk)`,
+  `CREATE INDEX IF NOT EXISTS idx_findings_severity  ON review_findings(severity)`,
   `CREATE INDEX IF NOT EXISTS idx_explain_status     ON explain_topics(status, updated_at)`,
   `CREATE INDEX IF NOT EXISTS idx_events_project_at  ON events(project_id, at)`,
   `CREATE INDEX IF NOT EXISTS idx_events_kind        ON events(kind)`

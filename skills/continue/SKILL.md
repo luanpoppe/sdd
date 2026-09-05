@@ -133,7 +133,13 @@ Curta (4-6 linhas, não é uma spec) — reaproveite o que o `tasks.md` já tem,
   - Rode o **comando de validação do projeto** (campo `Validação` do chunk / CLAUDE.md — lint/format da stack real, **não assuma eslint**) apenas nos arquivos editados.
   - Se o projeto exige (ver CLAUDE.md do projeto), rode os testes.
 
-> Em ambos os modos, o principal **decide** a/d/e/f/f-bis/g/h (o subagente implementer só codifica o chunk e reporta). Execute d→e→f→f-bis→g→h **nesta ordem**, e só então "Pare aqui".
+**c-bis) Code review do chunk** — só se **`code_review: on`** no `.sdd/config.yaml`. Com `off`/ausente (padrão), este passo **não existe**: não revise, não comente que está desligado, não sugira ligar.
+
+Lance UM subagente (papel `code-reviewer` em `subagents` para modelo/thinking) seguindo `../../helpers/prompts/code-review-guide.md`. Passe: o **diff** do chunk, os **arquivos tocados inteiros**, a `spec.md` da feature (ou `diagnosis.md` + `chosen_solution` no bug-fix) e as instruções extras de `~/.sdd/code-review.md` e `.sdd/code-review.md`, quando existirem.
+
+Ele **reporta e nunca corrige** — nem o typo óbvio. Todo achado vem com severidade, arquivo:linha e um **cenário concreto de falha**; sem cenário, não é achado. Leve o resultado para o bloco `Code review` do plano de revisão (passo g) e para o campo `code_review` do `sdd_record_chunk` (g-bis). Achado grave **destaca**, mas não bloqueia o `/lp-continue`.
+
+> Em ambos os modos, o principal **decide** a/c-bis/d/e/f/f-bis/f-ter/g/h (o subagente implementer só codifica o chunk e reporta). Execute c-bis→d→e→f→f-bis→f-ter→g→h **nesta ordem**, e só então "Pare aqui".
 >
 > **Atenção (scribe):** "ser do principal" = o principal DECIDE o quê escrever, **não** que ele dá `Write`/`Edit` inline. Com `scribe: subagent` (incl. campo ausente), as **escritas** de d) (`tasks.md`, `.sdd.yaml`), e) (`flow.html`), g-bis) (`in_review`) e g-ter) (troca de contrato provisório na `spec.md`, quando houver) + a de memória vão **todas juntas numa única chamada do escriba**, montada ao final (antes de imprimir o plano g). Não escreva nenhum desses inline. Ver a nota "Escrita de artefatos (scribe)" no topo e `../../helpers/prompts/scribe-guide.md`.
 
@@ -160,6 +166,10 @@ Curta (4-6 linhas, não é uma spec) — reaproveite o que o `tasks.md` já tem,
 Lance UM **subagente tester** (papel `tester` em `subagents` para modelo/thinking) seguindo `../../helpers/prompts/tester-guide.md`. Passe: os arquivos de código de **todos** os chunks da feature (campos `Arquivos` do `tasks.md`, não só o último chunk), a `spec.md` da feature (Requirements + Edge cases são os casos de teste) — ou, no bug-fix, `diagnosis.md` + `chosen_solution`, com teste de regressão obrigatório para a causa raiz — e as convenções de código do projeto.
 
 O tester **escreve os testes, roda, reporta — e nunca corrige** (nem o teste, nem a implementação). Teste falhando é decisão do usuário: bug real ou teste mal escrito. Leve o retorno dele para o bloco `Testes` do plano de revisão (passo g) e os arquivos criados para `in_review.files` (g-bis). Com **`mcp: on`**, registre o relatório com `sdd_record_tests` (runner, passou/falhou, cobertura, arquivos criados) — hoje ele só existe no chat.
+
+**f-ter) Code review da feature** — só com **`code_review: on`** **E** o passo f acabou de concluir a feature (no bug-fix: foi o último chunk). Nos demais chunks, pule sem mencionar nada.
+
+Mesma configuração do `c-bis`, alvo diferente: os arquivos de **todos** os chunks da feature. O que se procura aqui é a **incoerência entre chunks** — contrato que mudou no meio do caminho, duplicação que só aparece com o conjunto na mão, borda que cada chunk achou que o outro tratava. Não repita achado já apontado por chunk.
 
 **g) Plano de revisão obrigatório** (formato da state-machine.md):
 
@@ -190,6 +200,12 @@ Revisão (na ordem — comece pelo topo):
 - Faz: <...>.
 - Conecta: <...>.
 - Revisar: <...>.
+
+Code review (<N> achados: <n> graves, <n> médios, <n> menores):   <- só com code_review: on; omita o bloco inteiro se off ou se nada foi achado
+[grave] caminho/arquivo1.ts:42 — <o que está errado>
+  Cenário: <entrada concreta> → <resultado errado>.
+[médio] caminho/arquivo2.ts:88 — <o que está errado>
+  Cenário: <entrada concreta> → <resultado errado>.
 
 **3. caminho/tipos.d.ts** (criado) — tipos gerados, pode pular.
 
@@ -230,7 +246,7 @@ in_review:
 ```
 Assim, mesmo que a conversa reinicie, o próximo turno sabe qual chunk está em revisão e consegue re-imprimir a lista. Ao aprovar (próximo `/lp-continue`) ou reverter, limpe `in_review`.
 
-Com **`mcp: on`**, registre o chunk no banco **no mesmo passo**, com `sdd_record_chunk`: um item de `files` por arquivo desta lista, na mesma ordem, com `does`/`connects`/`review_note` recebendo exatamente as linhas `Faz`/`Conecta`/`Revisar` que você acabou de imprimir (`is_test: true` nos arquivos vindos do f-bis), mais `summary`/`reasoning` do chunk e o `commit` sugerido. Este é o ponto certo porque é aqui que você tem tudo junto. Se a spec tem cenários registrados, mande também `scenario_keys` com os que este chunk implementa.
+Com **`mcp: on`**, registre o chunk no banco **no mesmo passo**, com `sdd_record_chunk`: um item de `files` por arquivo desta lista, na mesma ordem, com `does`/`connects`/`review_note` recebendo exatamente as linhas `Faz`/`Conecta`/`Revisar` que você acabou de imprimir (`is_test: true` nos arquivos vindos do f-bis), mais `summary`/`reasoning` do chunk e o `commit` sugerido. Este é o ponto certo porque é aqui que você tem tudo junto. Se a spec tem cenários registrados, mande também `scenario_keys` com os que este chunk implementa. Com **`code_review: on`**, mande também `code_review` — um item por achado dos passos `c-bis`/`f-ter`, com severidade, arquivo, linha, cenário, causa e sugestão (aí sim completos, ao contrário do plano de revisão, que é resumido). Com `mcp_record.code_review: false`, pule o campo.
 
 Mande também, **só para o banco e sem imprimir no chat**: o `detail` (explicação longa de cada arquivo que merece: mecanismo, decisão descartada, armadilha), os `highlights` (0-3 trechos de código decisivos por arquivo), os `symbols` (os métodos que carregam comportamento, cada um com assinatura e **exemplos de entrada e saída com dado plausível do domínio, incluindo ao menos um caso de borda**) e — **só quando `auto_commit` não for `full`** — o `diff` unificado dos arquivos modificados. Com `auto_commit: full` o chunk vira commit e o git já guarda esse diff inteiro; regravá-lo é pagar duas vezes pelo mesmo conteúdo. O resto é o que deixa o plano de revisão curto sem perder profundidade — quem abrir o histórico depois tem o arquivo explicado. Ver `../../helpers/prompts/mcp-guide.md`.
 

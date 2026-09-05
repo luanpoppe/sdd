@@ -25,9 +25,9 @@ class RecallTool {
     return {
       name: 'sdd_recall',
       description:
-        'Busca no histórico do SDD por termo livre (arquivo, classe, método, conceito) em 8 ' +
+        'Busca no histórico do SDD por termo livre (arquivo, classe, método, conceito) em 9 ' +
         'fontes: chunks, arquivos, destaques, métodos com exemplos, steps de review, cenários, ' +
-        'conhecimento e temas do lp:explain. Use antes de mexer em algo que talvez já tenha sido tocado, ou para ' +
+        'conhecimento, temas do lp:explain e achados de code review. Use antes de mexer em algo que talvez já tenha sido tocado, ou para ' +
         'lembrar como uma parte do sistema funciona.',
       inputSchema: {
         type: 'object',
@@ -62,6 +62,7 @@ class RecallTool {
         knowledge: [],
         scenarios: [],
         decisions: [],
+        findings: [],
         explain: RecallTool.searchExplain(ctx.db, {
           pattern: RecallTool.likePattern(args.query),
           limit: RecallTool.clampLimit(args.limit)
@@ -86,7 +87,8 @@ class RecallTool {
       knowledge: RecallTool.searchKnowledge(ctx.db, scope),
       scenarios: RecallTool.searchScenarios(ctx.db, scope),
       decisions: RecallTool.searchEvents(ctx.db, scope),
-      explain: RecallTool.searchExplain(ctx.db, scope)
+      explain: RecallTool.searchExplain(ctx.db, scope),
+      findings: RecallTool.searchFindings(ctx.db, scope)
     };
 
     Log.info('recall executado', {
@@ -98,7 +100,8 @@ class RecallTool {
       knowledge: result.knowledge.length,
       scenarios: result.scenarios.length,
       decisions: result.decisions.length,
-      explain: result.explain.length
+      explain: result.explain.length,
+      findings: result.findings.length
     });
     return result;
   }
@@ -261,6 +264,32 @@ class RecallTool {
    * descreve como o sistema funciona hoje, não o que mudou num chunk —, então costuma
    * ser o resultado mais útil numa busca por conceito.
    */
+  /**
+   * Achados do code review. Serve para a pergunta que ninguém consegue responder hoje:
+   * "o que já foi apontado neste arquivo e nunca foi corrigido?".
+   */
+  static searchFindings(db, scope) {
+    const { clause, params } = RecallTool.projectClause(scope, 'c.project_id');
+    const match = RecallTool.anyColumnMatches(
+      ['f.title', 'f.scenario', 'f.cause', 'f.suggestion', 'f.path'],
+      scope.pattern
+    );
+
+    return SddDb.all(
+      db,
+      `SELECT p.name AS project, c.change_id, k.chunk_id, f.severity, f.path, f.line,
+              f.title, f.scenario, f.cause, f.suggestion, f.at
+         FROM review_findings f
+         JOIN chunks k ON k.id = f.chunk_pk
+         JOIN changes c ON c.id = k.change_pk
+         JOIN projects p ON p.id = c.project_id
+        WHERE ${clause} ${match.clause}
+        ORDER BY f.at DESC
+        LIMIT ?`,
+      [...params, ...match.params, scope.limit]
+    );
+  }
+
   /**
    * Temas do `lp:explain`. Única fonte que ignora o escopo de projeto, porque a tabela
    * não tem `project_id`: conceito aprendido num repositório vale no próximo.

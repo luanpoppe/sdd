@@ -51,7 +51,7 @@ Todo nó **já implementado** (`done`, `current` ou `deviated`) é clicável e a
 Para cada nó implementado:
 
 1. No nó, adicione a classe `has-detail`, o atributo `data-detail="F<n>.C<m>"`, `tabindex="0"` e um `<span class="hint">detalhes</span>` dentro dele.
-2. No `<div class="detail-panel" hidden>` da MESMA feature (um por feature, logo depois do `.flow`), adicione um bloco = **mini-walkthrough do chunk, com código REAL** (estilo `lp:review`):
+2. No `<div class="detail-panel" hidden>` da MESMA feature (um por feature, logo depois do `.flow`), adicione um bloco = **mini-walkthrough do chunk, com código REAL** (estilo `lp:review-walkthrough`):
    ```html
    <div class="detail" data-detail-for="F<n>.C<m>" hidden>
      <h4>Componente <span class="chunk-id">F<n>.C<m> · ClassePrincipal</span></h4>
@@ -70,7 +70,7 @@ Para cada nó implementado:
 
 Conteúdo do detalhe (regras):
 
-- **Leia o código REAL dos chunks implementados.** Para `done`/`current`/`deviated`, abra os arquivos que o chunk tocou (listados no `tasks.md`, ou o diff) e extraia os **trechos decisivos de verdade** — não pseudo-código. O objetivo é um walkthrough como o do `lp:review`: quem clica entende como aquela parte foi implementada de fato.
+- **Leia o código REAL dos chunks implementados.** Para `done`/`current`/`deviated`, abra os arquivos que o chunk tocou (listados no `tasks.md`, ou o diff) e extraia os **trechos decisivos de verdade** — não pseudo-código. O objetivo é um walkthrough como o do `lp:review-walkthrough`: quem clica entende como aquela parte foi implementada de fato.
   - **Barato no `lp:continue`**: o chunk acabou de ser implementado neste turno — reuse o relatório do subagente / o diff que você já tem em contexto em vez de reler tudo. No `lp:flow` avulso (sem esse contexto), aí sim leia os arquivos do chunk.
   - Nós `pending` continuam **sem** `has-detail` (não há código ainda).
 - **Como funciona**: 1 parágrafo curto + os trechos reais. Um `<pre data-file="path">` por arquivo relevante (o `data-file` vira o nome do arquivo no topo do bloco). ≤ ~15 linhas por bloco; corte o resto com `…`. Escape `<`, `>`, `&`.

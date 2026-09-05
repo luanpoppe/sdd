@@ -71,12 +71,12 @@ Mantenha **macro e curto**. É contexto, não spec nem walkthrough linha a linha
 - **`lp:init` (projeto pré-existente, `context: true`)**: um subagente analisa o **macro** do projeto e semeia o `index.md` + contexto **agrupado por domínio em subpastas** (`<dominio>/...`), com nomes específicos. Projeto novo/vazio: só cria o `index.md` esqueleto; o resto cresce com os fluxos.
 - **`lp:continue` — ao CONCLUIR uma feature**: crie/atualize o contexto daquela feature **sob a subpasta do domínio** (`.sdd/context/<dominio>/<aspecto>.md`), com nome específico (não use o slug solto na raiz). O que é, como funciona, decisões da spec/plan/auto-sync. Entra no pacote do escriba do passo, junto com a atualização do índice.
 - **`lp:bug-fix` — ao concluir a correção**: atualize o contexto da área afetada (na subpasta do domínio) com a causa raiz e a decisão de correção (ou crie, se a área ainda não existir).
-- **`lp:review` — conforme a revisão avança**: registre no contexto a área revisada (review = entendimento → fonte ideal de contexto).
+- **`lp:review-walkthrough` — conforme a revisão avança**: registre no contexto a área revisada (review = entendimento → fonte ideal de contexto).
 - Sempre que criar/mover/renomear um arquivo → **atualize o(s) índice(s)** no mesmo passo.
 
 ## Obrigação de leitura
 
-No início de QUALQUER fluxo `lp:*` que raciocina sobre o projeto (`lp:new-feature`, `lp:continue`, `lp:bug-fix`, `lp:review`, `lp:ask`, `lp:audit`), com `context: true`: **leia o `.sdd/context/index.md`**. Se a tarefa toca uma área listada, leia também o arquivo de contexto dela antes de decidir/implementar. É a primeira parada para "como isso funciona hoje?".
+No início de QUALQUER fluxo `lp:*` que raciocina sobre o projeto (`lp:new-feature`, `lp:continue`, `lp:bug-fix`, `lp:review-walkthrough`, `lp:ask`, `lp:audit`), com `context: true`: **leia o `.sdd/context/index.md`**. Se a tarefa toca uma área listada, leia também o arquivo de contexto dela antes de decidir/implementar. É a primeira parada para "como isso funciona hoje?".
 
 ## context vs memória (não confundir)
 

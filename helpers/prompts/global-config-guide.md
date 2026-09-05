@@ -45,7 +45,7 @@ O global é lido em **exatamente dois momentos**:
 1. **`lp:init`** — para semear o `.sdd/config.yaml` do projeto novo.
 2. **`lp:settings`** — para ler ou escrever o próprio global (com a palavra-chave `global`).
 
-**Mais nada.** Nenhuma outra skill lê o global. O `lp:init` **materializa** os valores resolvidos dentro do `.sdd/config.yaml`, então `lp:continue`, `lp:bug-fix`, `lp:review` e todas as outras continuam lendo só o config do projeto, sem saber que global existe.
+**Mais nada.** Nenhuma outra skill lê o global. O `lp:init` **materializa** os valores resolvidos dentro do `.sdd/config.yaml`, então `lp:continue`, `lp:bug-fix`, `lp:review-walkthrough` e todas as outras continuam lendo só o config do projeto, sem saber que global existe.
 
 **Precedência ao semear**: config do projeto (se já existir) > global > default embutido.
 

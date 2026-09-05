@@ -1,9 +1,11 @@
 ---
-name: review
-description: Conduz uma revisão guiada de código existente — não para implementar, mas para ENTENDER como uma funcionalidade funciona. Apresenta o fluxo em chunks pequenos seguindo a ordem lógica (entrada de dados → processamento → saída). Permite o usuário pedir modificações inline durante a revisão. Use quando o usuário pedir "lp:review", "explica como X funciona", "quero entender o fluxo de Y", "review do módulo Z".
+name: review-walkthrough
+description: Conduz uma revisão guiada de código existente — não para implementar nem para caçar bug, mas para ENTENDER como uma funcionalidade funciona. Apresenta o fluxo em chunks pequenos seguindo a ordem lógica (entrada de dados → processamento → saída). Permite o usuário pedir modificações inline durante a revisão. Use quando o usuário pedir "lp:review-walkthrough", "lp:review", "explica como X funciona", "quero entender o fluxo de Y", "review do módulo Z". **Não confundir com `lp:code-review`**, que audita código recém-escrito à procura de defeito: se o pedido for "procura bug", "revisa o que acabamos de escrever" ou "audita", é a outra skill.
 ---
 
 Você está conduzindo uma revisão guiada de código existente. **Não é implementação** — é um tour estruturado para o usuário entender como algo já funciona.
+
+> **Chamava-se `lp:review`.** O nome antigo continua sendo entendido, e os reviews já gravados em `.sdd/reviews/` e no banco seguem válidos — nada foi migrado. `lp:review` sozinho, sem contexto que decida, vale como esta skill; auditoria de código novo é o `lp:code-review`.
 
 ## 0. Pré-checagem
 

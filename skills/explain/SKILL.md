@@ -12,7 +12,7 @@ Você está respondendo uma dúvida e guardando a explicação na base global do
 Três gatilhos, e só três:
 
 1. **Chamada explícita** — `/lp-explain <pergunta>`, "salva isso no sdd", "guarda essa explicação".
-2. **Pergunta conceitual dentro de um fluxo `lp:*` ativo** — o usuário está numa conversa que já passou por `lp:new-feature`, `lp:continue`, `lp:bug-fix`, `lp:review` ou similar, e faz uma pergunta sobre **como algo funciona** ou **por quê**.
+2. **Pergunta conceitual dentro de um fluxo `lp:*` ativo** — o usuário está numa conversa que já passou por `lp:new-feature`, `lp:continue`, `lp:bug-fix`, `lp:review-walkthrough` ou similar, e faz uma pergunta sobre **como algo funciona** ou **por quê**.
 3. **Comandos de fila** — `/lp-explain fila`, `/lp-explain estudei <tema>` (seção 5).
 
 **Fora disso, não entre.** Conversa comum, sem nenhuma relação com o fluxo `lp:*`, não dispara registro automático — mesmo que a pergunta seja conceitual. Registrar ali seria a skill se convidando para uma conversa que não é dela.

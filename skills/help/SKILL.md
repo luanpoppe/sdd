@@ -11,7 +11,7 @@ Você está dando ao usuário um status report do SDD. **Apenas LEITURA** — nu
 - Leia TODOS os campos do config: `format`, `lang`, `chunk_size`, `context_watch`, `flowchart`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue`, `context`, `parallel`, `chunk_order`, `auto_commit`, `mcp`, `tasks_storage`, `state_storage` (trate ausentes com o default: `flowchart: on`, `implementer: subagent`, `scribe: subagent`, `tasks_format: md`, `tasks_autocontinue: on`, `context: true`, `parallel: off`, `chunk_order: inside-out`, `auto_commit: suggest-only`, `tests: off`, `mcp: off`, `tasks_storage: file`, `state_storage: file`). Cheque também se existe a **config global** `~/.sdd/config.yaml` (preferências do usuário que semeiam projetos novos) — se existir, conte quantos campos tem; se não, ignore em silêncio. Leia também o bloco **opcional** `subagents` (modelo por papel de subagente) — se ausente, não é default nenhum: simplesmente não mencione.
 - Se `context: true`/ausente e `.sdd/context/index.md` existir: conte quantas áreas estão documentadas (linhas do índice) — reporte no status.
 - Liste pastas em `.sdd/changes/` (mudanças ativas) e conte `.sdd/archive/`.
-- Liste reviews ativos em `.sdd/reviews/` (criados por `lp:review`), se houver, com o `state`.
+- Liste reviews ativos em `.sdd/reviews/` (criados por `lp:review-walkthrough`), se houver, com o `state`.
 - Verifique `.sdd/memory.md` (ou `.sdd/memory-map.md`): conte entradas por seção.
 - Para cada mudança ativa: leia `.sdd.yaml` (id, title, state, current_feature, current_chunk, features[], updated). **Com `state_storage: mcp`** esses campos não estão no arquivo: leia-os com `sdd_read_state`. Se as tools não estiverem disponíveis, diga que o estado está no banco e não pôde ser lido — não reporte a mudança como parada nem chute o passo. **Cheque `kind`**: se `kind: bugfix`, é um bug-fix (estados `bug-diagnosing`/`bug-proposing`/`bug-fixing`) — não tem `features[]`; os chunks vivem em `tasks.md` na raiz da mudança. Veja `../../helpers/prompts/bugfix-machine.md`.
 - Se há feature em `implementing` ou anterior: leia `specs/<current_feature>/tasks.md` (se existir).
@@ -24,7 +24,7 @@ Formato sugerido:
 
 ```
 SDD: <projeto>
-Config: format=<f> · lang=<l> · chunk_size=<c> · flowchart=<on/off> · implementer=<subagent/main> · scribe=<subagent/main> · tasks_format=<md/follow> · tasks_autocontinue=<on/off> · context=<true/false> · parallel=<on/off> · chunk_order=<inside-out/outside-in/free> · auto_commit=<full/suggest-only/off> · tests=<off/on> · mcp=<off/on> · tasks_storage=<file/mcp> · state_storage=<file/mcp>
+Config: format=<f> · lang=<l> · chunk_size=<c> · flowchart=<on/off> · implementer=<subagent/main> · scribe=<subagent/main> · tasks_format=<md/follow> · tasks_autocontinue=<on/off> · context=<true/false> · parallel=<on/off> · chunk_order=<inside-out/outside-in/free> · auto_commit=<full/suggest-only/off> · tests=<off/on> · code_review=<off/on> · mcp=<off/on> · tasks_storage=<file/mcp> · state_storage=<file/mcp>
 Subagentes: <papel:modelo · papel:modelo>   (só esta linha se o bloco `subagents` existir; omita inteira se não)
 Config global: ~/.sdd/config.yaml (<N> campos)   (só se o arquivo existir; omita se não — não sugira criar)
 MCP: tools do SDD <disponíveis / NÃO disponíveis nesta sessão>   (só esta linha se mcp=on; omita inteira se off)
@@ -42,7 +42,7 @@ Feature ativa: <current_feature>  ·  chunk atual: <current_chunk> — <o que el
 Diagrama: .sdd/changes/<id>/flow.html   (se flowchart=on)
 
 Memória: <N em Estilo/Processo · M em Stack/Domínio>  (.sdd/memory.md)
-Reviews ativos (lp:review): <slug — state>   (se houver)
+Reviews ativos (lp:review-walkthrough): <slug — state>   (se houver)
 
 Sugestões:
 1. /lp-continue — <descreva a próxima ação concretamente>
@@ -85,7 +85,9 @@ Comandos do SDD `lp-*` (via marketplace: `lp:init`; via installer/Cursor: `/lp-i
   /lp-settings global [campo valor]  Mesma coisa, mas na config global (~/.sdd/config.yaml) — padrão dos próximos /lp-init.
   /lp-context [pergunta|ação]  Base de conhecimento do projeto (.sdd/context/): health-check, dúvidas, documentar áreas.
   /lp-memory [instrução]  Gerencia .sdd/memory.md (revisar, validar, editar, remover, dividir, mesclar).
-  /lp-review [tema]   Revisão guiada de código existente. Tour em chunks pelo fluxo. Permite modificações inline.
+  /lp-code-review [alvo]  Audita código recém-escrito: bug, borda, contrato divergente,
+                      erro engolido, vazamento, segurança. Reporta com severidade, não corrige.
+  /lp-review-walkthrough [tema]   Revisão guiada de código existente. Tour em chunks pelo fluxo. Permite modificações inline.
   /lp-audit      Lista divergências entre docs e código da feature ativa. Não aplica nada sem OK.
   /lp-archive    Finaliza: verifica + move a mudança para .sdd/archive/<id>/.
   /lp-auto-update  Atualiza as skills para a versão mais recente do GitHub (luanpoppe/sdd).

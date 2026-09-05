@@ -18,7 +18,7 @@ Siga `../../helpers/prompts/flowchart-guide.md` para montar o `flow.html` a part
 
 - Aqui, sim, regenere o `<main>` inteiro — `lp:flow` existe justamente para reconstruir a partir do estado real. No `lp:continue` a regra é a oposta (edição pontual); ver `../../helpers/prompts/flowchart-guide.md`, seção "Atualização incremental".
 - **Escrita (scribe)**: com `scribe: subagent` (default), delegue a escrita do `flow.html` ao subagente escriba (`../../helpers/prompts/scribe-guide.md`) — você monta o conteúdo e passa pra ele escrever, mantendo o contexto limpo. Com `scribe: main` ou sem subagente → escreva inline.
-- Cada nó já implementado (`done`/`current`/`deviated`) vira clicável, com um **mini-walkthrough** no `.detail-panel` (como funciona + **código REAL** do chunk + dados fluindo + conecta), estilo `lp:review`. **Leia os arquivos que o chunk tocou** para extrair os trechos reais (no `lp:flow` avulso; dentro do `lp:continue`, reuse o diff/relatório do subagente já em contexto). Veja o guia.
+- Cada nó já implementado (`done`/`current`/`deviated`) vira clicável, com um **mini-walkthrough** no `.detail-panel` (como funciona + **código REAL** do chunk + dados fluindo + conecta), estilo `lp:review-walkthrough`. **Leia os arquivos que o chunk tocou** para extrair os trechos reais (no `lp:flow` avulso; dentro do `lp:continue`, reuse o diff/relatório do subagente já em contexto). Veja o guia.
 - Salve em `.sdd/changes/<id>/flow.html`.
 
 ## 2. Reportar
