@@ -41,7 +41,7 @@ Chame a tool **junto** do passo, não num turno separado.
 | passo **g-bis** | `sdd_record_chunk` | **a chamada principal** — o chunk e um item por arquivo, com `does`/`connects`/`review_note` mais `detail`, `highlights`, `symbols` e `diff` (ver abaixo) |
 | commit efetivado no `auto_commit: full` | `sdd_record_chunk` | rechame com o `commit` preenchido (`mode: full`, `branch`, `sha`) |
 | `lp:review`, step fechado | `sdd_record_review` | o step com arquivos, `detail`, `highlights` e `symbols` — **a mesma profundidade de um chunk** |
-| geração da spec de uma feature | `sdd_sync_change` | `features[].scenarios[]` — os cenários BDD e edge cases, com `key` estável (`mcp_record.scenarios`) |
+| geração da spec de uma feature | `sdd_sync_change` | `features[].scenarios[]` — os requisitos (BDD ou entrada/saída) e edge cases, com `key` estável (`mcp_record.scenarios`) |
 | `lp:context`, ao criar/atualizar uma área | `sdd_record_knowledge` | `kind: context`, o que é a área e como funciona (`mcp_record.context`) |
 | `lp:explain`, ao gerar/atualizar um tema | `sdd_record_knowledge` | `kind: explain`, o tema e o essencial do que foi explicado (`mcp_record.explain`) |
 | `lp:archive` | `sdd_sync_change` | `archived` + `state: archived` |

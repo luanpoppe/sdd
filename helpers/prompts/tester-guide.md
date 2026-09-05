@@ -23,7 +23,7 @@ Em qualquer chunk que não fecha a feature, f-bis não faz nada. No modo paralel
 ## O que o principal passa ao tester
 
 - **Arquivos de código da feature**: junte os campos `Arquivos` de **todos** os chunks da feature no `tasks.md` (no bug-fix, do `tasks.md` na raiz da mudança). Não é só o último chunk.
-- **A `spec.md` da feature** — em especial os **cenários BDD** (`Dado que / Quando / Então`) e a seção **Edge cases**: são insumo direto de casos de teste, cada cenário deve virar pelo menos um teste.
+- **A `spec.md` da feature** — em especial a seção **Requirements** e a seção **Edge cases**: são insumo direto de casos de teste, cada item deve virar pelo menos um teste. Os requisitos vêm em **dois formatos**, e ambos obrigam teste: BDD (`Dado que / Quando / Então`) quando há ator externo, e `Entrada` / `Saída` / `Erro` quando o comportamento é interno. O formato técnico já traz o valor literal de entrada e saída — use exatamente esse valor, não invente outro. A linha `Erro` de um requisito é caso de teste como qualquer outro.
 - **No bug-fix**: o `diagnosis.md` (causa raiz) e a `chosen_solution` do `solutions.md`. A causa raiz **obriga** um teste de regressão — o teste que teria pegado o bug.
 - Convenções de código do projeto (CLAUDE.md/regras) e o comando de validação usado nos chunks.
 
@@ -39,7 +39,7 @@ Em qualquer chunk que não fecha a feature, f-bis não faz nada. No modo paralel
   - **Borda**: vazio, zero, um elemento, limite superior/inferior, coleção grande, string com unicode/espaço, data no limite do intervalo.
   - **Falha**: entrada inválida, dependência que lança, timeout, resposta malformada, permissão negada.
   - **Nulos** (`null`/`undefined`/`None`/`nil`) — **só quando o tipo realmente permite**. Não force caso impossível só pra ter mais um teste.
-- Cada cenário BDD da spec e cada item de "Edge cases" precisa ter teste correspondente. Se algum não for testável em unitário, diga no relatório em vez de fingir cobertura.
+- Cada requisito da spec (nos dois formatos, incluindo a linha `Erro` do formato técnico) e cada item de "Edge cases" precisa ter teste correspondente. Se algum não for testável em unitário, diga no relatório em vez de fingir cobertura.
 
 **Qualidade**
 - **DRY por parametrização**: `it.each` (JS/TS), `pytest.mark.parametrize` (Python), table-driven (Go), `[Theory]/[InlineData]` (xUnit). Casos que só variam entrada/saída viram tabela, não N blocos copiados.

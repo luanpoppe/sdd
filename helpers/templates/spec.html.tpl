@@ -11,7 +11,7 @@
     <p class="toc-title">Índice</p>
     <ol>
       <li><a href="#resumo">Resumo</a></li>
-      <li><a href="#requirements">Requirements (BDD)</a></li>
+      <li><a href="#requirements">Requirements</a></li>
       <li><a href="#edge-cases">Edge cases</a></li>
       <!-- A linha abaixo só entra se a seção "Contratos expostos" existir no spec.md. -->
       <li><a href="#contratos-expostos">Contratos expostos</a></li>
@@ -33,8 +33,14 @@
     </details>
 
     <details class="lp-sec" id="requirements" open>
-      <summary><h2>Requirements (cenários BDD)</h2></summary>
-      <!-- Cada cenário: <h3> título + bloco Dado/Quando/Então (ou Given/When/Then conforme lang). -->
+      <summary><h2>Requirements</h2></summary>
+      <!--
+        Espelha o spec.md, que mistura dois formatos na mesma lista numerada:
+        - BDD (há ator externo): <h3> título + bloco Dado/Quando/Então (Given/When/Then).
+        - Entrada/Saída (comportamento interno): <h3> título + Entrada/Saída/Erro, com o
+          valor literal em <code>. Payload longo em <pre><code>.
+        A numeração é contínua entre os dois — não separe em duas listas.
+      -->
     </details>
 
     <details class="lp-sec" id="edge-cases" open>
