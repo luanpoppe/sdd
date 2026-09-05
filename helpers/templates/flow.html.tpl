@@ -52,7 +52,8 @@
       margin-bottom: 1.5rem; padding: 0 1.25rem; }
     .feature[open] { padding-bottom: 1.5rem; }
     .feature > summary { font-size: 1rem; font-weight: 600; cursor: pointer; list-style: none;
-      display: flex; align-items: center; gap: .5rem; padding: 1rem 0; user-select: none; }
+      display: flex; align-items: center; gap: .5rem; padding: 1rem 0;
+      -webkit-user-select: none; user-select: none; }
     .feature > summary::-webkit-details-marker { display: none; }
     .feature > summary::before { content: "▸"; color: var(--accent); font-size: .8rem; transition: transform .15s; }
     .feature[open] > summary::before { transform: rotate(90deg); }

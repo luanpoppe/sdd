@@ -318,7 +318,7 @@ details[data-step] > summary, details[data-section] > summary {
   display: flex; align-items: center; gap: 11px;
   padding: 16px 0; margin: 0;
   font-size: 20px; font-weight: 620; letter-spacing: -0.02em;
-  user-select: none; transition: color 0.14s;
+  -webkit-user-select: none; user-select: none; transition: color 0.14s;
 }
 details > summary::-webkit-details-marker { display: none; }
 details > summary:hover { color: var(--lp-accent); }

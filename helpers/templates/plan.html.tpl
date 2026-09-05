@@ -2,6 +2,7 @@
 <html lang="{{lang}}">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Plano — {{change_id}}</title>
   <link rel="stylesheet" href="../../assets/styles.css">
 </head>
@@ -50,7 +51,7 @@
   </main>
 
   <footer class="lp-footer">
-    <p>Gerado pelo SDD <code>lp:new</code>. Espelho HTML do <code>plan.md</code> (fonte é o .md).</p>
+    <p>Gerado pelo SDD <code>lp:new-feature</code>. Espelho HTML do <code>plan.md</code> (fonte é o .md).</p>
   </footer>
 </body>
 </html>
