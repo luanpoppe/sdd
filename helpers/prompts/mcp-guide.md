@@ -31,6 +31,7 @@ Chame a tool **junto** do passo, não num turno separado.
 | `lp:bug-fix` — criação e fim do diagnóstico | `sdd_sync_change` | `kind: bugfix`, `title`, `state`. Sem `features[]` |
 | bug-fix, ao escolher a solução | `sdd_sync_change` | `chosen_solution` + `state: bug-fixing` |
 | `lp:continue` — transição de `state` (spec, tasks, feature concluída) | `sdd_sync_change` | o `state` novo e o `features[].status` que mudou |
+| fim de um **grill** (macro do `lp:new`, diagnóstico do `lp:bug-fix`, spec de uma feature) | `sdd_record_event` | `kind: note` — as decisões que o grill resolveu e os achados que mudaram o entendimento, em `detail` |
 | passo **a**, divergência encontrada | `sdd_record_event` | `kind: deviation`, o que divergiu e o que foi decidido |
 | passo **b0**, decisão de modo | `sdd_record_event` | `kind: mode_decision` — **fecha um buraco real**: hoje essa decisão é perguntada 1× por feature e não é persistida em lugar nenhum |
 | onda do paralelo, ao anunciar | `sdd_record_event` | `kind: wave_planned`, quais chunks entraram e por que os outros ficaram fora (ver `./parallel-guide.md`) |
@@ -61,6 +62,22 @@ Esta é a regra que faz a feature valer a pena. O plano de revisão no chat tem 
 Quantos destaques por arquivo: **0 a 3**. Arquivo trivial (DTO, contrato, barrel) não precisa de nenhum — e `detail` nele pode ser uma frase ou nada. Concentre o esforço nos 1-2 arquivos que realmente carregam o chunk; foi neles que a revisão vai gastar tempo.
 
 Recorte o `snippet`: 5-25 linhas, o suficiente para o trecho se explicar. Se precisa de mais que isso, provavelmente são dois destaques.
+
+### O `detail` dos eventos é onde a decisão fica legível
+
+O `summary` é a linha da timeline — uma frase. O **`detail`** é um objeto livre, e é ele que faz o evento valer meses depois. Agrupe por conceito em vez de despejar texto corrido:
+
+```json
+{
+  "grill": { "profundidade": "...", "fronteira": "..." },
+  "achados": { "sintoma_reenquadrado": "...", "causa_raiz": "...", "evidencia": "..." },
+  "clickup": { "subtask": "86e34gwq7", "status": "em andamento" }
+}
+```
+
+As chaves são livres e em `snake_case` — quem consome (o SDD Viewer) as exibe como rótulo, então nomeie pelo conceito (`causa_raiz`, `motivo`, `decisao_1`), não com abreviação. Objeto aninhado é bem-vindo: vira seção na tela.
+
+O que vale registrar num grill: **o que foi decidido e o que ficou de fora**, o achado que reenquadrou o problema (o mais valioso — é o que ninguém lembra depois), a evidência que sustenta a conclusão, e ponteiros externos (card, ticket, PR). O que não vale: repetir o que já está no `diagnosis.md`/`plan.md` — o banco é índice, não cópia.
 
 ## Quem chama
 

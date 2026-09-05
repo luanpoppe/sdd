@@ -79,6 +79,7 @@ Se `format` ∈ {html, both}, gere também `plan.html` usando `../../helpers/tem
 - `features`: lista completa (slug, title, summary, status: `pending`) na ordem definida.
 - `updated`: hoje.
 - Com **`mcp: on`**: `sdd_sync_change` com o `title`, o `state` novo e o `features[]` completo — é o momento em que a estrutura da mudança fica conhecida.
+- Com **`mcp: on`**, registre também um `sdd_record_event` (`kind: note`) com o que o grill macro decidiu e o que ficou explicitamente fora de escopo. Ver `../../helpers/prompts/mcp-guide.md`.
 
 ## 6. Mensagem final e pausa para revisão
 

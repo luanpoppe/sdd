@@ -53,7 +53,7 @@ Com **`mcp: on`** no `.sdd/config.yaml`, chame `sdd_sync_change` logo depois de 
 2. **Investigue o código** (Read/Grep/Glob/Agent Explore — papel `explorer` para modelo/thinking, ver `../../helpers/prompts/subagents-guide.md`) para rastrear do sintoma até a **causa raiz**. Cite arquivos/funções reais (`arquivo:linha`). Distinga causa de sintoma — não pare no primeiro `catch`.
    - Se a causa não ficar clara, diga o que ainda falta investigar em vez de inventar. Pode fazer mais um batch de perguntas.
 3. Gere `diagnosis.md` usando `../../helpers/templates/diagnosis.md.tpl`. **Objetivo e sem repetição** (cabe em 1-2 telas, ~40 linhas). Cada seção tem UM trabalho: **Investigação** = a trilha/evidência (bullets "olhei X → constatei Y", arquivo:linha uma vez cada); **Causa raiz** = a conclusão em 1-3 frases, referenciando os arquivos já citados pelo nome curto — **não re-narre a trilha** nem repita o sintoma. **Nada de propor correção** aqui (fix vai pro `solutions.md`). Se `format` ∈ {html, both}: gere também `diagnosis.html` (`../../helpers/templates/diagnosis.html.tpl`) e garanta `.sdd/assets/styles.css` (copie de `../../helpers/templates/styles.css` se faltar).
-4. Atualize `.sdd.yaml`: `title`, `state: bug-proposing`, `updated`. Com **`mcp: on`**, chame `sdd_sync_change` com o `title` e o `state` novo.
+4. Atualize `.sdd.yaml`: `title`, `state: bug-proposing`, `updated`. Com **`mcp: on`**, chame `sdd_sync_change` com o `title` e o `state` novo, e mais um `sdd_record_event` (`kind: note`) com as decisões que o grill resolveu e os achados que reenquadraram o sintoma — é a informação que não cabe no `diagnosis.md` e que ninguém lembra depois. Ver `../../helpers/prompts/mcp-guide.md`.
 5. Imprima plano de revisão:
 
    ```
