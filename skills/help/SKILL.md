@@ -28,6 +28,7 @@ Config: format=<f> · lang=<l> · chunk_size=<c> · flowchart=<on/off> · implem
 Subagentes: <papel:modelo · papel:modelo>   (só esta linha se o bloco `subagents` existir; omita inteira se não)
 Config global: ~/.sdd/config.yaml (<N> campos)   (só se o arquivo existir; omita se não — não sugira criar)
 MCP: tools do SDD <disponíveis / NÃO disponíveis nesta sessão>   (só esta linha se mcp=on; omita inteira se off)
+Fila de estudo: <N> tema(s) aberto(s) em ~/.sdd/explain/   (só se houver algum aberto; omita a linha se não houver ou se a pasta não existir)
 
 Mudança ativa: <id> — <title>
 Estado: <state>  ·  atualizado em <updated>
@@ -56,6 +57,8 @@ Se nenhuma mudança ativa: sugira `/lp-new-feature <id>` (implementação do zer
 Se `state == awaiting-archive`: sugira `/lp-archive`.
 Se `parallel=off` e a mudança está em `implementing`: mencione que dá pra acelerar com `/lp-parallel`.
 
+**Sobre a fila de estudo**: conte os temas com `data-status="aberto"` nos HTMLs de `~/.sdd/explain/` — ou, com `mcp: on`, chame `sdd_read_explain`. É lembrete, não cobrança: mostre o número e siga, sem sugerir estudar agora.
+
 **Sobre a linha do MCP**: `mcp: on` no config e tools realmente utilizáveis são duas coisas diferentes — quem liga a config e não reinicia a sessão fica sem as tools, e é aí que acha que "não funciona". Então reporte o que você **observa**: se as tools `sdd_*` existem nesta sessão, diga "disponíveis"; se não, diga "NÃO disponíveis nesta sessão — reinicie para ativar". Com `mcp: off`, omita a linha inteira e não sugira ligar.
 
 ## 3. Resumo dos comandos `lp-*` (apenas se invocado SEM argumentos)
@@ -71,8 +74,11 @@ Comandos do SDD `lp-*` (via marketplace: `lp:init`; via installer/Cursor: `/lp-i
   /lp-continue   Avança UM passo. Feature: spec → tasks → chunks. Bug-fix: opções → tasks → chunks.
   /lp-status     Resumo de handoff sob demanda (estado + próximos passos, pra retomar/nova conversa).
   /lp-help       Mostra status e (sem args) este resumo.
-  /lp-ask <q>    Dúvida rápida no chat sobre a mudança ativa. Não persiste nada.
-  /lp-explain <tema>  Cria/atualiza HTML acumulativo por tema em explain/<tema>.html.
+  /lp-ask <q>    Dúvida rápida no chat sobre a mudança ativa. Não grava nada.
+  /lp-explain <tema>  Explica e acumula em ~/.sdd/explain/<tema>.html (global, com fila
+                      de estudo). Dispara sozinho em pergunta conceitual dentro do fluxo.
+  /lp-explain fila    O que está aberto para estudar, do mais antigo.
+  /lp-explain estudei <tema>   Dá baixa na fila.
   /lp-flow       Gera/regenera o diagrama macro (flow.html) do fluxo de implementação.
   /lp-parallel [on|off]  Liga/desliga implementação paralela (chunks independentes, um subagente cada).
   /lp-settings [campo valor]  Lista/altera as configs do .sdd/config.yaml (por campo/valor ou linguagem natural).

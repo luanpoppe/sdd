@@ -11,6 +11,7 @@ const { ReindexTool } = require('./reindex');
 const { RecordKnowledgeTool } = require('./record-knowledge');
 const { WriteTasksTool, ReadTasksTool } = require('./tasks');
 const { WriteStateTool, ReadStateTool } = require('./state');
+const { RecordExplainTool, ReadExplainTool } = require('./explain');
 
 /**
  * Registro das tools expostas pelo servidor.
@@ -34,6 +35,8 @@ const TOOL_CLASSES = [
   ReadTasksTool,
   WriteStateTool,
   ReadStateTool,
+  RecordExplainTool,
+  ReadExplainTool,
   QueryHistoryTool,
   RecallTool,
   ReindexTool

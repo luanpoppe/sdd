@@ -23,6 +23,19 @@ Não fica em `~/.claude/skills/` nem em `~/.cursor/lp-helpers/` porque o install
 >
 > As duas exceções são declaradas em config e estão documentadas no guia operacional: `tasks_storage: mcp` e `state_storage: mcp`.
 
+### A tabela sem projeto
+
+`explain_topics` é a única tabela sem `project_id`, e por escolha: os temas do `lp:explain` são
+globais. O que se entendeu sobre JWT num repositório vale no próximo, e prender o tema a um
+projeto esconderia justamente o que motivou tirá-lo de dentro do `.sdd/`. A procedência de cada
+pergunta fica em `origins`, como metadado.
+
+Ela também é a única fonte com **estado de leitura** (`aberto` / `estudado`), o que transforma o
+histórico numa fila do que ficou pela metade. O estado continua sendo do arquivo — vive no
+`data-status` do HTML em `~/.sdd/explain/` — então a fila funciona com o MCP desligado; o banco
+só a torna buscável e visível no Viewer. O `sdd_reindex` não reconstrói esta tabela, porque ela
+não tem origem no `.sdd/` de projeto nenhum.
+
 ## O motor de SQLite, e por que o banco não usa WAL
 
 O servidor escolhe sozinho com o que falar SQLite (`mcp/sqlite-driver.js`):

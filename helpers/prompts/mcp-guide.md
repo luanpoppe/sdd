@@ -17,7 +17,7 @@ mcp_record:
   symbols: false     # para de gravar métodos com exemplos de entrada/saída
   diff: false        # para de gravar o diff por arquivo (já é o comportamento quando auto_commit: full)
   context: true      # .sdd/context/ no banco
-  explain: true      # temas do lp:explain no banco
+  explain: true      # temas globais do lp:explain no banco
   scenarios: true    # cenários da spec e o vínculo com os chunks
 ```
 
@@ -43,7 +43,8 @@ Chame a tool **junto** do passo, não num turno separado.
 | `lp:review`, step fechado | `sdd_record_review` | o step com arquivos, `detail`, `highlights` e `symbols` — **a mesma profundidade de um chunk** |
 | geração da spec de uma feature | `sdd_sync_change` | `features[].scenarios[]` — os requisitos (BDD ou entrada/saída) e edge cases, com `key` estável (`mcp_record.scenarios`) |
 | `lp:context`, ao criar/atualizar uma área | `sdd_record_knowledge` | `kind: context`, o que é a área e como funciona (`mcp_record.context`) |
-| `lp:explain`, ao gerar/atualizar um tema | `sdd_record_knowledge` | `kind: explain`, o tema e o essencial do que foi explicado (`mcp_record.explain`) |
+| `lp:explain`, ao gerar/atualizar um tema | `sdd_record_explain` | o tema **global** (fora de projeto), com `question`, `origin` e o `detail` que a busca precisa alcançar (`mcp_record.explain`) |
+| `lp:explain`, ao dar baixa na fila | `sdd_record_explain` | o mesmo slug com `status: "estudado"` |
 | `lp:archive` | `sdd_sync_change` | `archived` + `state: archived` |
 | banco perdido, ou período trabalhado com `mcp: off` | `sdd_reindex` | reconstrói o esqueleto a partir do `.sdd/`; não recupera explicação, exemplo nem decisão |
 
@@ -129,6 +130,8 @@ Sem os pontos abaixo, o SDD grava uma memória que nunca consulta.
 | `lp:new-feature`, durante o grill macro | `sdd_recall` com o tema da mudança | Mostra o que já existe antes de você perguntar ao usuário coisas que o histórico responde. |
 | `lp:review`, ao montar o plano de steps | `sdd_recall` com o tema do review | Reaproveita explicação e exemplos já escritos em vez de reconstruí-los do zero. |
 | `lp:ask` / `lp:status`, pergunta sobre trabalho anterior | `sdd_query_history` | Responde "onde paramos" e "o que foi feito" sem reler `.sdd/`. |
+| `lp:explain`, antes de criar tema novo | `sdd_read_explain` com `status: "todos"` | Evita `jwt` e `json-web-token` como dois temas. |
+| o usuário pergunta o que tem para estudar | `sdd_read_explain` | A fila do que ficou `aberto`, do mais antigo. |
 
 Regras para não virar ruído:
 
@@ -136,6 +139,7 @@ Regras para não virar ruído:
 - **Não anuncie a busca.** Se não achou nada, fique quieto. Se achou algo que muda a decisão, diga o que achou e o que muda.
 - **Achado é contexto, não ordem.** Nos modos `file`, o próximo chunk continua saindo do `tasks.md` e o estado do `.sdd.yaml`.
 - **Considere `all_projects: true`** quando a dúvida é de biblioteca, padrão ou stack, e não do projeto em si.
+- **Os temas do `lp:explain` sempre entram no `sdd_recall`**, com ou sem `all_projects`: a tabela não tem projeto. Uma explicação escrita noutro repositório é resposta legítima aqui.
 
 ### O `detail` dos eventos é onde a decisão fica legível
 

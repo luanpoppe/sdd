@@ -9,7 +9,7 @@
  * Sem essa distinção os dois se confundem em toda query.
  */
 
-const SCHEMA_VERSION = 5;
+const SCHEMA_VERSION = 6;
 
 const CREATE_TABLES = [
   `CREATE TABLE IF NOT EXISTS schema_meta (
@@ -246,6 +246,25 @@ const CREATE_TABLES = [
      mode     TEXT CHECK (mode IN ('full','suggest-only'))
    )`,
 
+  // Única tabela do banco sem `project_id`, e de propósito: o `lp:explain` é global.
+  // O que você entendeu sobre JWT num projeto continua valendo no próximo, então
+  // amarrar o tema a um repositório esconderia justamente o que motivou globalizar.
+  // A procedência de cada pergunta vive em `origins` (JSON), como metadado.
+  `CREATE TABLE IF NOT EXISTS explain_topics (
+     id         INTEGER PRIMARY KEY AUTOINCREMENT,
+     slug       TEXT NOT NULL UNIQUE COLLATE NOCASE,
+     title      TEXT,
+     path       TEXT,
+     status     TEXT NOT NULL DEFAULT 'aberto' CHECK (status IN ('aberto','estudado')),
+     summary    TEXT,
+     detail     TEXT,
+     origins    TEXT,
+     questions  INTEGER NOT NULL DEFAULT 0,
+     created_at TEXT NOT NULL,
+     updated_at TEXT NOT NULL,
+     studied_at TEXT
+   )`,
+
   `CREATE TABLE IF NOT EXISTS events (
      id         INTEGER PRIMARY KEY AUTOINCREMENT,
      project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
@@ -277,6 +296,7 @@ const CREATE_INDEXES = [
   `CREATE INDEX IF NOT EXISTS idx_knowledge_project  ON knowledge_entries(project_id, kind)`,
   `CREATE INDEX IF NOT EXISTS idx_reviews_project    ON reviews(project_id)`,
   `CREATE INDEX IF NOT EXISTS idx_review_steps_rev   ON review_steps(review_pk)`,
+  `CREATE INDEX IF NOT EXISTS idx_explain_status     ON explain_topics(status, updated_at)`,
   `CREATE INDEX IF NOT EXISTS idx_events_project_at  ON events(project_id, at)`,
   `CREATE INDEX IF NOT EXISTS idx_events_kind        ON events(kind)`
 ];

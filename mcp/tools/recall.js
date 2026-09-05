@@ -25,9 +25,9 @@ class RecallTool {
     return {
       name: 'sdd_recall',
       description:
-        'Busca no histórico do SDD por termo livre (arquivo, classe, método, conceito) em 7 ' +
-        'fontes: chunks, arquivos, destaques, métodos com exemplos, steps de review, cenários e ' +
-        'conhecimento. Use antes de mexer em algo que talvez já tenha sido tocado, ou para ' +
+        'Busca no histórico do SDD por termo livre (arquivo, classe, método, conceito) em 8 ' +
+        'fontes: chunks, arquivos, destaques, métodos com exemplos, steps de review, cenários, ' +
+        'conhecimento e temas do lp:explain. Use antes de mexer em algo que talvez já tenha sido tocado, ou para ' +
         'lembrar como uma parte do sistema funciona.',
       inputSchema: {
         type: 'object',
@@ -48,6 +48,9 @@ class RecallTool {
     const project = SddRepo.findProject(ctx.db, ctx.projectRoot);
     const allProjects = args.all_projects === true;
 
+    // Sem projeto registrado, tudo que é por projeto vem vazio — mas os temas do
+    // `lp:explain` são globais e continuam buscáveis, inclusive em repositório que
+    // nunca rodou o SDD.
     if (!project && !allProjects) {
       Log.info('recall sem registro para o projeto', { root: ctx.projectRoot });
       return {
@@ -58,7 +61,11 @@ class RecallTool {
         reviews: [],
         knowledge: [],
         scenarios: [],
-        decisions: []
+        decisions: [],
+        explain: RecallTool.searchExplain(ctx.db, {
+          pattern: RecallTool.likePattern(args.query),
+          limit: RecallTool.clampLimit(args.limit)
+        })
       };
     }
 
@@ -78,7 +85,8 @@ class RecallTool {
       reviews: RecallTool.searchReviewSteps(ctx.db, scope),
       knowledge: RecallTool.searchKnowledge(ctx.db, scope),
       scenarios: RecallTool.searchScenarios(ctx.db, scope),
-      decisions: RecallTool.searchEvents(ctx.db, scope)
+      decisions: RecallTool.searchEvents(ctx.db, scope),
+      explain: RecallTool.searchExplain(ctx.db, scope)
     };
 
     Log.info('recall executado', {
@@ -89,7 +97,8 @@ class RecallTool {
       reviews: result.reviews.length,
       knowledge: result.knowledge.length,
       scenarios: result.scenarios.length,
-      decisions: result.decisions.length
+      decisions: result.decisions.length,
+      explain: result.explain.length
     });
     return result;
   }
@@ -252,6 +261,27 @@ class RecallTool {
    * descreve como o sistema funciona hoje, não o que mudou num chunk —, então costuma
    * ser o resultado mais útil numa busca por conceito.
    */
+  /**
+   * Temas do `lp:explain`. Única fonte que ignora o escopo de projeto, porque a tabela
+   * não tem `project_id`: conceito aprendido num repositório vale no próximo.
+   */
+  static searchExplain(db, scope) {
+    const match = RecallTool.anyColumnMatches(
+      ['slug', 'title', 'summary', 'detail', 'origins'],
+      scope.pattern
+    );
+
+    return SddDb.all(
+      db,
+      `SELECT slug, title, status, summary, detail, path, questions, updated_at
+         FROM explain_topics
+        WHERE ${match.clause}
+        ORDER BY updated_at DESC
+        LIMIT ?`,
+      [...match.params, scope.limit]
+    );
+  }
+
   static searchKnowledge(db, scope) {
     const { clause, params } = RecallTool.projectClause(scope, 'k.project_id');
     const match = RecallTool.anyColumnMatches(

@@ -55,7 +55,11 @@ const MIGRATIONS = {
     `ALTER TABLE changes ADD COLUMN current_feature TEXT`,
     `ALTER TABLE changes ADD COLUMN current_chunk TEXT`,
     `ALTER TABLE changes ADD COLUMN in_review TEXT`
-  ]
+  ],
+  // Nada a fazer: `explain_topics` é tabela nova, criada pelo CREATE_TABLES em banco
+  // novo e em banco antigo (o `IF NOT EXISTS` roda sempre). O degrau existe só para o
+  // banco antigo registrar que chegou na versão 6.
+  6: []
 };
 
 module.exports = { MIGRATIONS };

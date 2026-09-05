@@ -55,10 +55,10 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 | `lp:settings` | Lista e altera as configurações do `.sdd/config.yaml` (por campo/valor ou em linguagem natural). Com a palavra `global`, mexe na config global do usuário (`~/.sdd/config.yaml`). |
 | `lp:context` | Base de conhecimento do projeto (`.sdd/context/`): health-check do índice/arquivos, dúvidas sobre como as coisas funcionam, documentar áreas. |
 | `lp:auto-update` | Atualiza as skills para a versão mais recente do GitHub. |
-| `lp:explain` | Gera explicação em HTML de um tópico. |
+| `lp:explain` | Explica um assunto e acumula num HTML global por tema (`~/.sdd/explain/`), com fila de estudo. Dispara sozinho em pergunta conceitual dentro de um fluxo ativo. |
 | `lp:audit` | Detecta divergência entre spec e implementação. |
 | `lp:memory` | Gerencia a memória autônoma do SDD. |
-| `lp:ask` | Pergunta pontual sobre o estado do SDD. |
+| `lp:ask` | Pergunta pontual sobre o estado do SDD, sem gravar nada. |
 | `lp:status` | Resumo de handoff sob demanda (pra retomar em conversa nova). |
 | `lp:archive` | Arquiva uma mudança concluída. |
 | `lp:help` | Estado atual do SDD + próximos passos. |
@@ -68,7 +68,7 @@ npx github:luanpoppe/sdd --tool=claude --dry-run
 
 [`luanpoppe/sdd-viewer`](https://github.com/luanpoppe/sdd-viewer) — app Electron read-only que lê `.sdd/` (mudanças, features, bug-fixes, reviews) e renderiza os artefatos `.md`/`.html` com fast refresh (atualiza sozinho quando o agente regrava um arquivo). Sidebar separa projeto → mudança/review → artefato. Não é dependência de nenhum fluxo `lp:*` — é só uma forma alternativa de ler o que o SDD já gera.
 
-- Com o MCP ligado, ganha uma aba **Timeline** por mudança (chunks em ordem, com duração, arquivos explicados, métodos com exemplos e diff) e uma **busca** que atravessa projetos.
+- Com o MCP ligado, ganha uma aba **Timeline** por mudança (chunks em ordem, com duração, arquivos explicados, métodos com exemplos e diff), uma **busca** que atravessa projetos e a **Fila de estudo** do `lp:explain` — os temas ainda abertos, do mais antigo, com a origem de cada pergunta.
 - Abrir/instalar/atualizar: `lp:desktop` (Windows por enquanto; checa update em paralelo sem travar o uso).
 - Instalador `.exe` (NSIS, por-usuário, sem admin) publicado em [GitHub Releases](https://github.com/luanpoppe/sdd-viewer/releases).
 - Rodar em outro SO / modo dev: clone o repo e `npm install && npm run dev`.
@@ -92,7 +92,8 @@ O que é registrado, em cada etapa:
 - **Cenários da spec** → e qual chunk implementou cada um, o que revela cenário sem cobertura.
 - **Decisões** → grill, modo sequencial/paralelo, divergências do auto-sync, commits.
 - **`lp:review`** → os steps com a mesma profundidade de um chunk.
-- **`.sdd/context/` e `lp:explain`** → a base de conhecimento de longo prazo do projeto.
+- **`.sdd/context/`** → a base de conhecimento de longo prazo do projeto.
+- **`lp:explain`** → os temas globais, com o estado da fila de estudo. É a única tabela do banco sem projeto: o que você entendeu sobre um assunto num repositório vale no próximo.
 
 Detalhes:
 
@@ -102,6 +103,18 @@ Detalhes:
 - O `lp:init` registra o servidor no `.mcp.json` do projeto (merge, nunca sobrescrita), então o time herda. As tools só aparecem **após reiniciar a sessão**.
 - Banco **global**, com uma tabela `projects` separando os repos: permite consulta cruzada e o histórico sobrevive a apagar o `.sdd/` de um projeto.
 - O banco é **índice e log derivado** — o markdown/YAML em `.sdd/` continua a fonte de verdade. As duas exceções são `tasks_storage: mcp` (o plano de chunks) e `state_storage: mcp` (o bloco volátil do `.sdd.yaml`), que passam a viver só no banco. Apagar o `sdd.db` degrada a visualização e não corrompe projeto nenhum, e nenhum fluxo `lp:*` depende dele para funcionar.
+
+## `lp:explain` — base de conhecimento sua, com fila de estudo
+
+Explica um assunto e acumula a explicação num HTML por tema em **`~/.sdd/explain/`** — fora de qualquer repositório, então serve tanto para dúvida sobre o código quanto sobre uma stack ou um conceito solto.
+
+- **O tema é do assunto, não do projeto.** `jwt` é um arquivo só, e cada pergunta registra de onde veio. O que você aprendeu num repositório aparece quando o assunto volta noutro.
+- **Dispara sozinho** em pergunta conceitual (*"o que é X"*, *"por que isso acontece"*) feita dentro de um fluxo `lp:*` ativo. Pergunta de operação (*"roda o teste"*, *"já commitou?"*) não entra — e em conversa sem relação com o SDD a skill não se convida.
+- **Responder nunca espera a escrita**: a resposta sai na hora e um subagente em background grava o HTML.
+- **Fila de estudo**: todo tema nasce `aberto` e só vira `estudado` quando você disser (`/lp-explain estudei <tema>`). `/lp-explain fila` lista o que está aberto, do mais antigo — o esquecido há mais tempo primeiro.
+- Quer resposta sem rastro nenhum? É o `lp:ask`.
+
+O estado mora no próprio HTML (`data-status`), então a fila funciona com o MCP desligado; ligado, ela também fica buscável e aparece no SDD Viewer.
 
 ## Configuração (`.sdd/config.yaml`)
 
