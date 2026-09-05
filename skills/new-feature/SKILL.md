@@ -72,7 +72,7 @@ Preencha:
 - **Features** — lista numerada com SLUG + TÍTULO + 1 frase. Nada mais. Se você está tentado a escrever mais por feature, PARE — isso vai para a spec dela.
 - **Escopo** — dentro/fora em listas curtas.
 
-Se `format` ∈ {html, both}, gere também `plan.html` usando `../../helpers/templates/plan.html.tpl` (espelha o `.md`; garanta que `.sdd/assets/styles.css` exista).
+Se `format` ∈ {html, both}, gere também `plan.html` **rodando o conversor** (`node <HOME>/.sdd/render/html.js <caminho do plan.md>`) — não escreva o HTML à mão. Garanta que `.sdd/assets/styles.css` exista. Se o comando falhar, caia para `../../helpers/templates/plan.html.tpl` e avise em uma linha. Ver `../../helpers/prompts/html-render-guide.md`.
 
 ## 5. Atualizar `.sdd.yaml`
 

@@ -36,7 +36,7 @@ in_review: <null | {chunks: [ids], files: [paths], updated: data}>
   flow.html           # opcional (flowchart: on)
 ```
 
-> **Formato segue `format` do config.** Com `html`/`both`, gere o par `.md` + `.html` para `diagnosis`, `solutions` e `tasks` (espelho, usando `.sdd/assets/styles.css`). Templates: `../templates/diagnosis.*.tpl`, `../templates/solutions.*.tpl`, `../templates/tasks.md.tpl`.
+> **Formato segue `format` do config.** Com `html`/`both`, o par `.md` + `.html` de `diagnosis`, `solutions` e `tasks` continua saindo — mas o `.html` é gerado **por código**: `node <HOME>/.sdd/render/html.js <caminho do .md>`, depois que o `.md` estiver gravado. Você escreve só o markdown. Falhou → escreva à mão pelo `.tpl` e avise em uma linha. Ver `./html-render-guide.md`. Templates do markdown: `../templates/diagnosis.md.tpl`, `../templates/solutions.md.tpl`, `../templates/tasks.md.tpl`.
 
 > **Escrita via scribe.** Com `scribe: subagent` (default), delegue as escritas de cada passo (docs, `flow.html`, `.sdd.yaml`) ao subagente escriba — veja `./scribe-guide.md`. O principal decide o conteúdo; o escriba escreve.
 

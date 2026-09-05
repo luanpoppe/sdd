@@ -119,6 +119,17 @@ Explica um assunto e acumula a explicação num HTML por tema em **`~/.sdd/expla
 
 O estado mora no próprio HTML (`data-status`), então a fila funciona com o MCP desligado; ligado, ela também fica buscável e aparece no SDD Viewer.
 
+## `format: both` sem pagar duas vezes
+
+Com `format: html` ou `both`, o `.html` de `plan`, `spec`, `tasks`, `diagnosis` e `solutions` é gerado **por código** — `~/.sdd/render/html.js`, instalado junto do plugin, sem dependência nenhuma.
+
+- **O agente escreve só o `.md`.** O espelho sai de um conversor determinístico, então `both` custa praticamente o mesmo que `md`.
+- **O espelho passou a ser fiel.** Escrito à mão, ele saía resumido: o HTML dizia menos que a fonte. Agora é o mesmo conteúdo.
+- **Fallback preservado**: sem node ou com o conversor falhando, o agente escreve o HTML como antes e avisa em uma linha. `both` continua entregando os dois arquivos em qualquer máquina.
+- **`--all` regenera em lote** todos os espelhos de um projeto — é como um artefato antigo recebe melhoria de template. Não toca no `styles.css`, que pode ter cor customizada no `lp:init`.
+
+`flow.html`, `explain.html` e `walkthrough.html` ficam de fora: os dois primeiros não têm `.md` de origem, e o terceiro é montado pelo `lp:review-walkthrough`.
+
 ## Legibilidade dos artefatos
 
 Duas regras que valem em toda spec, tasks, diagnosis e plano de revisão gerados:

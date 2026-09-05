@@ -22,6 +22,7 @@ const ROOT = path.resolve(__dirname, '..');
 const SKILLS_SRC = path.join(ROOT, 'skills');
 const HELPERS_SRC = path.join(ROOT, 'helpers');
 const MCP_SRC = path.join(ROOT, 'mcp');
+const RENDER_SRC = path.join(ROOT, 'render');
 const HOME = os.homedir();
 const PKG_VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, '.claude-plugin', 'plugin.json'), 'utf8')).version;
 const VERSION_MARKER = '.lp-version.json';
@@ -206,6 +207,20 @@ function planMcp(actions) {
   return { dest: mcpDest, installed };
 }
 
+// Conversor de markdown para HTML. Mesma pasta e mesmo motivo do MCP: fora do alcance
+// do purge, neutro entre harnesses, ao lado do config global.
+//
+// Também copiado SEMPRE. É ele que faz o `format: both` custar um documento em vez de
+// dois — o agente escreve o .md e o .html sai daqui, sem token de conteúdo.
+function planRender(actions) {
+  const renderDest = path.join(HOME, '.sdd', 'render');
+  const installed = readInstalledVersion(renderDest);
+  if (fs.existsSync(renderDest)) actions.push(['deleteDir', renderDest]);
+  copyDir(RENDER_SRC, renderDest, actions);
+  writeVersionMarker(renderDest, actions);
+  return { dest: renderDest, installed };
+}
+
 // ---- run ----
 function main() {
   const args = parseArgs(process.argv);
@@ -240,6 +255,8 @@ function main() {
   });
   const mcpPlan = planMcp(actions);
   process.stdout.write(`  • MCP → ${mcpPlan.dest} (opcional; ligue com /lp-settings mcp on)\n`);
+  const renderPlan = planRender(actions);
+  process.stdout.write(`  • Conversor md→html → ${renderPlan.dest} (usado quando format é html ou both)\n`);
 
   if (claudeCoversCursor) {
     const n = planCleanupCursorDuplicates(skills, actions);

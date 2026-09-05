@@ -21,7 +21,7 @@ Depois, conforme o alvo:
 
 | Campo | Valores | Default | O que faz |
 |---|---|---|---|
-| `format` | `md` / `html` / `both` | (grill) | Formato das docs de conteúdo (`plan`, `spec`). `html`/`both` gera o par `.html`. |
+| `format` | `md` / `html` / `both` | (grill) | Formato das docs de conteúdo (`plan`, `spec`). `html`/`both` gera o par `.html`, **por código** (`~/.sdd/render/html.js`), não pelo agente — o custo de `both` é praticamente o de `md`. Ver `../../helpers/prompts/html-render-guide.md`. |
 | `lang` | `pt-BR` / `en` | (grill) | Idioma das docs e do grilling. |
 | `chunk_size` | `micro` / `small` / `medium` / `large` / `xlarge` | `micro` | Tamanho de cada chunk de implementação. |
 | `context_watch` | `suggest` / `auto` / `off` | (grill) | Watch anti-degradação de contexto longo. |
