@@ -7,6 +7,7 @@ Regras para gerar/atualizar `.sdd/changes/<id>/flow.html`: um diagrama **macro**
 - Só gere/atualize se `flowchart` no `.sdd/config.yaml` for `on` (default). Se `off`, **não faça nada** relativo ao diagrama.
 - Com `flowchart: on`, o campo `flow_storage` decide **onde** ele vive — ver a seção abaixo. O resto deste guia descreve o modo `file`.
 - O arquivo é **sempre HTML**, independente de `format` (igual `lp:explain`). Fica em `.sdd/changes/<id>/flow.html`.
+- **O `<style>` do template é obrigatório.** Não troque por um link para `.sdd/assets/styles.css`: aquela folha estiliza as docs, e nenhuma classe do diagrama existe nela — o arquivo sairia sem estilo nenhum.
 - Use o template `../templates/flow.html.tpl` (do ponto de vista das skills: `~/.claude/skills/lp-shared/templates/flow.html.tpl` ou o caminho equivalente do install). É autocontido — sem libs, offline.
 
 ## Onde o fluxo vive: `flow_storage`

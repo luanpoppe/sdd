@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fluxo da implementação — {{TITLE}}</title>
   <style>
-    /* Autocontido: não depende de styles.css nem de libs externas. Funciona offline. */
+    /* AUTOCONTIDO — este <style> é obrigatório e NÃO pode ser trocado pelo link do
+       .sdd/assets/styles.css. Aquela folha só estiliza as docs; as classes do diagrama
+       (node, dot, done/current/pending/deviated, feature, connector, detail-panel,
+       chunk-id) não existem lá, e o arquivo sai sem estilo nenhum. Sem libs, offline. */
     :root {
       --bg: #f7f8fa; --fg: #1a1d21; --muted: #6b7280; --card: #ffffff; --line: #cbd5e1;
       --pending-bd: #cbd5e1; --pending-bg: #f1f5f9; --pending-fg: #64748b;
