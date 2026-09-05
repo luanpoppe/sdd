@@ -23,9 +23,10 @@ process.emitWarning = (warning, ...rest) => {
 
 const { RpcHandler } = require('./rpc');
 
-// `node:sqlite` só existe sem flag a partir do Node 23. Abaixo disso o servidor
-// morreria com um erro de módulo que não diz nada sobre a causa real.
-const MIN_NODE_MAJOR = 23;
+// Piso real do servidor. Não é mais o do `node:sqlite` (Node 22.5+): quando ele não
+// existe, o `./sqlite-driver.js` cai no SQLite WASM vendorizado, que roda em qualquer
+// Node moderno. O 18 aqui é o LTS mais antigo em que a sintaxe deste código é válida.
+const MIN_NODE_MAJOR = 18;
 
 class SddMcpServer {
   static version() {
@@ -43,8 +44,8 @@ class SddMcpServer {
     if (major >= MIN_NODE_MAJOR) return;
 
     process.stderr.write(
-      `[sdd-mcp] Node ${process.versions.node} é antigo demais: o banco do SDD usa ` +
-        `node:sqlite, disponível a partir do Node ${MIN_NODE_MAJOR}. ` +
+      `[sdd-mcp] Node ${process.versions.node} é antigo demais: o servidor do SDD precisa ` +
+        `de Node ${MIN_NODE_MAJOR} ou mais novo. ` +
         `Atualize o Node ou desligue o MCP com "/lp-settings mcp off".\n`
     );
     process.exit(1);

@@ -23,6 +23,33 @@ Não fica em `~/.claude/skills/` nem em `~/.cursor/lp-helpers/` porque o install
 >
 > As duas exceções são declaradas em config e estão documentadas no guia operacional: `tasks_storage: mcp` e `state_storage: mcp`.
 
+## O motor de SQLite, e por que o banco não usa WAL
+
+O servidor escolhe sozinho com o que falar SQLite (`mcp/sqlite-driver.js`):
+
+- **`node:sqlite`** quando o Node o traz (22.5+). É nativo e mais rápido.
+- **SQLite WASM vendorizado** (`mcp/vendor/node-sqlite3-wasm/`) em qualquer outro caso.
+
+O fallback existe porque o piso anterior era Node 23+, o que deixava sem MCP quem estivesse
+em Node 18 ou 20 — a maior parte do mercado. A biblioteca é vendorizada, e não declarada em
+`dependencies`, porque o instalador copia arquivos e nunca roda `npm install` na máquina de
+quem instala; uma dependência normal existiria só no repositório.
+
+**Consequência: o banco não usa mais WAL.** O build WASM não tem VFS de memória compartilhada,
+e não apenas deixa de usar WAL — ele **não abre** um arquivo marcado como tal, falhando com
+`unable to open database file`. Então o banco vive em rollback journal, o mesmo modo nos dois
+motores, e bancos antigos são convertidos na primeira abertura (`mcp/journal.js`).
+
+O que isso custa: em WAL, leitor e escritor não se bloqueiam; em rollback, o escritor tranca o
+arquivo durante a escrita. Como as escritas do SDD são pequenas e esparsas e os dois lados
+(servidor e SDD Viewer) usam `busy_timeout`, a janela de colisão é de milissegundos — e o
+leitor espera em vez de falhar.
+
+A conversão pode não acontecer na hora: o SQLite recusa a troca enquanto outra sessão com o MCP
+ligado, ou o Viewer, mantiver o arquivo aberto. Com o motor nativo isso é inofensivo (ele lê WAL),
+e a conversão sai sozinha numa abertura seguinte. Com o WASM, o servidor para com a instrução do
+que fechar.
+
 ## `sdd_reindex` — o que sustenta a promessa
 
 O banco só pode se dizer derivado porque há como re-derivá-lo. O `sdd_reindex` lê o `.sdd/` do projeto e reconstrói mudanças, features, chunks e status.
@@ -39,7 +66,7 @@ Diga estas na mesma resposta em que aplicar a mudança. Elas não são detalhe d
 
 - Grava um `.mcp.json` na raiz do projeto — versionado, o time herda.
 - As tools só passam a existir **depois de reiniciar a sessão**. É a confusão mais previsível: ligou, não reiniciou, "não funciona".
-- Exige Node 23+.
+- Exige Node 18+.
 
 ### `tasks_storage: mcp`
 
@@ -76,7 +103,7 @@ O `lp:init` grava, se o usuário aprovar, o servidor no arquivo do harness detec
 
 - `<HOME>` resolvido para caminho absoluto na hora de escrever.
 - O servidor descobre o projeto pelo diretório de trabalho. `SDD_PROJECT_ROOT` sobrescreve, e `SDD_DB_PATH` aponta para um banco descartável — as duas só para teste; **não escreva nenhuma das duas no `.mcp.json` de um projeto real**.
-- Precisa de **Node 23+** (o banco usa `node:sqlite`). Abaixo disso o servidor sai com uma mensagem explicando, e o `lp:init` nem oferece a opção.
+- Precisa de **Node 18+**. Abaixo disso o servidor sai com uma mensagem explicando, e o `lp:init` nem oferece a opção.
 - Ao desligar (`mcp: off`), deixe o `.mcp.json` como está: o registro é inofensivo desligado, e removê-lo mexeria num arquivo versionado do time.
 
 ## Princípios

@@ -52,7 +52,7 @@ Faça as perguntas abaixo. Siga as diretrizes de `../../helpers/prompts/grill-sn
 
 **Q6. Histórico estruturado via MCP local**
 
-> **Antes de perguntar, chece a versão do Node** (`node -v`). O servidor usa `node:sqlite`, que só existe a partir do **Node 23**. Abaixo disso, **não faça a pergunta**: grave `mcp: off` e diga em uma linha o motivo (*"MCP não oferecido: precisa de Node 23+, esta máquina tem vX"*). Não sugira atualizar o Node.
+> **Antes de perguntar, chece a versão do Node** (`node -v`). O piso é **Node 18**. Abaixo disso, **não faça a pergunta**: grave `mcp: off` e diga em uma linha o motivo (*"MCP não oferecido: precisa de Node 18+, esta máquina tem vX"*). Não sugira atualizar o Node. Acima de 18 o servidor funciona sempre: com `node:sqlite` quando o Node o traz (22.5+), e com o SQLite WASM vendorizado no resto.
 
 - off — nada é gravado além dos arquivos em `.sdd/`. (Recomendado se você não usa o SDD Viewer)
 - on — cada etapa (chunk implementado, arquivos tocados e o que revisar em cada um, testes, divergências, steps de `lp:review`) também é gravada num SQLite em `~/.sdd/sdd.db`.

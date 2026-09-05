@@ -2,14 +2,15 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const { DatabaseSync } = require('node:sqlite');
-
 const { Log } = require('./log');
+const { SqliteDriver } = require('./sqlite-driver');
+const { JournalMode } = require('./journal');
 const { ProjectResolver } = require('./project');
 const { SCHEMA_VERSION, CREATE_TABLES, CREATE_INDEXES } = require('./schema');
 const { MIGRATIONS } = require('./migrations');
 
 const DB_FILE_NAME = 'sdd.db';
+const BUSY_TIMEOUT_MS = 4000;
 
 /**
  * Conexão com o banco global (`~/.sdd/sdd.db`) e aplicação do schema.
@@ -38,14 +39,53 @@ class SddDb {
     const dbDir = path.dirname(dbPath);
     fs.mkdirSync(dbDir, { recursive: true });
 
-    const db = new DatabaseSync(dbPath);
-    // WAL: leitor (o SDD Viewer) não bloqueia escritor (este servidor) e vice-versa.
-    db.exec('PRAGMA journal_mode = WAL');
+    const driverKind = SqliteDriver.choose();
+    SddDb.ensureRollbackJournal(dbPath, driverKind);
+
+    const db = SqliteDriver.open(dbPath);
     db.exec('PRAGMA foreign_keys = ON');
+    // Sem WAL (ver ./journal.js), o escritor tranca o arquivo durante a escrita. O
+    // timeout faz o SDD Viewer esperar em vez de receber SQLITE_BUSY na cara.
+    db.exec(`PRAGMA busy_timeout = ${BUSY_TIMEOUT_MS}`);
 
     SddDb.migrate(db);
-    Log.info('banco aberto', { path: dbPath, schemaVersion: SCHEMA_VERSION });
+    Log.info('banco aberto', { path: dbPath, driver: db.driver, schemaVersion: SCHEMA_VERSION });
     return db;
+  }
+
+  /**
+   * Banco criado por uma versão antiga do SDD está em WAL, e o motor WASM não abre um
+   * arquivo assim. Converter na abertura é o que faz a troca de motor ser invisível para
+   * quem já usava — não há passo manual, e um banco já convertido sai daqui em no-op.
+   *
+   * A conversão pode falhar legitimamente: outra sessão com o MCP ligado, ou o SDD Viewer,
+   * mantêm o arquivo aberto, e o SQLite recusa a troca enquanto houver conexão. O que fazer
+   * depende de quem vai abrir em seguida:
+   *
+   * - motor **node**: ele lê WAL sem problema. A falha é irrelevante agora, e a conversão
+   *   acontece sozinha na primeira abertura em que ninguém mais estiver segurando o arquivo.
+   * - motor **wasm**: sem a conversão a abertura falha com "unable to open database file",
+   *   que não diz nada sobre a causa. Melhor parar aqui, com a instrução do que fazer.
+   */
+  static ensureRollbackJournal(dbPath, driverKind) {
+    if (!JournalMode.isWal(dbPath)) return;
+
+    const { converted, reason } = JournalMode.toRollback(dbPath);
+    if (converted) {
+      Log.info('journal convertido', { path: dbPath, reason });
+      return;
+    }
+
+    if (driverKind === 'node') {
+      Log.debug('banco ainda em WAL; o motor nativo lê assim mesmo', { reason });
+      return;
+    }
+
+    throw new Error(
+      `o banco ${dbPath} está em WAL e este Node não tem node:sqlite para convertê-lo ` +
+        `(${reason}). Feche o SDD Viewer e as outras sessões com o MCP ligado e tente de novo, ` +
+        `ou rode a instalação do SDD uma vez num Node 22.5+.`
+    );
   }
 
   /**
@@ -71,11 +111,11 @@ class SddDb {
     const current = SddDb.readSchemaVersion(db);
     if (current === SCHEMA_VERSION) return;
 
-    const upsert = db.prepare(
+    db.run(
       `INSERT INTO schema_meta (id, version) VALUES (1, ?)
-       ON CONFLICT (id) DO UPDATE SET version = excluded.version`
+       ON CONFLICT (id) DO UPDATE SET version = excluded.version`,
+      [SCHEMA_VERSION]
     );
-    upsert.run(SCHEMA_VERSION);
     Log.info('schema registrado', { from: current, to: SCHEMA_VERSION });
   }
 
@@ -103,7 +143,7 @@ class SddDb {
    */
   static readSchemaVersion(db) {
     try {
-      const row = db.prepare('SELECT version FROM schema_meta WHERE id = 1').get();
+      const row = db.get('SELECT version FROM schema_meta WHERE id = 1');
       return row ? row.version : null;
     } catch {
       return null;
@@ -111,27 +151,20 @@ class SddDb {
   }
 
   // --- wrappers finos -------------------------------------------------------
-  // Existem para que nenhuma tool precise repetir prepare/run e para converter o
-  // BigInt que o `lastInsertRowid` pode devolver.
+  // Ficaram finos porque o `./sqlite-driver.js` já normalizou as duas APIs de SQLite
+  // numa só. Continuam existindo para as tools nunca precisarem saber qual motor abriu
+  // o banco, e para manter o nome `one` que o resto do código usa.
 
   static run(db, sql, params = []) {
-    const statement = db.prepare(sql);
-    const result = statement.run(...params);
-    return {
-      changes: Number(result.changes),
-      lastInsertRowid: Number(result.lastInsertRowid)
-    };
+    return db.run(sql, params);
   }
 
   static one(db, sql, params = []) {
-    const statement = db.prepare(sql);
-    const row = statement.get(...params);
-    return row === undefined ? null : row;
+    return db.get(sql, params);
   }
 
   static all(db, sql, params = []) {
-    const statement = db.prepare(sql);
-    return statement.all(...params);
+    return db.all(sql, params);
   }
 }
 
