@@ -3,6 +3,7 @@
 const { SddDb } = require('../db');
 const { SddRepo } = require('../repo');
 const { Log } = require('../log');
+const { ServerVersion } = require('../version');
 
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 200;
@@ -42,13 +43,17 @@ class QueryHistoryTool {
 
     if (!project && !allProjects) {
       Log.info('histórico consultado sem registro para o projeto', { root: ctx.projectRoot });
-      return { project: null, changes: [], chunks: [], events: [] };
+      return { ...ServerVersion.status(), project: null, changes: [], chunks: [], events: [], open_findings: [] };
     }
 
     const limit = QueryHistoryTool.clampLimit(args.limit);
     const scope = { projectId: project ? project.id : null, allProjects, limit, args };
 
     const result = {
+      // A checagem de versão viaja de carona aqui porque esta é a tool que o motor chama
+      // no início do `implementing`: é o primeiro momento do turno em que um aviso ainda
+      // muda o que vai acontecer.
+      ...ServerVersion.status(),
       project: project ? { path: project.path, name: project.name } : null,
       changes: QueryHistoryTool.selectChanges(ctx.db, scope),
       chunks: QueryHistoryTool.selectChunks(ctx.db, scope),

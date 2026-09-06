@@ -6,8 +6,16 @@ Um subagente que audita **código recém-escrito** procurando o que está errado
 
 - Campo `code_review` no `.sdd/config.yaml`: `off` (padrão, ausente = `off`) ou `on`.
 - Com `off`, o passo **não existe** — não revise, não comente que está desligado, não sugira ligar.
-- Com `on`, roda por chunk (passo `c-bis`) e mais uma vez ao concluir a feature (passo `f-ter`).
+- Com `on`, roda **uma vez por feature**, no passo `f-ter`, quando o último chunk dela fecha. Não roda por chunk.
 - Sob demanda, o `lp:code-review` roda independente do toggle: chamar é pedir.
+
+### Por que uma vez por feature, e não a cada chunk
+
+Rodar por chunk custava caro e entregava pouco: um subagente por chunk, achados chegando de três em três, e a mesma decisão sendo pedida cinco vezes numa feature de cinco chunks. Pior, achado de chunk isolado erra mais — metade do que parece borda não tratada num chunk é tratada no chunk seguinte, que ainda não existia quando a revisão rodou.
+
+Com a feature inteira na mão, o revisor vê o contrato completo, a incoerência entre chunks e o que de fato ficou sem tratamento. E a decisão acontece uma vez, com tudo junto.
+
+O preço, dito claramente: **um achado grave nasce mais tarde**, já com chunks depois dele. É o custo aceito, e é o motivo de a decisão ser uma porta antes da próxima feature em vez de uma sugestão no meio do texto.
 
 ## Modelo e effort
 
@@ -19,11 +27,11 @@ Papel **`code-reviewer`** no bloco `subagents` do config, por harness, como qual
 
 Sempre os três, e nesta ordem de importância:
 
-1. **O diff do chunk** — o que mudou.
+1. **O diff da feature** — tudo o que os chunks dela mudaram.
 2. **Os arquivos tocados, inteiros** — o contexto ao redor. Sem isso ele não vê a função completa nem o contrato, e perde justamente o bug que só aparece na interação com o código que já estava lá.
 3. **A `spec.md` da feature** (ou, no bug-fix, o `diagnosis.md` + a `chosen_solution`) — o que era para acontecer. É o que permite o achado *"implementou diferente do combinado"*, que nenhum linter dá.
 
-Na passada de feature (`f-ter`), some a isso os arquivos de **todos** os chunks dela: o alvo ali é a incoerência entre chunks, que por definição não cabe em nenhum deles isolado.
+O alvo é a feature, não o último chunk. Boa parte do valor está exatamente no que não cabe num chunk isolado: contrato que mudou no meio do caminho, duplicação que só aparece com o conjunto na mão, borda que cada chunk achou que o outro tratava.
 
 ## O que procurar — checklist padrão
 
@@ -101,18 +109,31 @@ A lista sai **ordenada por severidade**, graves primeiro. Não há teto de quant
 
 Nada encontrado é resultado legítimo e comum. Diga *"Code review: nada a apontar"* em uma linha e siga — não invente achado menor para justificar a rodada.
 
-## A decisão — sempre que houver grave ou médio
+## A decisão — uma porta, não uma sugestão
 
-Achado impresso e nunca decidido é o modo mais comum de a revisão falhar: ele não foi corrigido, não foi descartado, não foi adiado, e ninguém volta nele. Então, **com pelo menos um `grave` ou `medio` na lista, pergunte** — depois de imprimir o plano de revisão, nunca antes (o usuário decide olhando os arquivos, não no vácuo).
+Achado impresso e nunca decidido é o modo mais comum de a revisão falhar: não foi corrigido, não foi descartado, não foi adiado, e ninguém volta nele. Como agora o review roda uma vez por feature, a decisão é um **passo de fluxo**, com lugar fixo:
 
-Use a interface nativa de pergunta do harness (`AskUserQuestion` no Claude, equivalente nos outros). O formato depende de quantos achados há:
+1. **No mesmo turno em que a feature fecha**, depois de imprimir o plano de revisão, exponha **todos** os achados da feature e pergunte o que fazer.
+2. **No `/lp-continue` seguinte**, antes de começar qualquer coisa: se ainda houver achado `aberto` da feature anterior, exponha de novo e pergunte **antes** de iniciar o próximo chunk. Só depois disso o fluxo segue.
+
+O passo 2 é o que faz disto uma porta. Sem ele, fechar a conversa no meio do turno apagaria a decisão, e a dívida voltaria a morrer em silêncio.
+
+O que a porta **não** faz: bloquear indefinidamente. Se você responder "nenhum agora", os achados passam a `adiado` — com uma linha dizendo para quando — e o fluxo segue sem perguntar de novo. `adiado` é decisão; `aberto` é ausência de decisão, e é só isso que reabre a porta.
+
+### O formato da pergunta
+
+Use a interface nativa do harness (`AskUserQuestion` no Claude, equivalente nos outros). O formato depende de quantos achados há:
 
 - **Até 3 achados de grave/médio** → uma pergunta de múltipla escolha, um item por achado (`A1 — <título curto>`), mais a opção de não corrigir nenhum agora.
-- **4 ou mais** → uma pergunta agregada: *corrigir todos os graves e médios* · *só os graves* · *nenhum agora, ficam abertos* · *descartar (com motivo)*. Quatro opções é o teto da interface; enfileirar 7 achados numa pergunta não cabe.
+- **4 ou mais** → uma pergunta agregada: *corrigir todos os graves e médios* · *só os graves* · *nenhum agora, ficam adiados* · *descartar (com motivo)*. Quatro opções é o teto da interface; enfileirar 7 achados numa pergunta não cabe.
 
-**Só `menor` na lista → não pergunte.** Interromper o fluxo por legibilidade é o caminho mais rápido para o usuário parar de ler a seção inteira. Os menores ficam abertos e reaparecem no fechamento da feature.
+**Só `menor` na lista → não pergunte.** Os menores ficam abertos, aparecem no plano e não param nada — interromper o fluxo por legibilidade é o caminho mais rápido para o usuário parar de ler a seção inteira.
 
 O usuário sempre pode responder fora das opções (*"corrige A1 e A3"*, *"descarta A2, foi decidido assim no grill"*). Trate isso como a resposta, não como fuga do formulário.
+
+### Sem MCP, a porta não persiste
+
+O gate do `/lp-continue` seguinte consulta o `open_findings` do `sdd_query_history`. Com `mcp: off`, o achado vive só no chat: a exposição no turno em que a feature fecha continua valendo, a segunda passada não existe. Diga isso **uma vez** na primeira rodada de review da conversa, e não repita.
 
 ## A correção — quem aplica
 
@@ -145,22 +166,11 @@ Todo achado termina em um destes quatro estados, e três deles exigem uma frase 
 
 ## Dívida aberta não morre calada
 
-Duas retomadas obrigatórias, as duas por `sdd_query_history` (o campo `open_findings` já vem filtrado por `status: aberto`):
+A retomada obrigatória é uma só, e é o gate descrito acima: **no início do `/lp-continue`**, com `mcp: on`, uma chamada `sdd_query_history` (campo `open_findings`, já filtrado por `status: aberto`).
 
-- **No fechamento da feature (`f-ter`)** — antes de revisar o conjunto, liste os achados ainda abertos dela: `A<n>` original, severidade, arquivo e título, em uma linha cada. É a última chance natural de decidir sobre eles.
-- **No início do chunk seguinte** — uma linha, só a contagem: *"3 achados abertos nesta feature (1 grave)."* Sem repetir as fichas, e sem perguntar de novo.
-
-Sem MCP não há de onde recobrar: nesse caso o achado vive só no chat, e vale dizer isso uma vez na primeira rodada de review da conversa.
-
-## O revisor reporta, nunca corrige
-
-Mesma regra do tester, pelo mesmo motivo: a decisão é do usuário. Um achado pode estar errado, ou apontar algo que foi decidido de propósito no grill.
-
-- **Não edite código.** Nem o "óbvio", nem o typo.
-- **Não bloqueie** o `/lp-continue`. Achado grave é destaque no plano de revisão, não trava.
-- **Não repita** o que o plano de revisão já diz. O campo `Revisar` conta o que olhar; o achado conta o que **está errado**.
-
-Isto vale para **o subagente revisor**. A correção existe e tem passo próprio — ver "A decisão" e "A correção" abaixo —, mas quem aplica é o principal ou um implementer, depois de o usuário decidir. Quem encontra nunca é quem conserta: o revisor que corrige perde a chance de ser contestado.
+- **Achado `aberto`** → exponha e pergunte antes de iniciar o próximo chunk.
+- **Achado `adiado`** → uma linha só, com a contagem, junto do cabeçalho do chunk: *"2 achados adiados da feature `<slug>` (1 grave)."* Sem fichas e sem pergunta.
+- **Nada aberto nem adiado** → siga em silêncio. Não anuncie que consultou.
 
 ## Onde entra no plano de revisão
 
@@ -185,12 +195,12 @@ A3 [médio] ...
 
 A4 [menor] src/pedidos/repo.ts:12 — `x` como nome do agregador esconde o que ele acumula.
 
-Abertos de rodadas anteriores: 1 (A2 do F2.C1 — validação de tmdbId no use case).
+Adiados da feature anterior: 1 (A2 de `user-movie-entry` — validação de tmdbId no use case).
 ```
 
 A ficha completa vai **no chat**, não só no banco. Era o contrário antes, e o resultado era uma lista que ninguém tinha como julgar: sem causa e sem custo, "corrigir agora?" não tem resposta.
 
-Com achado `grave`, acrescente à linha `Próximo:` que há grave a decidir — sem bloquear.
+Com achado `grave`, a linha `Próximo:` diz que o próximo `/lp-continue` começa decidindo sobre ele.
 
 ## Registro no banco (só com `mcp: on`)
 
@@ -216,6 +226,8 @@ Com `mcp_record.code_review: false`, pule o campo — o review continua rodando 
 - ❌ **Revisar código que o chunk não tocou.** O escopo é o diff mais o contexto ao redor dele; auditoria geral do repositório é outra tarefa.
 - ❌ **Contar mais achados do que os que você listou.** Número sem ficha é dívida que o usuário sabe que existe e não tem como olhar.
 - ❌ **Imprimir a lista e seguir para o `Próximo:`** com grave ou médio em aberto, sem perguntar nada.
+- ❌ **Iniciar o próximo chunk com achado `aberto` da feature anterior.** A porta existe justamente aí.
+- ❌ **Rodar o review a cada chunk.** Custa um subagente por chunk e produz achado que o chunk seguinte já resolveria.
 - ❌ **Interromper o fluxo por achado `menor`.** Legibilidade não justifica pergunta.
 - ❌ **Fechar achado sem `resolution`.** `descartado` sem motivo escrito é o mesmo que apagar.
 - ❌ **Corrigir o código e não regravar o `status`.** O achado fica aberto no banco para sempre e volta a aparecer em toda retomada.

@@ -48,7 +48,7 @@ Chame a tool **junto** do passo, não num turno separado.
 | `lp:context`, ao criar/atualizar uma área | `sdd_record_knowledge` | `kind: context`, o que é a área e como funciona (`mcp_record.context`) |
 | `lp:explain`, ao gerar/atualizar um tema | `sdd_record_explain` | o tema **global** (fora de projeto), com `question`, `origin` e o `detail` que a busca precisa alcançar (`mcp_record.explain`) |
 | `lp:explain`, ao dar baixa na fila | `sdd_record_explain` | o mesmo slug com `status: "estudado"` |
-| passos **c-bis** / **f-ter**, com `code_review: on` | `sdd_record_chunk` | campo `code_review` — um item por achado, com severidade, arquivo, linha, cenário, causa e sugestão (`mcp_record.code_review`) |
+| passo **f-ter**, com `code_review: on` | `sdd_record_chunk` | campo `code_review` — um item por achado, com severidade, arquivo, linha, cenário, causa e sugestão (`mcp_record.code_review`) |
 | passo **g-quater**, achado corrigido/descartado/adiado | `sdd_record_chunk` | o mesmo `code_review`, só com o achado fechado: `status` + `resolution`. Upsert por `path`+`title` |
 | passo **b-ter**, com `data_model: on` | `sdd_record_chunk` | campo `data_model` — um item por entidade, com `shape`, `decisions`, `rejected`, `index_notes` e `migration` (`mcp_record.data_model`) |
 | passo de **tasks**, com `flow_storage: mcp` | `sdd_write_tasks` (`mode: "plan"`) | o esqueleto do fluxo — um item por chunk com `component`, sem apagar o que já foi implementado |
@@ -207,7 +207,8 @@ Sem os pontos abaixo, o SDD grava uma memória que nunca consulta.
 | `lp:new-feature`, durante o grill macro | `sdd_recall` com o tema da mudança | Mostra o que já existe antes de você perguntar ao usuário coisas que o histórico responde. |
 | `lp:review-walkthrough`, ao montar o plano de steps | `sdd_recall` com o tema do review | Reaproveita explicação e exemplos já escritos em vez de reconstruí-los do zero. |
 | `lp:ask` / `lp:status`, pergunta sobre trabalho anterior | `sdd_query_history` | Responde "onde paramos" e "o que foi feito" sem reler `.sdd/`. |
-| passo **f-ter**, com `code_review: on` | `sdd_query_history` → `open_findings` | Os achados que ninguém fechou. Sem isto, achado impresso e não decidido morre no chat. |
+| **início do `implementing`**, com `code_review: on` | `sdd_query_history` → `open_findings` | A porta antes do próximo chunk. Sem isto, achado impresso e não decidido morre no chat. |
+| a mesma chamada, sempre | `sdd_query_history` → `stale_warning` | Servidor MCP em execução mais antigo que o instalado. Diga em uma linha que a sessão precisa reiniciar. |
 | `lp:explain`, antes de criar tema novo | `sdd_read_explain` com `status: "todos"` | Evita `jwt` e `json-web-token` como dois temas. |
 | o usuário pergunta o que tem para estudar | `sdd_read_explain` | A fila do que ficou `aberto`, do mais antigo. |
 
@@ -279,6 +280,14 @@ Como usar:
 - O `sdd_sync_change` continua sendo chamado normalmente: ele espelha a metade que ficou no arquivo. Quem governa o bloco volátil é o `sdd_write_state`, e só ele.
 
 > **Neste modo o MCP deixa de ser opcional**, pelo mesmo motivo. Tool indisponível **trava** o passo. Nunca chute o estado a partir dos artefatos presentes em disco — abrir uma spec porque "parece que falta" é pior que parar. Consequências de ligar: ver `./mcp-rationale.md`.
+
+## O servidor não recarrega sozinho
+
+O servidor MCP sobe junto com a sessão e fica de pé até ela morrer. Um `lp:auto-update` troca os arquivos de `~/.sdd/mcp/` e **não** reinicia esse processo: a sessão aberta continua rodando o código anterior, sem nenhum sinal visível.
+
+Isso já custou dado. Uma correção de perda do relatório por arquivo foi publicada, e as sessões abertas seguiram apagando por horas — o servidor delas era anterior ao conserto.
+
+Por isso o `sdd_query_history` devolve `stale_warning`. Havendo aviso: **uma** linha ao usuário dizendo para reiniciar a sessão, uma vez por conversa, sem bloquear nada. Não havendo, silêncio — não anuncie que a versão está em dia.
 
 ## Degradação — regra dura
 
