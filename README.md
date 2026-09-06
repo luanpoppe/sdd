@@ -217,6 +217,7 @@ Para não repetir as mesmas escolhas em todo projeto novo, dá pra guardar suas 
 - Aceita **todos** os campos da tabela acima (incluindo o bloco `subagents`) — é o mesmo esquema, sem subconjunto. Só `version`/`created` ficam de fora, por serem metadados do projeto.
 - É **esparso**: só existe o que você põe. Campo ausente = default do plugin (assim você continua recebendo mudanças de default em versões novas).
 - É **semente, não herança dinâmica**: o `lp:init` copia os valores para o `.sdd/config.yaml` do projeto e mostra o que herdou. Nos campos do grill, o valor global vem pré-selecionado — dá pra divergir num projeto específico.
+- **O `lp:help` avisa quando o projeto ficou para trás**: campo que existe no seu global e falta no `.sdd/config.yaml` — o caso do projeto criado antes daquele recurso existir — aparece como *deriva*, com o `/lp-settings` pronto. Ele não edita nada; alinhar é decisão sua.
 - Portanto, **mudar o global não altera projetos já criados** — de propósito: o `.sdd/config.yaml` versionado no repo é a verdade daquele projeto, igual pra todo mundo do time. Pra mudar um projeto existente, `lp:settings` normal.
 - Fica em `~/.sdd/` (não em `~/.claude/`) porque o installer limpa `lp-*` da pasta de skills a cada update, e porque assim serve Claude Code, Cursor e Codex igualmente.
 

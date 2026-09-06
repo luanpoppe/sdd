@@ -135,3 +135,5 @@ Os anti-padrões de *fluxo* estão no guia operacional. Estes são sobre a **qua
 - **Só exemplo de caminho feliz.** Se o método tem borda e você não a registrou, registrou a parte que ninguém precisava.
 - **`detail` que repete o `does` com outras palavras.** Se não acrescenta mecanismo, decisão descartada ou armadilha, deixe vazio — um `detail` vazio é honesto, um `detail` redundante custa leitura e não devolve nada.
 - **`note` do exemplo que descreve o que já se vê.** Ele existe para dizer o que o caso *prova*.
+- **Gravar o chunk vazio de conteúdo** — `detail` de duas frases, zero destaque, zero símbolo — porque os limites do guia falam em "0 a 3" e "pule o trivial". Aquilo é teto; o piso é o chunk ficar entendível sem abrir o código. Arquivo novo que declara regra (validação, cálculo, política de erro) nunca cai no "trivial".
+- **Deixar a regra sutil fora do símbolo.** O nome diz que valida; só o exemplo diz que nulo passa e `0` não, ou que a chave ausente no patch é ignorada de propósito. Essa é a parte que ninguém reconstrói depois.

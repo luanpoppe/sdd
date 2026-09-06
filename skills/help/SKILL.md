@@ -8,7 +8,7 @@ Você está dando ao usuário um status report do SDD. **Apenas LEITURA** — nu
 ## 1. Coleta
 
 - Existe `.sdd/config.yaml`? Se não → "SDD não inicializado. Rode `/lp-init`." Pare.
-- Leia TODOS os campos do config: `format`, `lang`, `chunk_size`, `context_watch`, `flowchart`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue`, `context`, `parallel`, `chunk_order`, `auto_commit`, `mcp`, `tasks_storage`, `state_storage` (trate ausentes com o default: `flowchart: on`, `implementer: subagent`, `scribe: subagent`, `tasks_format: md`, `tasks_autocontinue: on`, `context: true`, `parallel: off`, `chunk_order: inside-out`, `auto_commit: suggest-only`, `tests: off`, `mcp: off`, `tasks_storage: file`, `state_storage: file`). Cheque também se existe a **config global** `~/.sdd/config.yaml` (preferências do usuário que semeiam projetos novos) — se existir, conte quantos campos tem; se não, ignore em silêncio. Leia também o bloco **opcional** `subagents` (modelo por papel de subagente) — se ausente, não é default nenhum: simplesmente não mencione.
+- Leia TODOS os campos do config: `format`, `lang`, `chunk_size`, `context_watch`, `flowchart`, `implementer`, `scribe`, `tasks_format`, `tasks_autocontinue`, `context`, `parallel`, `chunk_order`, `auto_commit`, `mcp`, `tasks_storage`, `state_storage` (trate ausentes com o default: `flowchart: on`, `implementer: subagent`, `scribe: subagent`, `tasks_format: md`, `tasks_autocontinue: on`, `context: true`, `parallel: off`, `chunk_order: inside-out`, `auto_commit: suggest-only`, `tests: off`, `mcp: off`, `tasks_storage: file`, `state_storage: file`). Cheque também se existe a **config global** `~/.sdd/config.yaml` (preferências do usuário que semeiam projetos novos) — se existir, **leia os campos** e calcule a deriva (seção "Deriva da config global" abaixo); se não, ignore em silêncio. Leia também o bloco **opcional** `subagents` (modelo por papel de subagente) — se ausente, não é default nenhum: simplesmente não mencione.
 - Se `context: true`/ausente e `.sdd/context/index.md` existir: conte quantas áreas estão documentadas (linhas do índice) — reporte no status.
 - Liste pastas em `.sdd/changes/` (mudanças ativas) e conte `.sdd/archive/`.
 - Liste reviews ativos em `.sdd/reviews/` (criados por `lp:review-walkthrough`), se houver, com o `state`.
@@ -28,6 +28,8 @@ Config: format=<f> · lang=<l> · chunk_size=<c> · flowchart=<on/off> · implem
 Subagentes: <papel:modelo · papel:modelo>   (só esta linha se o bloco `subagents` existir; omita inteira se não)
 Conversor md->html: ~/.sdd/render (só cite a linha se format for html/both)
 Config global: ~/.sdd/config.yaml (<N> campos)   (só se o arquivo existir; omita se não — não sugira criar)
+Deriva (<N>): campos do seu global que este projeto nunca recebeu   (só se houver deriva; ver seção abaixo)
+  <campo>: <valor global>   →  /lp-settings <campo> <valor global>
 MCP: tools do SDD <disponíveis / NÃO disponíveis nesta sessão>   (só esta linha se mcp=on; omita inteira se off)
 Fila de estudo: <N> tema(s) aberto(s) em ~/.sdd/explain/   (só se houver algum aberto; omita a linha se não houver ou se a pasta não existir)
 
@@ -59,6 +61,24 @@ Se `state == awaiting-archive`: sugira `/lp-archive`.
 Se `parallel=off` e a mudança está em `implementing`: mencione que dá pra acelerar com `/lp-parallel`.
 
 **Sobre a fila de estudo**: conte os temas com `data-status="aberto"` nos HTMLs de `~/.sdd/explain/` — ou, com `mcp: on`, chame `sdd_read_explain`. É lembrete, não cobrança: mostre o número e siga, sem sugerir estudar agora.
+
+### Deriva da config global
+
+O global é **semente**: o `lp:init` copia os valores no dia em que o projeto nasce, e depois o projeto segue sozinho (ver `../../helpers/prompts/global-config-guide.md`). A consequência é silenciosa: campo que passou a existir **depois** daquele dia nunca chega no projeto antigo, e o recurso simplesmente não acontece — sem erro, sem aviso, sem nada no chat.
+
+Foi assim que um projeto criado antes do `data_model` seguiu criando tabela e migração sem nunca lançar o `data-modeler`, com o global do usuário pedindo `data_model: on`.
+
+Então reporte a comparação:
+
+- **Deriva = campo presente no global e AUSENTE no `.sdd/config.yaml`.** Só isso. Liste o valor global e o `/lp-settings <campo> <valor>` pronto.
+- **Campo presente nos dois com valores diferentes NÃO é deriva** — é escolha daquele projeto, e o `.sdd/config.yaml` é a verdade dele. Não reporte, não sugira alinhar.
+- Compare só o **primeiro nível**. `mcp_record` e `subagents` entram como um item cada, quando o bloco inteiro falta no projeto.
+- `version` e `created` nunca entram: são metadados do projeto e não existem no global.
+- **Sem global, ou sem nenhum campo faltando → omita a linha inteira.** Não diga "nenhuma deriva".
+
+**Aviso para os campos de armazenamento** (`flow_storage`, `tasks_storage`, `state_storage`): se houver **mudança ativa**, acrescente uma linha dizendo para ligar só depois de arquivá-la. Trocar no meio deixa artefato órfão — o `flow.html` já gerado congela onde parou, e o plano de chunks passa a ser lido de um lugar onde ele não está.
+
+**A skill continua somente leitura**: ela mostra o comando, nunca edita o config. Alinhar é decisão do usuário — o projeto pode ter motivo para estar diferente.
 
 **Sobre a linha do MCP**: `mcp: on` no config e tools realmente utilizáveis são duas coisas diferentes — quem liga a config e não reinicia a sessão fica sem as tools, e é aí que acha que "não funciona". Então reporte o que você **observa**: se as tools `sdd_*` existem nesta sessão, diga "disponíveis"; se não, diga "NÃO disponíveis nesta sessão — reinicie para ativar". Com `mcp: off`, omita a linha inteira e não sugira ligar.
 

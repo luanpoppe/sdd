@@ -60,15 +60,16 @@ class ExplainWriter {
     list.forEach((symbol, index) => {
       const inserted = SddDb.run(
         db,
-        `INSERT INTO symbols (${column}, position, name, kind, signature, purpose)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO symbols (${column}, position, name, kind, signature, purpose, calls)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           value,
           index + 1,
           symbol.name,
           symbol.kind ?? null,
           symbol.signature ?? null,
-          symbol.purpose ?? null
+          symbol.purpose ?? null,
+          ExplainWriter.callsJson(symbol.calls)
         ]
       );
 
@@ -76,6 +77,12 @@ class ExplainWriter {
     });
 
     return { symbols: list.length, examples: exampleCount };
+  }
+
+  /** Lista vazia e lista ausente viram o mesmo `null`: o campo é opcional. */
+  static callsJson(calls) {
+    if (!Array.isArray(calls) || calls.length === 0) return null;
+    return JSON.stringify(calls.map((entry) => String(entry)));
   }
 
   static insertExamples(db, symbolPk, examples) {
@@ -144,8 +151,10 @@ const HIGHLIGHTS_SCHEMA = {
 const SYMBOLS_SCHEMA = {
   type: 'array',
   description:
-    'Só os símbolos que carregam comportamento, com exemplos. Pule DTO, getter, barrel ' +
-    'e construtor.',
+    'UM item por método novo ou alterado do arquivo — não só o principal. Cada um com ' +
+    'exemplos que cubram os caminhos que ele decide (válido, rejeitado, saída antecipada) ' +
+    'e, em `calls`, os métodos do mesmo arquivo que ele chama. Pule só DTO, getter, ' +
+    'barrel e construtor sem lógica.',
   items: {
     type: 'object',
     required: ['name'],
@@ -157,10 +166,19 @@ const SYMBOLS_SCHEMA = {
       },
       signature: { type: 'string', description: 'Assinatura real, com tipos' },
       purpose: { type: 'string', description: 'O que resolve, 1-2 frases' },
+      calls: {
+        type: 'array',
+        description:
+          'Métodos DO MESMO ARQUIVO que este chama, na ordem em que chama. É o que ' +
+          'mostra a cadeia interna — ex: ["assertValidTmdbId", "assertValidPatch"].',
+        items: { type: 'string' }
+      },
       examples: {
         type: 'array',
         description:
-          'Dado plausível do domínio, nunca "foo"/"bar". Ao menos UM caso de borda ou falha.',
+          'Dado plausível do domínio, nunca "foo"/"bar". Um por caminho que o método ' +
+          'decide: o que passa, o que é rejeitado (com o erro real) e a saída antecipada. ' +
+          'Ao menos UM caso de borda ou falha, marcado com is_edge.',
         items: {
           type: 'object',
           properties: {

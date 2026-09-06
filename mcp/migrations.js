@@ -66,7 +66,11 @@ const MIGRATIONS = {
   8: [],
   // `component` é o rótulo curto do nó no fluxo ("Controller", "Repository"), e passou
   // a existir com o modo `flow_storage: mcp`. Coluna nova em tabela antiga.
-  9: [`ALTER TABLE chunks ADD COLUMN component TEXT`]
+  9: [`ALTER TABLE chunks ADD COLUMN component TEXT`],
+  // `calls` guarda a quem o símbolo delega DENTRO do mesmo arquivo. Sem isso, uma classe
+  // de validação vira uma lista de métodos soltos e a cadeia real — o que chama o quê —
+  // some, que é justamente a parte que ninguém reconstrói lendo os nomes.
+  10: [`ALTER TABLE symbols ADD COLUMN calls TEXT`]
 };
 
 module.exports = { MIGRATIONS };

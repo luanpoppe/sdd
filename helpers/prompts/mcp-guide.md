@@ -86,6 +86,17 @@ O plano de revisão no chat tem que ser **escaneável** (1-2 frases por linha). 
 
 **0 a 3 destaques por arquivo.** Arquivo trivial (DTO, contrato, barrel) não precisa de nenhum, e `detail` nele pode ser uma frase ou nada. Concentre nos 1-2 arquivos que carregam o chunk. `snippet` de 5-25 linhas; se precisa de mais, provavelmente são dois destaques.
 
+##### O piso — e ele é mais importante que o teto
+
+Os limites acima são **teto**, e teto lido sozinho vira licença para gravar nada. O que estraga o registro na prática não é excesso: é o chunk inteiro entrar com `detail` de duas frases, zero destaque e zero símbolo, e ninguém — nem você, na próxima conversa — conseguir dizer o que aquele código faz sem abrir os arquivos.
+
+- **Chunk sem nenhum destaque em nenhum arquivo não deveria existir.** A exceção é o chunk puramente mecânico: rename, mover arquivo, ajuste de config, barrel. Se o chunk implementou comportamento e você não achou um trecho que decide, você não procurou.
+- **Arquivo criado do zero nunca é trivial por ser novo.** Um arquivo de 80 linhas com uma classe de validação carrega regra; que ele não existisse ontem não muda isso.
+- **Regra vira destaque, sempre.** Validação, cálculo, política de erro, decisão de nulidade, condição que mudou de lugar. O trecho que ninguém reconstrói lendo só o nome do método é exatamente o que precisa estar aqui.
+- **Teste do `detail`**: ele responde *o que acontece com uma entrada inválida* e *por que assim e não do outro jeito*? Se não, ele é o `does` esticado. Reescreva ou apague — `detail` que repete o `does` é pior que ausente, porque ocupa o lugar do que faltou.
+
+Antes de mandar o `sdd_record_chunk`, olhe o pacote e responda: *alguém que nunca viu este chunk entende o que ele faz só com o que estou gravando?* Se a resposta é não, falta destaque ou falta símbolo — e você ainda está com os arquivos em mão.
+
 #### `symbols` — os métodos, com entrada e saída de verdade
 
 Responde a pergunta que trecho de código não responde: **o que isso faz quando roda**. Um item por método/função/endpoint que carrega comportamento.
@@ -119,7 +130,47 @@ Regras que fazem o exemplo ensinar em vez de só ilustrar:
 - **Dado plausível do domínio.** `"0029876-12.2024"`, `"Maria Andrade"` — nunca `"foo"`, `"bar"`, `"string1"`.
 - **Ao menos um caso de borda ou falha** por símbolo que tenha um, com `is_edge: true`: lista vazia, dependência fora do ar, limite estourado, permissão negada. Mesma exigência que o `./tester-guide.md` faz dos testes, e pelo mesmo motivo.
 - **`note` diz o que o caso prova**, não repete o que se vê. *"3 ids viram 1 chamada"* informa; *"retorna os nomes"* não.
-- **Pule símbolo trivial**: getter, construtor, DTO, barrel, mapper de uma linha. Um símbolo por arquivo já é bastante; três é quase sempre demais.
+- **Pule símbolo trivial**: getter, construtor, DTO, barrel, mapper de uma linha — o que não tem lógica nenhuma.
+- **Todo o resto é obrigatório: um símbolo por método novo ou alterado do arquivo**, não só o principal. Método que valida, calcula, filtra, escolhe entre dois caminhos ou lança erro precisa do seu próprio item, com exemplos. O nome diz que valida; só o exemplo diz que `rating` nulo passa e `0` não.
+- **Um exemplo por caminho que o método decide**, não um por método: o que passa, o que é rejeitado (com a mensagem de erro real) e a saída antecipada (o `if` que retorna sem fazer nada). São esses três que a pessoa precisa e que o código esconde.
+
+##### `calls` — a cadeia dentro do arquivo
+
+Quando um método chama outro **do mesmo arquivo**, liste os nomes em `calls`, na ordem em que ele chama. É o que transforma uma lista de métodos soltos numa cadeia legível, e é a primeira coisa que se perde quando alguém lê o arquivo por cima.
+
+```json
+{
+  "name": "UserMovieEntryValidationUtils.assertValidUpsertInput",
+  "kind": "method",
+  "signature": "static assertValidUpsertInput(tmdbId: number, patch: UserMovieEntryPatch): void",
+  "purpose": "Porta de entrada da validação do upsert: valida o identificador do filme e, só então, o patch.",
+  "calls": ["assertValidTmdbId", "assertValidPatch"],
+  "examples": [
+    {
+      "label": "patch parcial sem rating",
+      "input": { "tmdbId": 27205, "patch": { "watched": true } },
+      "output": "void (nada lançado)",
+      "note": "assertValidPatch sai cedo pelo Object.hasOwn: rating ausente não é rating inválido."
+    },
+    {
+      "label": "rating fora da faixa",
+      "input": { "tmdbId": 27205, "patch": { "rating": 0 } },
+      "output": "UserMovieEntryValidationException: rating must be an integer between 1 and 10, received 0",
+      "note": "A faixa é 1-10, então 0 é rejeitado no domínio antes de chegar no CHECK do Postgres.",
+      "is_edge": true
+    },
+    {
+      "label": "tmdbId inválido",
+      "input": { "tmdbId": 0, "patch": { "watched": true } },
+      "output": "UserMovieEntryValidationException: tmdbId must be a positive integer, received 0",
+      "note": "Falha no primeiro elo da cadeia — o patch nem chega a ser olhado.",
+      "is_edge": true
+    }
+  ]
+}
+```
+
+Três coisas que só esse pacote conta, e que nenhum `does` de uma linha contaria: a ordem da validação, o motivo de `rating` ausente ser diferente de `rating` nulo, e qual erro concreto cada entrada produz.
 
 #### `scenario_keys` — qual cenário este chunk implementa
 

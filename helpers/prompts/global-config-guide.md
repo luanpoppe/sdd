@@ -40,10 +40,11 @@ subagents:
 
 ## Modelo: semente, não camada viva
 
-O global é lido em **exatamente dois momentos**:
+O global é lido em **exatamente três momentos**, e só o primeiro aplica valor:
 
 1. **`lp:init`** — para semear o `.sdd/config.yaml` do projeto novo.
 2. **`lp:settings`** — para ler ou escrever o próprio global (com a palavra-chave `global`).
+3. **`lp:help`** — só para **comparar e relatar** a deriva (campo que existe no global e falta no projeto). Mostra o `/lp-settings` pronto; nunca escreve nada.
 
 **Mais nada.** Nenhuma outra skill lê o global. O `lp:init` **materializa** os valores resolvidos dentro do `.sdd/config.yaml`, então `lp:continue`, `lp:bug-fix`, `lp:review-walkthrough` e todas as outras continuam lendo só o config do projeto, sem saber que global existe.
 
@@ -54,6 +55,12 @@ O global é lido em **exatamente dois momentos**:
 Isso é intencional, não limitação. Cada projeto tem sua cópia materializada e versionada no repo — é a verdade daquele projeto, e não muda porque alguém mexeu na home. Time inteiro lê o mesmo `.sdd/config.yaml`.
 
 Para mudar um projeto existente: `lp:settings` normal (sem `global`). Se o usuário reclamar que "mudei o global e o projeto X não mudou", explique isso — não é bug.
+
+### Mas o silêncio custa caro, e por isso o `lp:help` avisa
+
+Há um caso em que a consequência não é escolha nenhuma: **campo que passou a existir depois** de o projeto nascer. Ele não está no `.sdd/config.yaml` porque ninguém decidiu que não deveria estar — está ausente porque não existia. O recurso então não acontece, e nada no chat diz por quê.
+
+Por isso o `lp:help` compara e lista os campos do global **ausentes** no projeto, com o comando pronto. Campo presente nos dois com valores diferentes **não** entra: ali houve decisão, e o config do projeto vence. Ver `../../skills/help/SKILL.md`, seção "Deriva da config global".
 
 ## Uso no `lp:init`
 
