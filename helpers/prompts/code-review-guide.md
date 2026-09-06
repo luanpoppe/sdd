@@ -66,23 +66,91 @@ Desligue apenas o que o arquivo pedir, e nunca por conta própria. Se um item de
 
 ## Formato de cada achado
 
+Cada achado tem **um identificador curto** (`A1`, `A2`, …) na ordem em que sai. Ele não é enfeite: é o que permite ao usuário responder *"corrige A1 e A3"* sem redescrever o problema.
+
+Grave e médio saem com a ficha completa:
+
 ```
-[grave] src/pedidos/calculadora.ts:42 — desconto acumulado aplica duas vezes
-Cenário: pedido com 2 itens em promoção → total sai R$ 18,00 em vez de R$ 24,00.
-Por quê: o laço soma `desconto` no acumulador e o subtrai de novo no retorno.
-Sugestão: subtrair só no retorno, ou zerar o acumulador antes do laço.
+A1 [grave] src/pedidos/calculadora.ts:42 — desconto acumulado aplica duas vezes
+   Cenário:  pedido com 2 itens em promoção → total R$ 18,00 em vez de R$ 24,00.
+   Causa:    o laço soma `desconto` no acumulador e o subtrai de novo no retorno.
+   Correção: subtrair só no retorno, ou zerar o acumulador antes do laço.
+   Custo:    1 arquivo, ~3 linhas, sem novo teste.
 ```
 
-Quatro campos, todos obrigatórios:
+Campos obrigatórios:
 
-- **Severidade** — `grave` (bug que chega no usuário, perda de dado, falha de segurança), `médio` (borda não tratada, contrato divergente, erro engolido) ou `menor` (legibilidade que atrapalha manutenção, duplicação real).
+- **Severidade** — `grave` (bug que chega no usuário, perda de dado, falha de segurança), `medio` (borda não tratada, contrato divergente, erro engolido) ou `menor` (legibilidade que atrapalha manutenção, duplicação real). Sempre estes três nomes; nunca "baixo", "alto", "crítico".
 - **Local** — arquivo e linha. Achado sem endereço não é acionável.
-- **Cenário concreto de falha** — entrada específica e o resultado errado que ela produz. **Não conseguiu escrever o cenário? Não é achado.** É a regra que separa defeito de opinião, e é o que impede a lista de crescer sem limite.
-- **Por quê + sugestão** — o mecanismo do erro e um caminho de correção. Sugestão não é ordem.
+- **Cenário concreto de falha** — entrada específica e o resultado errado que ela produz. **Não conseguiu escrever o cenário? Não é achado.** É a regra que separa defeito de opinião.
+- **Causa** — o mecanismo do erro, não a repetição do título.
+- **Correção** — o caminho, em uma frase. Sugestão não é ordem, e não é patch.
+- **Custo** — quantos arquivos, quantas linhas, e se exige teste novo. É o campo que decide: sem ele, "corrigir agora ou depois?" é um chute.
 
-A lista sai **ordenada por severidade**, graves primeiro. Não há teto de quantidade: um chunk realmente problemático merece a lista inteira, e o `cenário obrigatório` já é o filtro.
+**Menor sai em uma linha**, e sai sempre:
+
+```
+A4 [menor] src/pedidos/repo.ts:12 — `x` como nome do agregador esconde o que ele acumula.
+```
+
+### Contar sem listar é o pior dos formatos
+
+Se o cabeçalho diz `6 achados`, os seis aparecem. Listar três e esconder os outros três atrás de um número é pior que não ter revisado: o usuário sabe que existe algo e não tem como olhar.
+
+A lista sai **ordenada por severidade**, graves primeiro. Não há teto de quantidade — o cenário obrigatório já é o filtro.
 
 Nada encontrado é resultado legítimo e comum. Diga *"Code review: nada a apontar"* em uma linha e siga — não invente achado menor para justificar a rodada.
+
+## A decisão — sempre que houver grave ou médio
+
+Achado impresso e nunca decidido é o modo mais comum de a revisão falhar: ele não foi corrigido, não foi descartado, não foi adiado, e ninguém volta nele. Então, **com pelo menos um `grave` ou `medio` na lista, pergunte** — depois de imprimir o plano de revisão, nunca antes (o usuário decide olhando os arquivos, não no vácuo).
+
+Use a interface nativa de pergunta do harness (`AskUserQuestion` no Claude, equivalente nos outros). O formato depende de quantos achados há:
+
+- **Até 3 achados de grave/médio** → uma pergunta de múltipla escolha, um item por achado (`A1 — <título curto>`), mais a opção de não corrigir nenhum agora.
+- **4 ou mais** → uma pergunta agregada: *corrigir todos os graves e médios* · *só os graves* · *nenhum agora, ficam abertos* · *descartar (com motivo)*. Quatro opções é o teto da interface; enfileirar 7 achados numa pergunta não cabe.
+
+**Só `menor` na lista → não pergunte.** Interromper o fluxo por legibilidade é o caminho mais rápido para o usuário parar de ler a seção inteira. Os menores ficam abertos e reaparecem no fechamento da feature.
+
+O usuário sempre pode responder fora das opções (*"corrige A1 e A3"*, *"descarta A2, foi decidido assim no grill"*). Trate isso como a resposta, não como fuga do formulário.
+
+## A correção — quem aplica
+
+O corte é por tamanho, e é objetivo de propósito:
+
+| Situação | Quem corrige |
+|---|---|
+| Até 2 achados, no mesmo arquivo | **o principal**, inline |
+| 3 ou mais, ou espalhados por arquivos diferentes | **um subagente implementer**, com escopo só dos achados |
+
+Uma rodada de subagente para trocar 4 linhas é desperdício; correção espalhada feita inline come o contexto da conversa principal. Nos dois casos, depois de corrigir:
+
+1. **Rode a validação do projeto** nos arquivos tocados, e o teste que cobre o achado (se existir). Correção sem verificação é troca de um defeito por outro.
+2. **Regrave o chunk** — `sdd_record_chunk` com os arquivos que mudaram e o `code_review` dos achados fechados (`status: "corrigido"` + `resolution`). Ver `./mcp-guide.md`: campo ausente preserva, então o payload é pequeno.
+3. **Reimprima só o que mudou** do plano de revisão — os arquivos tocados e o bloco de achados atualizado, não o plano inteiro.
+4. **Diga o que ficou aberto**, em uma linha, mesmo que seja "nada".
+
+Passar a correção adiante como se fosse um chunk novo é errado: não é chunk novo, é o mesmo chunk numa versão melhor. Ele não ganha ID, não entra no `tasks.md`, não vira commit separado (o commit do chunk sai depois da aprovação, já com a correção dentro).
+
+## Desfecho de cada achado
+
+Todo achado termina em um destes quatro estados, e três deles exigem uma frase de justificativa:
+
+- `aberto` — o padrão de quem nasce. Não precisa de justificativa.
+- `corrigido` — `resolution` diz **o que foi feito** ("trocado por `Object.hasOwn` + spec do caso `undefined`").
+- `descartado` — `resolution` diz **por que não é problema** ("decidido no grill: `movieId` no patch é intencional para o admin").
+- `adiado` — `resolution` diz **para quando e por quê** ("vai junto do DTO no F2.C2, onde a validação já existe").
+
+`descartado` sem motivo escrito é o mesmo que apagar o achado, e apagar é justamente o que o status existe para evitar.
+
+## Dívida aberta não morre calada
+
+Duas retomadas obrigatórias, as duas por `sdd_query_history` (o campo `open_findings` já vem filtrado por `status: aberto`):
+
+- **No fechamento da feature (`f-ter`)** — antes de revisar o conjunto, liste os achados ainda abertos dela: `A<n>` original, severidade, arquivo e título, em uma linha cada. É a última chance natural de decidir sobre eles.
+- **No início do chunk seguinte** — uma linha, só a contagem: *"3 achados abertos nesta feature (1 grave)."* Sem repetir as fichas, e sem perguntar de novo.
+
+Sem MCP não há de onde recobrar: nesse caso o achado vive só no chat, e vale dizer isso uma vez na primeira rodada de review da conversa.
 
 ## O revisor reporta, nunca corrige
 
@@ -92,29 +160,51 @@ Mesma regra do tester, pelo mesmo motivo: a decisão é do usuário. Um achado p
 - **Não bloqueie** o `/lp-continue`. Achado grave é destaque no plano de revisão, não trava.
 - **Não repita** o que o plano de revisão já diz. O campo `Revisar` conta o que olhar; o achado conta o que **está errado**.
 
+Isto vale para **o subagente revisor**. A correção existe e tem passo próprio — ver "A decisão" e "A correção" abaixo —, mas quem aplica é o principal ou um implementer, depois de o usuário decidir. Quem encontra nunca é quem conserta: o revisor que corrige perde a chance de ser contestado.
+
 ## Onde entra no plano de revisão
 
 Bloco próprio, **depois** da lista de arquivos e antes da linha `Próximo:`:
 
 ```
-Code review (2 achados — 1 grave, 1 médio):
-[grave] src/pedidos/calculadora.ts:42 — desconto acumulado aplica duas vezes
-  Cenário: pedido com 2 itens em promoção → total R$ 18,00 em vez de R$ 24,00.
-[médio] src/pedidos/repo.ts:88 — busca sem limite quando o filtro vem vazio
-  Cenário: filtro nulo → carrega a tabela inteira em memória.
+Code review (4 achados: 1 grave, 2 médios, 1 menor):
+
+A1 [grave] src/pedidos/calculadora.ts:42 — desconto acumulado aplica duas vezes
+   Cenário:  pedido com 2 itens em promoção → total R$ 18,00 em vez de R$ 24,00.
+   Causa:    o laço soma `desconto` no acumulador e o subtrai de novo no retorno.
+   Correção: subtrair só no retorno, ou zerar o acumulador antes do laço.
+   Custo:    1 arquivo, ~3 linhas, sem novo teste.
+
+A2 [médio] src/pedidos/repo.ts:88 — busca sem limite quando o filtro vem vazio
+   Cenário:  filtro nulo → carrega a tabela inteira em memória.
+   Causa:    o `where` é montado condicionalmente e o `take` só entra com filtro.
+   Correção: `take` fixo com o default da paginação, independente do filtro.
+   Custo:    1 arquivo, 1 linha, 1 caso de teste.
+
+A3 [médio] ...
+
+A4 [menor] src/pedidos/repo.ts:12 — `x` como nome do agregador esconde o que ele acumula.
+
+Abertos de rodadas anteriores: 1 (A2 do F2.C1 — validação de tmdbId no use case).
 ```
 
-No plano, cada achado cabe em duas linhas (severidade + local + o quê, mais o cenário). O `por quê` e a sugestão completos vão para o banco e são ditos no chat só se o usuário perguntar.
+A ficha completa vai **no chat**, não só no banco. Era o contrário antes, e o resultado era uma lista que ninguém tinha como julgar: sem causa e sem custo, "corrigir agora?" não tem resposta.
 
-Com achado `grave`, acrescente à linha `Próximo:` que há um achado grave a decidir — sem bloquear.
+Com achado `grave`, acrescente à linha `Próximo:` que há grave a decidir — sem bloquear.
 
 ## Registro no banco (só com `mcp: on`)
 
-Os achados vão no **`sdd_record_chunk`**, no mesmo passo `g-bis`, no campo `code_review` — um item por achado, com severidade, arquivo, linha, cenário, causa e sugestão.
+Os achados vão no **`sdd_record_chunk`**, no passo `g-bis`, no campo `code_review` — um item por achado, com severidade, arquivo, linha, cenário, causa, sugestão e, quando houver desfecho, `status` + `resolution`.
 
-Ficam amarrados ao chunk que os gerou, aparecem na Timeline junto do arquivo revisado e entram na busca. É o que permite, depois, perguntar o que já foi apontado e nunca corrigido.
+Três regras que vêm do formato da tool:
 
-Com `mcp_record.code_review: false`, pule o campo — o review continua rodando e aparecendo no chat.
+- **O upsert é por `path` + `title`**, não por linha. Corrigir o arquivo move as linhas, e um achado que mudou de linha é o mesmo achado — chavear por linha criaria uma duplicata a cada correção.
+- **Campo ausente preserva.** Regravar o chunk sem mandar `code_review` não mexe em achado nenhum; regravar mandando só o achado corrigido não reabre os outros.
+- **Sumir da lista não apaga.** Para remover um achado que se revelou falso, mande `drop: true` nele.
+
+Ficam amarrados ao chunk que os gerou, aparecem na Timeline junto do arquivo revisado, entram na busca e voltam pelo `open_findings` do `sdd_query_history` enquanto estiverem abertos.
+
+Com `mcp_record.code_review: false`, pule o campo — o review continua rodando e aparecendo no chat, e a retomada de dívida deixa de existir.
 
 ## Anti-padrões
 
@@ -124,3 +214,9 @@ Com `mcp_record.code_review: false`, pule o campo — o review continua rodando 
 - ❌ **Marcar tudo como grave.** Severidade que não discrimina não informa, e é o caminho mais rápido para o usuário parar de ler a seção.
 - ❌ **Apontar ausência de teste como achado.** Isso é trabalho do `tests: on` e do passo f-bis.
 - ❌ **Revisar código que o chunk não tocou.** O escopo é o diff mais o contexto ao redor dele; auditoria geral do repositório é outra tarefa.
+- ❌ **Contar mais achados do que os que você listou.** Número sem ficha é dívida que o usuário sabe que existe e não tem como olhar.
+- ❌ **Imprimir a lista e seguir para o `Próximo:`** com grave ou médio em aberto, sem perguntar nada.
+- ❌ **Interromper o fluxo por achado `menor`.** Legibilidade não justifica pergunta.
+- ❌ **Fechar achado sem `resolution`.** `descartado` sem motivo escrito é o mesmo que apagar.
+- ❌ **Corrigir o código e não regravar o `status`.** O achado fica aberto no banco para sempre e volta a aparecer em toda retomada.
+- ❌ **Tratar a correção como chunk novo.** Não ganha ID, não entra no `tasks.md`, não vira commit separado.

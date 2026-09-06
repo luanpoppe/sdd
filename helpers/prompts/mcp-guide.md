@@ -49,6 +49,7 @@ Chame a tool **junto** do passo, não num turno separado.
 | `lp:explain`, ao gerar/atualizar um tema | `sdd_record_explain` | o tema **global** (fora de projeto), com `question`, `origin` e o `detail` que a busca precisa alcançar (`mcp_record.explain`) |
 | `lp:explain`, ao dar baixa na fila | `sdd_record_explain` | o mesmo slug com `status: "estudado"` |
 | passos **c-bis** / **f-ter**, com `code_review: on` | `sdd_record_chunk` | campo `code_review` — um item por achado, com severidade, arquivo, linha, cenário, causa e sugestão (`mcp_record.code_review`) |
+| passo **g-quater**, achado corrigido/descartado/adiado | `sdd_record_chunk` | o mesmo `code_review`, só com o achado fechado: `status` + `resolution`. Upsert por `path`+`title` |
 | passo **b-ter**, com `data_model: on` | `sdd_record_chunk` | campo `data_model` — um item por entidade, com `shape`, `decisions`, `rejected`, `index_notes` e `migration` (`mcp_record.data_model`) |
 | passo de **tasks**, com `flow_storage: mcp` | `sdd_write_tasks` (`mode: "plan"`) | o esqueleto do fluxo — um item por chunk com `component`, sem apagar o que já foi implementado |
 | `lp:archive` | `sdd_sync_change` | `archived` + `state: archived` |
@@ -206,6 +207,7 @@ Sem os pontos abaixo, o SDD grava uma memória que nunca consulta.
 | `lp:new-feature`, durante o grill macro | `sdd_recall` com o tema da mudança | Mostra o que já existe antes de você perguntar ao usuário coisas que o histórico responde. |
 | `lp:review-walkthrough`, ao montar o plano de steps | `sdd_recall` com o tema do review | Reaproveita explicação e exemplos já escritos em vez de reconstruí-los do zero. |
 | `lp:ask` / `lp:status`, pergunta sobre trabalho anterior | `sdd_query_history` | Responde "onde paramos" e "o que foi feito" sem reler `.sdd/`. |
+| passo **f-ter**, com `code_review: on` | `sdd_query_history` → `open_findings` | Os achados que ninguém fechou. Sem isto, achado impresso e não decidido morre no chat. |
 | `lp:explain`, antes de criar tema novo | `sdd_read_explain` com `status: "todos"` | Evita `jwt` e `json-web-token` como dois temas. |
 | o usuário pergunta o que tem para estudar | `sdd_read_explain` | A fila do que ficou `aberto`, do mais antigo. |
 

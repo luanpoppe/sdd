@@ -17,8 +17,9 @@ class QueryHistoryTool {
     return {
       name: 'sdd_query_history',
       description:
-        'Consulta o histórico do SDD: mudanças, chunks implementados (com duração) e eventos, ' +
-        'em ordem cronológica decrescente. Use para retomar contexto de trabalho anterior.',
+        'Consulta o histórico do SDD: mudanças, chunks implementados (com duração), eventos e ' +
+        'os achados de code review AINDA ABERTOS, em ordem cronológica decrescente. Use para ' +
+        'retomar contexto de trabalho anterior.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -51,13 +52,15 @@ class QueryHistoryTool {
       project: project ? { path: project.path, name: project.name } : null,
       changes: QueryHistoryTool.selectChanges(ctx.db, scope),
       chunks: QueryHistoryTool.selectChunks(ctx.db, scope),
-      events: QueryHistoryTool.selectEvents(ctx.db, scope)
+      events: QueryHistoryTool.selectEvents(ctx.db, scope),
+      open_findings: QueryHistoryTool.selectOpenFindings(ctx.db, scope)
     };
 
     Log.info('histórico consultado', {
       changes: result.changes.length,
       chunks: result.chunks.length,
-      events: result.events.length
+      events: result.events.length,
+      openFindings: result.open_findings.length
     });
     return result;
   }
@@ -132,6 +135,40 @@ class QueryHistoryTool {
          LEFT JOIN features f ON f.id = k.feature_pk
          ${where}
         ORDER BY k.finished_at DESC, k.id DESC
+        LIMIT ?`,
+      [...params, scope.limit]
+    );
+  }
+
+  /**
+   * Os achados que o code review levantou e ninguém fechou.
+   *
+   * Vem junto do histórico, e não numa tool própria, porque a pergunta é sempre a mesma
+   * — "onde paramos?" — e a dívida aberta faz parte da resposta. Achado fechado sai da
+   * lista: quem quer o histórico completo consulta o chunk.
+   */
+  static selectOpenFindings(db, scope) {
+    const { where, params } = QueryHistoryTool.scopeClause(scope, {
+      project: 'c.project_id',
+      changeId: 'c.change_id',
+      at: 'rf.at'
+    });
+
+    const filtro = where ? `${where} AND rf.status = 'aberto'` : `WHERE rf.status = 'aberto'`;
+
+    return SddDb.all(
+      db,
+      `SELECT p.name AS project, c.change_id, f.slug AS feature, k.chunk_id,
+              rf.severity, rf.path, rf.line, rf.title, rf.scenario, rf.cause, rf.suggestion,
+              rf.scope, rf.at
+         FROM review_findings rf
+         JOIN chunks k ON k.id = rf.chunk_pk
+         JOIN changes c ON c.id = k.change_pk
+         JOIN projects p ON p.id = c.project_id
+         LEFT JOIN features f ON f.id = k.feature_pk
+         ${filtro}
+        ORDER BY CASE rf.severity WHEN 'grave' THEN 0 WHEN 'medio' THEN 1 ELSE 2 END,
+                 rf.at DESC
         LIMIT ?`,
       [...params, scope.limit]
     );

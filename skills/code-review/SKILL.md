@@ -38,27 +38,34 @@ Orquestração de vários revisores em paralelo **não existe ainda** — é um 
 
 ## 4. Imprimir o resultado
 
-Ordenado por severidade, graves primeiro:
+Ordenado por severidade, graves primeiro, cada achado com **ID curto** para o usuário poder responder *"corrige A1 e A3"*:
 
 ```
 Code review — <alvo> (<N> achados: <n> graves, <n> médios, <n> menores)
 
-[grave] src/pedidos/calculadora.ts:42 — desconto acumulado aplica duas vezes
-  Cenário: pedido com 2 itens em promoção → total R$ 18,00 em vez de R$ 24,00.
-  Por quê: o laço soma `desconto` no acumulador e o subtrai de novo no retorno.
-  Sugestão: subtrair só no retorno, ou zerar o acumulador antes do laço.
+A1 [grave] src/pedidos/calculadora.ts:42 — desconto acumulado aplica duas vezes
+   Cenário:  pedido com 2 itens em promoção → total R$ 18,00 em vez de R$ 24,00.
+   Causa:    o laço soma `desconto` no acumulador e o subtrai de novo no retorno.
+   Correção: subtrair só no retorno, ou zerar o acumulador antes do laço.
+   Custo:    1 arquivo, ~3 linhas, sem novo teste.
 
-[médio] src/pedidos/repo.ts:88 — busca sem limite quando o filtro vem vazio
-  ...
+A2 [médio] src/pedidos/repo.ts:88 — busca sem limite quando o filtro vem vazio
+   ...
+
+A4 [menor] src/pedidos/repo.ts:12 — `x` como nome do agregador esconde o que ele acumula.
 ```
 
-Invocado sob demanda, imprima os quatro campos de cada achado — aqui o usuário veio para ler o review, ao contrário do passo automático, onde o bloco é resumido para caber no plano de revisão.
+**Todos os achados aparecem** — `menor` em uma linha, nunca só no contador. E o número do cabeçalho é sempre igual à quantidade de fichas abaixo dele.
 
-Nada encontrado: *"Code review em `<alvo>`: nada a apontar."* Uma linha, sem inventar achado menor para justificar a rodada.
+## 4-bis. Decidir e, se pedirem, corrigir
+
+Com pelo menos um `grave` ou `medio`, pergunte o que fazer (`AskUserQuestion`) — as regras de formato da pergunta, do corte entre corrigir inline e lançar um implementer, e do desfecho de cada achado estão em "A decisão" e "A correção" do `../../helpers/prompts/code-review-guide.md`.
+
+Só `menor`: não pergunte. Os menores ficam abertos.
 
 ## 5. Registrar (só com `mcp: on`)
 
-Rodando sobre um chunk conhecido, chame `sdd_record_chunk` com o campo `code_review` preenchido — os achados ficam amarrados ao chunk e entram na busca.
+Rodando sobre um chunk conhecido, chame `sdd_record_chunk` com o campo `code_review` preenchido — os achados ficam amarrados ao chunk, entram na busca e voltam pelo `open_findings` do `sdd_query_history` enquanto estiverem abertos. Corrigiu no 4-bis: regrave o achado com `status` e `resolution`.
 
 Sobre alvo que não é um chunk (um caminho, um diff de branch), registre um `sdd_record_event` (`kind: note`) com o resumo: quantos achados, de que severidade, em que arquivos. Ver `../../helpers/prompts/mcp-guide.md`.
 
@@ -66,6 +73,7 @@ Sobre alvo que não é um chunk (um caminho, um diff de branch), registre um `sd
 
 - **Achado sem cenário concreto de falha não é achado.** É a regra que separa defeito de opinião de estilo.
 - **Um subagente, não vários.** O orquestrador de revisores é trabalho futuro, deliberadamente fora daqui.
-- **Não bloqueia nada.** Nem o `/lp-continue`, nem o commit, nem a aprovação do chunk.
+- **Não bloqueia nada.** Nem o `/lp-continue`, nem o commit, nem a aprovação do chunk. Perguntar o que fazer com um achado grave não é bloquear — é fechar o assunto.
+- **Achado sem desfecho é dívida invisível.** Todo achado termina `corrigido`, `descartado`, `adiado` ou explicitamente `aberto`.
 - **Não é o `lp:review-walkthrough`.** Aquele ensina código existente em steps; este procura defeito em código novo.
 - Ausência de teste não é achado — isso é o passo f-bis, com `tests: on`.

@@ -70,7 +70,14 @@ const MIGRATIONS = {
   // `calls` guarda a quem o símbolo delega DENTRO do mesmo arquivo. Sem isso, uma classe
   // de validação vira uma lista de métodos soltos e a cadeia real — o que chama o quê —
   // some, que é justamente a parte que ninguém reconstrói lendo os nomes.
-  10: [`ALTER TABLE symbols ADD COLUMN calls TEXT`]
+  10: [`ALTER TABLE symbols ADD COLUMN calls TEXT`],
+  // Ciclo de vida do achado do code review. Antes disto o achado era uma linha de chat
+  // com cópia no banco: não havia como saber se foi corrigido, descartado ou esquecido.
+  11: [
+    `ALTER TABLE review_findings ADD COLUMN status TEXT NOT NULL DEFAULT 'aberto'`,
+    `ALTER TABLE review_findings ADD COLUMN resolution TEXT`,
+    `ALTER TABLE review_findings ADD COLUMN resolved_at TEXT`
+  ]
 };
 
 module.exports = { MIGRATIONS };

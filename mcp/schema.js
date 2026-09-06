@@ -9,7 +9,7 @@
  * Sem essa distinção os dois se confundem em toda query.
  */
 
-const SCHEMA_VERSION = 10;
+const SCHEMA_VERSION = 11;
 
 const CREATE_TABLES = [
   `CREATE TABLE IF NOT EXISTS schema_meta (
@@ -264,7 +264,14 @@ const CREATE_TABLES = [
      cause      TEXT,
      suggestion TEXT,
      scope      TEXT CHECK (scope IN ('chunk','feature')),
-     at         TEXT NOT NULL
+     at         TEXT NOT NULL,
+     -- O ciclo de vida do achado. Sem ele o banco respondia "o que foi apontado", nunca
+     -- "o que foi apontado e continua aberto" — que é a pergunta que importa. Sem CHECK
+     -- de propósito: a mesma coluna precisa nascer por ALTER TABLE em banco antigo, e
+     -- ALTER não aceita CHECK; a validação mora no schema da tool.
+     status      TEXT NOT NULL DEFAULT 'aberto',
+     resolution  TEXT,
+     resolved_at TEXT
    )`,
 
   // Entidades desenhadas pelo `data-modeler` (`data_model: on`), amarradas ao chunk que
@@ -339,6 +346,7 @@ const CREATE_INDEXES = [
   `CREATE INDEX IF NOT EXISTS idx_review_steps_rev   ON review_steps(review_pk)`,
   `CREATE INDEX IF NOT EXISTS idx_findings_chunk     ON review_findings(chunk_pk)`,
   `CREATE INDEX IF NOT EXISTS idx_findings_severity  ON review_findings(severity)`,
+  `CREATE INDEX IF NOT EXISTS idx_findings_status    ON review_findings(status)`,
   `CREATE INDEX IF NOT EXISTS idx_datamodels_chunk   ON data_models(chunk_pk)`,
   `CREATE INDEX IF NOT EXISTS idx_datamodels_name    ON data_models(name)`,
   `CREATE INDEX IF NOT EXISTS idx_explain_status     ON explain_topics(status, updated_at)`,
