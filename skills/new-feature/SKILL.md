@@ -44,7 +44,7 @@ Com **`mcp: on`** no `.sdd/config.yaml`, chame `sdd_sync_change` logo depois de 
 
 ## 3. Grill (estilo grill-me — EM BATCHES de até 4 independentes)
 
-> **Crítico**: NÃO assuma defaults. Use `AskUserQuestion` agrupando perguntas **independentes** (a resposta de uma não muda outra) em batches de 3-4; perguntas dependentes vão em batches posteriores. Cada pergunta com 2-4 opções concretas + sua recomendação + trade-offs. Releia `grill-snippet.md` antes.
+> **Crítico**: NÃO assuma defaults. Use `AskUserQuestion` agrupando perguntas **independentes** (a resposta de uma não muda outra) em batches de 3-4; perguntas dependentes vão em batches posteriores. Cada pergunta com 2-4 opções concretas + sua recomendação + trade-offs. **Explique o batch no chat antes de chamar a ferramenta** — o que está em jogo, o custo de cada opção, sua recomendação — e declare a linha de independência. Releia `grill-snippet.md` antes.
 
 **Cubra apenas o macro.** Detalhes de cada feature SÃO responsabilidade do `lp:continue` quando aquela feature entrar em foco. Aqui você apenas:
 
@@ -124,5 +124,5 @@ diga isso em uma linha e omita o bloco. Ver a regra completa em `../../helpers/p
 
 - **Não gere specs nem tasks aqui.** Isso é responsabilidade exclusiva do `lp:continue`.
 - **Não detalhe features no plan.md.** Detalhes vivem nas specs (criadas uma por vez).
-- **Perguntas em batches** de até 4 independentes durante o grill; dependentes em batches posteriores (ver `grill-snippet.md`).
+- **Perguntas em batches** de até 4 independentes durante o grill, cada batch explicado no chat antes da chamada; dependentes em batches posteriores (ver `grill-snippet.md`).
 - **Plan.md curto.** Se passar de ~80 linhas, está detalhando demais — corte.

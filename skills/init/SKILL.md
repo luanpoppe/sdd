@@ -15,7 +15,7 @@ Você está configurando o spec-driven development `lp:*` neste projeto. Siga es
 
 ## 2. Grill curto (use `AskUserQuestion`)
 
-Faça as perguntas abaixo. Siga as diretrizes de `../../helpers/prompts/grill-snippet.md` — como formato, idioma e chunk size são independentes entre si, mande as três num único batch de `AskUserQuestion`.
+Faça as perguntas abaixo. Siga as diretrizes de `../../helpers/prompts/grill-snippet.md` — como formato, idioma e chunk size são independentes entre si, mande as três num único batch de `AskUserQuestion`. Antes da chamada, explique no chat o que cada uma decide e o que cada opção implica: é a primeira conversa do usuário com o SDD, e os rótulos sozinhos não ensinam nada.
 
 > **Se a config global definir algum destes campos**, continue perguntando, mas ponha o valor global como a **primeira opção e a recomendada**, sinalizando a origem no rótulo (ex: *"HTML e Markdown (seu padrão global)"*) em vez do "(Recomendado)" padrão. O usuário confirma ou muda só neste projeto.
 

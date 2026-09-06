@@ -46,7 +46,7 @@ Com **`mcp: on`** no `.sdd/config.yaml`, chame `sdd_sync_change` logo depois de 
 
 > Objetivo desta skill: **entender o bug e achar a causa raiz**. NÃO proponha correção ainda (isso é o próximo passo, via `/lp-continue` → `solutions`).
 
-1. **Grill curto** em batches de até 4 perguntas independentes (`AskUserQuestion`, ver `grill-snippet.md`). Cubra só o que não dá pra inferir do código:
+1. **Grill curto** em batches de até 4 perguntas independentes (`AskUserQuestion`, ver `grill-snippet.md`). Explique cada pergunta e suas opções no chat **antes** de chamar a ferramenta, e declare a linha de independência do batch. Cubra só o que não dá pra inferir do código:
    - Sintoma exato (o que acontece de errado) e o que era **esperado**.
    - Como **reproduzir** (passos, dados, ambiente prod/local). Se não reproduz sempre, o que se sabe.
    - Escopo/impacto (desde quando, quem é afetado, gravidade).

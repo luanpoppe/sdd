@@ -21,7 +21,7 @@ Avance 1 chunk do review ativo seguindo a seção 4.
 
 ### Sem argumentos + nenhum review ativo → **iniciar (grill inicial)**
 
-Faça grill curto com `AskUserQuestion`. **Q1 vai sozinha primeiro** (tudo depende do tema); depois **Q2 e Q3 juntas num batch** (são independentes entre si). **NÃO assuma um tema, NÃO escolha algo do código sozinho** — sempre pergunte.
+Faça grill curto com `AskUserQuestion`, explicando cada pergunta no chat antes de chamar a ferramenta (ver `../../helpers/prompts/grill-snippet.md`). **Q1 vai sozinha primeiro** (tudo depende do tema); depois **Q2 e Q3 juntas num batch** (são independentes entre si). **NÃO assuma um tema, NÃO escolha algo do código sozinho** — sempre pergunte.
 
 **Q1. O que você quer revisar? (OBRIGATÓRIA)**
 

@@ -1,6 +1,6 @@
 # SDD — `lp:*` para Claude Code
 
-Spec-driven development em 20 skills. Chunks micro revisáveis, fluxo sequencial por feature, fluxo enxuto de bug-fix (causa raiz → opções → correção), diagrama macro da implementação, base de conhecimento viva do projeto (`.sdd/context/`), implementação por subagentes (com modo paralelo opcional), memória autônoma, grilling anti-assunção, revisão guiada de código existente, sugestão de branch + commits (automáticos ou sugeridos) por chunk, um MCP local opcional que persiste cada etapa num SQLite (histórico e memória entre conversas), e um app desktop opcional (SDD Viewer) pra visualizar os artefatos fora do chat.
+Spec-driven development em 20 skills. Chunks micro revisáveis, fluxo sequencial por feature, fluxo enxuto de bug-fix (causa raiz → opções → correção), diagrama macro da implementação, base de conhecimento viva do projeto (`.sdd/context/`), implementação por subagentes (com modo paralelo opcional), memória autônoma, grilling anti-assunção (cada pergunta explicada no chat antes de ser feita), revisão guiada de código existente, sugestão de branch + commits (automáticos ou sugeridos) por chunk, um MCP local opcional que persiste cada etapa num SQLite (histórico e memória entre conversas), e um app desktop opcional (SDD Viewer) pra visualizar os artefatos fora do chat.
 
 ## Instalação
 
