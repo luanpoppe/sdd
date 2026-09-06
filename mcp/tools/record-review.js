@@ -79,8 +79,10 @@ class RecordReviewTool {
     }
 
     const stepPk = RecordReviewTool.upsertStep(ctx.db, reviewPk, args.step);
-    const files = Array.isArray(args.step.files) ? args.step.files : [];
-    RecordReviewTool.replaceStepFiles(ctx.db, stepPk, files);
+    // Ausente preserva, como no `sdd_record_chunk`: fechar o step depois, mandando só
+    // `done`, não pode apagar os arquivos que ele já tinha listado.
+    const files = Array.isArray(args.step.files) ? args.step.files : null;
+    if (files) RecordReviewTool.replaceStepFiles(ctx.db, stepPk, files);
 
     const anchor = { reviewStepPk: stepPk };
     const highlights = ExplainWriter.replaceHighlights(ctx.db, anchor, args.step.highlights);
@@ -89,7 +91,7 @@ class RecordReviewTool {
     Log.info('step de review registrado', {
       slug: args.slug,
       step: args.step.step_id,
-      files: files.length,
+      files: files ? files.length : 'inalterado',
       highlights,
       symbols: symbols.symbols,
       examples: symbols.examples
@@ -98,7 +100,7 @@ class RecordReviewTool {
     return {
       review_pk: reviewPk,
       step_pk: stepPk,
-      files_recorded: files.length,
+      files_recorded: files ? files.length : null,
       highlights_recorded: highlights,
       symbols_recorded: symbols.symbols,
       examples_recorded: symbols.examples

@@ -52,7 +52,10 @@ class RecordChunkTool {
           reasoning: { type: 'string', description: 'Por quê / como conecta com o macro' },
           files: {
             type: 'array',
-            description: 'Um por arquivo tocado, na ordem de revisão',
+            description:
+              'Um por arquivo tocado, na ordem de revisão. Ao REGRAVAR o chunk, mande só os ' +
+              'arquivos que mudaram: campo ausente preserva o que já está gravado, e arquivo ' +
+              'não citado fica intacto. Omita `files` por inteiro se nenhum arquivo mudou.',
             items: {
               type: 'object',
               required: ['path'],
@@ -78,7 +81,12 @@ class RecordChunkTool {
                 },
                 highlights: HIGHLIGHTS_SCHEMA,
                 symbols: SYMBOLS_SCHEMA,
-                is_test: { type: 'boolean', description: 'Teste criado no passo f-bis' }
+                is_test: { type: 'boolean', description: 'Teste criado no passo f-bis' },
+                drop: {
+                  type: 'boolean',
+                  description:
+                    'Remove este arquivo do chunk. Único jeito de apagar — sumir da lista não apaga.'
+                }
               }
             }
           },
@@ -152,8 +160,8 @@ class RecordChunkTool {
 
     const chunkPk = RecordChunkTool.upsertChunk(ctx.db, change.id, feature, args);
 
-    const files = Array.isArray(args.files) ? args.files : [];
-    RecordChunkTool.replaceFiles(ctx.db, chunkPk, files, ctx.projectRoot);
+    const files = Array.isArray(args.files) ? args.files : null;
+    if (files) RecordChunkTool.mergeFiles(ctx.db, chunkPk, files, ctx.projectRoot);
 
     if (args.commit) RecordChunkTool.insertCommit(ctx.db, chunkPk, args.commit);
     if (args.mark) TasksStore.mark(ctx.db, chunkPk, args.mark);
@@ -161,12 +169,12 @@ class RecordChunkTool {
     RecordChunkTool.replaceFindings(ctx.db, chunkPk, args.code_review);
     RecordChunkTool.replaceDataModels(ctx.db, chunkPk, args.data_model);
 
-    const totals = RecordChunkTool.countDepth(files);
+    const totals = RecordChunkTool.countDepth(files ?? []);
 
     Log.info('chunk registrado', {
       change: args.change_id,
       chunk: args.chunk_id,
-      files: files.length,
+      files: files ? files.length : 'inalterado',
       highlights: totals.highlights,
       symbols: totals.symbols,
       examples: totals.examples,
@@ -175,7 +183,7 @@ class RecordChunkTool {
       entities: Array.isArray(args.data_model) ? args.data_model.length : 0
     });
 
-    return { change_pk: change.id, chunk_pk: chunkPk, files_recorded: files.length };
+    return { change_pk: change.id, chunk_pk: chunkPk, files_recorded: files ? files.length : null };
   }
 
   /**
@@ -184,10 +192,11 @@ class RecordChunkTool {
    * uma referência solta seria pior que perder o vínculo.
    */
   static linkScenarios(db, changePk, chunkPk, keys) {
-    const list = Array.isArray(keys) ? keys : [];
+    if (!Array.isArray(keys)) return;
+
     SddDb.run(db, 'DELETE FROM chunk_scenarios WHERE chunk_pk = ?', [chunkPk]);
 
-    for (const key of list) {
+    for (const key of keys) {
       const scenario = SddDb.one(db, 'SELECT id FROM scenarios WHERE change_pk = ? AND key = ?', [
         changePk,
         key
@@ -257,41 +266,95 @@ class RecordChunkTool {
   }
 
   /**
-   * Apaga e reinsere em vez de fazer upsert por arquivo. O relatório de um chunk é
-   * uma foto completa: se o chunk for re-registrado depois de uma alteração inline,
-   * um arquivo que saiu do escopo tem que sair do banco também.
+   * Grava o relatório por arquivo **somando ao que já existe**, nunca substituindo a
+   * lista inteira.
+   *
+   * A versão anterior apagava todos os arquivos do chunk antes de reinserir, tratando
+   * o payload como foto completa. Isso custou caro: regravar um chunk depois de um
+   * ajuste inline — que é o que o fluxo manda fazer — com um payload que trazia só o
+   * `summary` zerava o relatório inteiro do chunk, e com ele os destaques e símbolos
+   * pendurados por cascata.
+   *
+   * Agora vale a mesma regra do resto da tool: **campo ausente preserva**. Arquivo não
+   * citado fica como estava; arquivo citado tem só os campos enviados sobrescritos; e
+   * remover um arquivo do chunk virou um gesto explícito (`drop: true`).
    */
-  static replaceFiles(db, chunkPk, files, projectRoot) {
-    SddDb.run(db, 'DELETE FROM file_changes WHERE chunk_pk = ?', [chunkPk]);
-
+  static mergeFiles(db, chunkPk, files, projectRoot) {
     files.forEach((file, index) => {
-      const inserted = SddDb.run(
-        db,
-        `INSERT INTO file_changes
-           (chunk_pk, path, operation, lines_added, lines_removed, does, connects, review_note,
-            detail, diff, content_hash, review_order, is_test)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
+      if (file.drop === true) {
+        SddDb.run(db, 'DELETE FROM file_changes WHERE chunk_pk = ? AND path = ?', [
           chunkPk,
-          file.path,
-          file.operation ?? null,
-          file.lines_added ?? null,
-          file.lines_removed ?? null,
-          file.does ?? null,
-          file.connects ?? null,
-          file.review_note ?? null,
-          file.detail ?? null,
-          file.diff ?? null,
-          FileHash.of(projectRoot, file.path),
-          index + 1,
-          file.is_test ? 1 : 0
-        ]
-      );
+          file.path
+        ]);
+        return;
+      }
 
-      const anchor = { fileChangePk: inserted.lastInsertRowid };
+      const fileChangePk = RecordChunkTool.upsertFile(db, chunkPk, file, index, projectRoot);
+      const anchor = { fileChangePk };
+
       ExplainWriter.replaceHighlights(db, anchor, file.highlights);
       ExplainWriter.replaceSymbols(db, anchor, file.symbols);
     });
+  }
+
+  /**
+   * Um arquivo do relatório. O merge é feito em JavaScript, e não em `COALESCE` no SQL,
+   * porque `is_test` é `NOT NULL` e não distingue "não mandou" de "mandou false" — ler a
+   * linha antiga antes deixa a regra visível num lugar só.
+   */
+  static upsertFile(db, chunkPk, file, index, projectRoot) {
+    const previous = SddDb.one(db, 'SELECT * FROM file_changes WHERE chunk_pk = ? AND path = ?', [
+      chunkPk,
+      file.path
+    ]);
+
+    const keep = (incoming, column) => {
+      if (incoming === undefined || incoming === null) return previous ? previous[column] : null;
+      return incoming;
+    };
+
+    const hash = FileHash.of(projectRoot, file.path);
+    const isTest = file.is_test === undefined ? (previous ? previous.is_test : 0) : file.is_test ? 1 : 0;
+
+    const values = [
+      chunkPk,
+      file.path,
+      keep(file.operation, 'operation'),
+      keep(file.lines_added, 'lines_added'),
+      keep(file.lines_removed, 'lines_removed'),
+      keep(file.does, 'does'),
+      keep(file.connects, 'connects'),
+      keep(file.review_note, 'review_note'),
+      keep(file.detail, 'detail'),
+      keep(file.diff, 'diff'),
+      keep(hash, 'content_hash'),
+      index + 1,
+      isTest
+    ];
+
+    if (previous) {
+      SddDb.run(
+        db,
+        `UPDATE file_changes
+            SET operation = ?, lines_added = ?, lines_removed = ?, does = ?, connects = ?,
+                review_note = ?, detail = ?, diff = ?, content_hash = ?, review_order = ?,
+                is_test = ?
+          WHERE id = ?`,
+        [...values.slice(2), previous.id]
+      );
+      return previous.id;
+    }
+
+    const inserted = SddDb.run(
+      db,
+      `INSERT INTO file_changes
+         (chunk_pk, path, operation, lines_added, lines_removed, does, connects, review_note,
+          detail, diff, content_hash, review_order, is_test)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      values
+    );
+
+    return inserted.lastInsertRowid;
   }
 
   /**

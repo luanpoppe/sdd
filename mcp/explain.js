@@ -25,9 +25,16 @@ class ExplainWriter {
    */
   static replaceHighlights(db, anchor, highlights) {
     const { column, value } = ExplainWriter.anchorColumns(anchor);
+
+    // Campo AUSENTE nao apaga o que ja existe. Regravar um arquivo so para corrigir o
+    // resumo nao pode levar junto a explicacao que ja estava la: destaque desatualizado
+    // e um incomodo, destaque perdido e uma informacao que ninguem reescreve.
+    // Para apagar de proposito, mande a lista vazia (`[]`).
+    if (!Array.isArray(highlights)) return ExplainWriter.count(db, 'code_highlights', column, value);
+
     SddDb.run(db, `DELETE FROM code_highlights WHERE ${column} = ?`, [value]);
 
-    const list = Array.isArray(highlights) ? highlights : [];
+    const list = highlights;
     list.forEach((highlight, index) => {
       SddDb.run(
         db,
@@ -51,10 +58,19 @@ class ExplainWriter {
 
   static replaceSymbols(db, anchor, symbols) {
     const { column, value } = ExplainWriter.anchorColumns(anchor);
+
+    // Mesma regra dos destaques: ausente preserva, `[]` apaga.
+    if (!Array.isArray(symbols)) {
+      return {
+        symbols: ExplainWriter.count(db, 'symbols', column, value),
+        examples: ExplainWriter.countExamples(db, column, value)
+      };
+    }
+
     // Os exemplos caem por cascata junto com os símbolos.
     SddDb.run(db, `DELETE FROM symbols WHERE ${column} = ?`, [value]);
 
-    const list = Array.isArray(symbols) ? symbols : [];
+    const list = symbols;
     let exampleCount = 0;
 
     list.forEach((symbol, index) => {
@@ -77,6 +93,22 @@ class ExplainWriter {
     });
 
     return { symbols: list.length, examples: exampleCount };
+  }
+
+  /** Quanto ja existe pendurado nesta ancora — usado quando o campo veio ausente. */
+  static count(db, table, column, value) {
+    const row = SddDb.one(db, `SELECT COUNT(*) AS n FROM ${table} WHERE ${column} = ?`, [value]);
+    return row ? row.n : 0;
+  }
+
+  static countExamples(db, column, value) {
+    const row = SddDb.one(
+      db,
+      `SELECT COUNT(*) AS n FROM symbol_examples
+        WHERE symbol_pk IN (SELECT id FROM symbols WHERE ${column} = ?)`,
+      [value]
+    );
+    return row ? row.n : 0;
   }
 
   /** Lista vazia e lista ausente viram o mesmo `null`: o campo é opcional. */

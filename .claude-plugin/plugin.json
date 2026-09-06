@@ -1,7 +1,7 @@
 {
   "name": "lp",
   "description": "SDD (spec-driven development) com 20 skills lp:* — chunks micro revisáveis, fluxo sequencial por feature, fluxo enxuto de bug-fix (causa raiz → opções → correção), diagrama macro da implementação, base de conhecimento viva do projeto (.sdd/context/), configuração via lp:settings, memória autônoma, modelagem de dados com aprovação antes da migração, grilling anti-assunção e revisão guiada de código existente.",
-  "version": "2.15.0",
+  "version": "2.15.1",
   "author": {
     "name": "Luan Poppe",
     "email": "luanpoppe.tech@gmail.com"

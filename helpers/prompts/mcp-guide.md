@@ -62,7 +62,14 @@ O chunk registrado no g-bis é o chunk **como ele estava naquele instante**. Se 
 
 Então, sempre que atender um pedido de alteração num chunk em revisão (ver `./state-machine.md`, "Perguntas/alterações durante a revisão"):
 
-1. **Rechame `sdd_record_chunk`** com os arquivos como ficaram — `does`/`connects`/`review_note` iguais à lista que você acabou de reimprimir, mais `detail` e `highlights` refletindo a mudança. A tool faz upsert: rechamar corrige, não duplica.
+1. **Rechame `sdd_record_chunk`** com **os arquivos que mudaram** — `does`/`connects`/`review_note` iguais à lista que você acabou de reimprimir, mais `detail` e `highlights` refletindo a mudança. A tool faz upsert por caminho: rechamar corrige, não duplica.
+
+   A regravação é **parcial e aditiva**, e isso muda o que você precisa mandar:
+
+   - **Campo ausente preserva.** Mandar só `summary` corrige o resumo e não encosta no relatório por arquivo.
+   - **Arquivo não citado fica intacto.** Você não precisa reenviar os três arquivos do chunk para corrigir um.
+   - **Sumir da lista não apaga.** Para tirar um arquivo do chunk, mande `{ "path": "...", "drop": true }` — é o único jeito.
+   - **Cuidado com o meio-termo:** citar um arquivo e omitir `symbols` preserva os símbolos dele; citar e mandar `"symbols": []` apaga. Lista vazia é um pedido explícito de apagar.
 2. **Chame `sdd_record_event` (`kind: note`)** quando o ajuste veio de uma **decisão** — "põe um CHECK no banco", "troca soft delete por hard delete", "esse campo passa a ser nulável". O arquivo mostra o quê; só o evento guarda o porquê e o que foi descartado.
 3. **Chame `sdd_sync_change`** se o ajuste mudou um cenário da spec.
 
@@ -289,7 +296,7 @@ A exceção são os dois modos `mcp` acima, em que travar é o comportamento cor
 
 **O agente principal, direto — não o escriba.** Chamar tool MCP não é escrever arquivo, então não viola a regra tudo-ou-nada do `./scribe-guide.md`. E não há garantia de que um subagente enxergue as tools da sessão.
 
-- **Uma chamada por ponto do mapa** — mas **regravar o mesmo chunk depois de alterá-lo não é duplicar**, é corrigir (upsert). O que polui a timeline é gravar o mesmo estado duas vezes, não gravar um estado novo.
+- **Uma chamada por ponto do mapa** — mas **regravar o mesmo chunk depois de alterá-lo não é duplicar**, é corrigir (upsert parcial: ausente preserva). O que polui a timeline é gravar o mesmo estado duas vezes, não gravar um estado novo.
 - **Nunca imprima `detail`/`highlights` no chat.** Eles existem para o plano de revisão poder continuar curto.
 - **Nunca pare o passo por falha de tool** (fora dos dois modos `mcp`). O trabalho acontece; o registro é o que pode faltar.
 - **Nunca sugira ligar o MCP quando está `off`.**

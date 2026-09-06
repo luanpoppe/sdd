@@ -13,37 +13,94 @@ const { SddDb } = require('./db');
  * sendo o arquivo.
  */
 class TasksStore {
-  /** Substitui o plano inteiro de uma mudança/feature. Escrita parcial não existe. */
+  /**
+   * Reescreve o plano de uma mudança/feature.
+   *
+   * "Reescrever" para aqui quando encontra trabalho já registrado: chunk que rodou
+   * carrega relatório por arquivo, símbolos, achados de review e modelagem pendurados
+   * por `ON DELETE CASCADE`, e apagar a linha do plano levaria tudo junto. Um replano
+   * no meio da feature é rotina; perder o histórico de quem já rodou, não.
+   *
+   * Então: chunk do plano novo é sempre gravado; chunk que sumiu do plano só é apagado
+   * se ainda estiver `pending` e sem nenhum arquivo registrado.
+   */
   static replace(db, changePk, featurePk, chunks) {
     const scope = featurePk === null ? 'feature_pk IS NULL' : 'feature_pk = ?';
     const scopeParams = featurePk === null ? [] : [featurePk];
 
-    SddDb.run(db, `DELETE FROM chunks WHERE change_pk = ? AND ${scope}`, [changePk, ...scopeParams]);
+    const incoming = new Set(chunks.map((chunk) => chunk.chunk_id));
+    const existing = SddDb.all(
+      db,
+      `SELECT id, chunk_id, status,
+              (SELECT COUNT(*) FROM file_changes f WHERE f.chunk_pk = chunks.id) AS files
+         FROM chunks
+        WHERE change_pk = ? AND ${scope}`,
+      [changePk, ...scopeParams]
+    );
+
+    for (const chunk of existing) {
+      if (incoming.has(chunk.chunk_id)) continue;
+
+      const carregaTrabalho = chunk.status !== 'pending' || chunk.files > 0;
+      if (carregaTrabalho) continue;
+
+      SddDb.run(db, 'DELETE FROM chunks WHERE id = ?', [chunk.id]);
+    }
 
     chunks.forEach((chunk, index) => {
-      const inserted = SddDb.run(
-        db,
-        `INSERT INTO chunks
-           (change_pk, feature_pk, chunk_id, title, status, position,
-            planned_files, depends_on, review_order, component)
-         VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)`,
-        [
-          changePk,
-          featurePk,
-          chunk.chunk_id,
-          chunk.title ?? null,
-          index + 1,
-          JSON.stringify(chunk.files ?? []),
-          JSON.stringify(chunk.depends_on ?? []),
-          chunk.review_order ?? null,
-          chunk.component ?? null
-        ]
-      );
-
-      TasksStore.insertChecks(db, inserted.lastInsertRowid, chunk);
+      const chunkPk = TasksStore.upsertPlanned(db, changePk, featurePk, chunk, index);
+      TasksStore.replaceChecks(db, chunkPk, chunk);
     });
 
     return chunks.length;
+  }
+
+  /** A linha do plano em si. `status`, `summary` e `reasoning` de quem já rodou ficam. */
+  static upsertPlanned(db, changePk, featurePk, chunk, index) {
+    SddDb.run(
+      db,
+      `INSERT INTO chunks
+         (change_pk, feature_pk, chunk_id, title, status, position,
+          planned_files, depends_on, review_order, component)
+       VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)
+       ON CONFLICT (change_pk, chunk_id) DO UPDATE SET
+         feature_pk    = COALESCE(excluded.feature_pk, chunks.feature_pk),
+         title         = COALESCE(excluded.title, chunks.title),
+         position      = excluded.position,
+         planned_files = excluded.planned_files,
+         depends_on    = excluded.depends_on,
+         review_order  = COALESCE(excluded.review_order, chunks.review_order),
+         component     = COALESCE(excluded.component, chunks.component)`,
+      [
+        changePk,
+        featurePk,
+        chunk.chunk_id,
+        chunk.title ?? null,
+        index + 1,
+        JSON.stringify(chunk.files ?? []),
+        JSON.stringify(chunk.depends_on ?? []),
+        chunk.review_order ?? null,
+        chunk.component ?? null
+      ]
+    );
+
+    const row = SddDb.one(db, 'SELECT id FROM chunks WHERE change_pk = ? AND chunk_id = ?', [
+      changePk,
+      chunk.chunk_id
+    ]);
+    return row.id;
+  }
+
+  /**
+   * Os checkboxes do chunk. Chunk que já rodou não é tocado: reinserir os itens com
+   * `[ ]` desmarcaria na tela um trabalho que existe.
+   */
+  static replaceChecks(db, chunkPk, chunk) {
+    const atual = SddDb.one(db, 'SELECT status FROM chunks WHERE id = ?', [chunkPk]);
+    if (atual && atual.status !== 'pending') return 0;
+
+    SddDb.run(db, 'DELETE FROM chunk_checks WHERE chunk_pk = ?', [chunkPk]);
+    return TasksStore.insertChecks(db, chunkPk, chunk);
   }
 
   /**
