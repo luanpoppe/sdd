@@ -42,6 +42,7 @@ Chame a tool **junto** do passo, não num turno separado.
 | passo **f-bis**, tester rodou | `sdd_record_tests` | runner, passou/falhou, cobertura, o relatório e os arquivos criados |
 | passo **g-bis** | `sdd_record_chunk` | **a chamada principal** — o chunk e um item por arquivo, com `does`/`connects`/`review_note` mais `detail`, `highlights`, `symbols` e `diff` (ver abaixo) |
 | commit efetivado no `auto_commit: full` | `sdd_record_chunk` | rechame com o `commit` preenchido (`mode: full`, `branch`, `sha`) |
+| **ajuste pedido durante a revisão** do chunk | `sdd_record_chunk` | rechame com os arquivos como ficaram, e `sdd_record_event` (`kind: note`) se o ajuste veio de uma decisão |
 | `lp:review-walkthrough`, step fechado | `sdd_record_review` | o step com arquivos, `detail`, `highlights` e `symbols` — **a mesma profundidade de um chunk** |
 | geração da spec de uma feature | `sdd_sync_change` | `features[].scenarios[]` — os requisitos (BDD ou entrada/saída) e edge cases, com `key` estável (`mcp_record.scenarios`) |
 | `lp:context`, ao criar/atualizar uma área | `sdd_record_knowledge` | `kind: context`, o que é a área e como funciona (`mcp_record.context`) |
@@ -54,6 +55,18 @@ Chame a tool **junto** do passo, não num turno separado.
 | banco perdido, ou período trabalhado com `mcp: off` | `sdd_reindex` | reconstrói o esqueleto a partir do `.sdd/` **e os temas do `lp:explain` a partir de `~/.sdd/explain/`** (globais, varridos mesmo fora de projeto); não recupera explicação por arquivo, exemplo nem decisão |
 
 O **passo g-bis** é o ponto certo para `sdd_record_chunk` porque é o único momento em que você já tem tudo junto: o relatório do implementer, a ordem de revisão e a `commit_message`. É o mesmo passo em que você já grava `in_review` — as duas escritas andam juntas.
+
+#### Ajuste durante a revisão → regrave o chunk
+
+O chunk registrado no g-bis é o chunk **como ele estava naquele instante**. Se o usuário pedir alteração enquanto ele está em revisão, o código muda e o registro fica descrevendo uma versão que não existe mais — pior que registro nenhum, porque parece atual.
+
+Então, sempre que atender um pedido de alteração num chunk em revisão (ver `./state-machine.md`, "Perguntas/alterações durante a revisão"):
+
+1. **Rechame `sdd_record_chunk`** com os arquivos como ficaram — `does`/`connects`/`review_note` iguais à lista que você acabou de reimprimir, mais `detail` e `highlights` refletindo a mudança. A tool faz upsert: rechamar corrige, não duplica.
+2. **Chame `sdd_record_event` (`kind: note`)** quando o ajuste veio de uma **decisão** — "põe um CHECK no banco", "troca soft delete por hard delete", "esse campo passa a ser nulável". O arquivo mostra o quê; só o evento guarda o porquê e o que foi descartado.
+3. **Chame `sdd_sync_change`** se o ajuste mudou um cenário da spec.
+
+Vale o mesmo argumento do bloco de commit reimpresso: rechamar uma tool é barato, e descobrir na próxima conversa que o banco descreve o código errado, não. **Não espere o usuário perguntar "você registrou isso?"** — se ele precisou perguntar, o registro já falhou.
 
 ### O que preencher em `sdd_record_chunk`
 
@@ -225,10 +238,11 @@ A exceção são os dois modos `mcp` acima, em que travar é o comportamento cor
 
 **O agente principal, direto — não o escriba.** Chamar tool MCP não é escrever arquivo, então não viola a regra tudo-ou-nada do `./scribe-guide.md`. E não há garantia de que um subagente enxergue as tools da sessão.
 
-- **Uma chamada por ponto do mapa.** As tools fazem upsert, mas registro duplicado polui a timeline com ordem errada.
+- **Uma chamada por ponto do mapa** — mas **regravar o mesmo chunk depois de alterá-lo não é duplicar**, é corrigir (upsert). O que polui a timeline é gravar o mesmo estado duas vezes, não gravar um estado novo.
 - **Nunca imprima `detail`/`highlights` no chat.** Eles existem para o plano de revisão poder continuar curto.
 - **Nunca pare o passo por falha de tool** (fora dos dois modos `mcp`). O trabalho acontece; o registro é o que pode faltar.
 - **Nunca sugira ligar o MCP quando está `off`.**
 - **Nunca peça ao usuário para preencher payload.** Tudo que as tools querem você já tem em mão no passo.
+- **Nunca deixe o banco descrevendo código que você acabou de mudar.** Alterou arquivo de um chunk já registrado → rechame `sdd_record_chunk` no mesmo turno.
 
 Os anti-padrões de **qualidade do conteúdo** (destaque sem curadoria, exemplo com `foo`/`bar`, só caminho feliz, `detail` que repete o `does`) estão em `./mcp-rationale.md`.

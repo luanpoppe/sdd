@@ -292,6 +292,7 @@ Vale enquanto há um chunk **em revisão**. A fonte de verdade é o `in_review` 
 
 1. Responda a pergunta / aplique a alteração normalmente e explique o que fez (delegando a outra skill se fizer sentido).
 2. Se **alterou arquivos**: rode o comando de validação do projeto (não assuma eslint) nos editados e, se o projeto exigir, os testes. A lista pode ter mudado (novos arquivos, novos ±linhas) — reflita isso e atualize `in_review.files` (e o bloco de commit sugerido/`in_review.commit_message`, se `auto_commit` ≠ `off`).
+2-bis. Se **alterou arquivos** e `mcp: on`: **regrave o chunk no banco, neste mesmo turno** — `sdd_record_chunk` com os arquivos como ficaram (`does`/`connects`/`review_note` iguais à lista reimpressa, mais `detail` e `highlights` atualizados). Se o ajuste veio de uma **decisão** do usuário — "põe um CHECK no banco", "troca para hard delete", "esse campo passa a ser nulável" —, some um `sdd_record_event` (`kind: note`) com o porquê, e um `sdd_sync_change` se a decisão mudou um cenário da spec. A tool faz upsert: rechamar corrige o registro, não duplica. Pular isso deixa o banco descrevendo a versão anterior do código — ver `../../helpers/prompts/mcp-guide.md`.
 3. **Sempre, no FIM da resposta — nunca pule este passo, mesmo numa resposta puramente explicativa que não tocou em arquivo nenhum — re-imprima a lista de revisão atualizada** (mesmo formato: bloco por arquivo, cabeçalho em negrito + bullets, separados por linha em branco), para o usuário continuar de onde parou sem precisar perguntar "o que eu tava revisando mesmo?":
 
    ```

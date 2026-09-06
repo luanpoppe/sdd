@@ -239,3 +239,5 @@ Regras da lista:
 Enquanto um chunk está em revisão (impresso, `[~]`, não aprovado), se o usuário perguntar algo ou pedir ajuste no chunk **sem** rodar `/lp-continue`: atenda, e **re-imprima a lista de revisão atualizada no fim da resposta** para ele continuar de onde parou. Se alterou arquivos, re-rode a validação e reflita novos arquivos/±linhas na lista. Não avance de chunk sem `/lp-continue` explícito.
 
 Com `auto_commit` ≠ `off`, o **bloco de commit vai junto**, depois da lista, fechando a resposta — **mesmo quando os comandos não mudaram**. Reimprimir dois comandos idênticos é barato; deixar o usuário caçar a mensagem antiga no scrollback, não. Ver `./git-guide.md`.
+
+Com `mcp: on`, **alterou arquivo → regrave o chunk no mesmo turno**: `sdd_record_chunk` com os arquivos como ficaram, e `sdd_record_event` (`kind: note`) quando o ajuste veio de uma decisão do usuário ("põe um CHECK no banco", "troca para hard delete"). A tool faz upsert — rechamar corrige o registro, não cria duplicata. Sem isso o banco continua descrevendo a versão anterior do código, que é pior do que não ter registro: parece atual. Ver `./mcp-guide.md`.
