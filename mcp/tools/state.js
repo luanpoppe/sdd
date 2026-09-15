@@ -10,6 +10,22 @@ const IN_REVIEW_SCHEMA = {
   properties: {
     chunks: { type: 'array', items: { type: 'string' } },
     files: { type: 'array', items: { type: 'string' }, description: 'Paths na ordem de revisão' },
+    commit_message: { type: 'string', description: 'Mensagem sugerida do chunk em revisão' },
+    // O turno de fechamento não commita: ele deixa aqui o que sai na aprovação seguinte.
+    pending_commits: {
+      type: 'array',
+      description:
+        'Commits montados e ainda não executados, na ordem em que devem sair. O /lp-continue ' +
+        'que aprova a revisão roda esta lista e limpa o in_review.',
+      items: {
+        type: 'object',
+        required: ['message', 'files'],
+        properties: {
+          message: { type: 'string' },
+          files: { type: 'array', items: { type: 'string' } }
+        }
+      }
+    },
     updated: { type: 'string' }
   }
 };

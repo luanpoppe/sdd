@@ -47,8 +47,8 @@ Mapa fixo — use-o para saber qual entrada da config se aplica ao subagente que
 | `implementer` | `../../skills/continue/SKILL.md` passo **c** (chunk sequencial) · cada subagente de uma onda do `./parallel-guide.md` |
 | `scribe` | toda chamada do escriba — `lp:continue`, `lp:new-feature`, `lp:bug-fix`, `lp:flow`, `lp:context` (ver `./scribe-guide.md`) |
 | `explorer` | `Agent Explore` de investigação — reúso no `lp:new-feature`, causa raiz no `lp:bug-fix`, escopo amplo no `lp:review-walkthrough` · bootstrap de contexto do `lp:init` (3-bis) · semeadura do `lp:context` |
-| `tester` | passo **f-bis** do motor `implementing` — geração de testes ao concluir a feature/correção, só com `tests: on` (ver `./tester-guide.md`) |
-| `code-reviewer` | passo **f-ter** do motor `implementing`, quando a feature fecha — uma passada por feature, não por chunk —, só com `code_review: on` · toda invocação de `lp:code-review` (ver `./code-review-guide.md`). É o papel em que subir o modelo mais se paga: revisor fraco produz achado genérico. |
+| `tester` | passo **f-bis** do motor `implementing` — geração de testes no turno de fechamento da feature/correção (o `/lp-continue` seguinte ao último chunk), só com `tests: on` (ver `./tester-guide.md`) |
+| `code-reviewer` | passo **f-ter** do motor `implementing`, no turno de fechamento da feature — uma passada por feature, não por chunk, e nunca no mesmo turno do último chunk —, só com `code_review: on` · toda invocação de `lp:code-review` (ver `./code-review-guide.md`). É o papel em que subir o modelo mais se paga: revisor fraco produz achado genérico. |
 | `data-modeler` | passo **b-ter** do motor `implementing`, só com `data_model: on` e chunk que toca dados · toda invocação de `lp:data-model` (ver `./data-model-guide.md`). Como o `code-reviewer`, é papel em que subir o modelo se paga: o erro de schema é o mais caro de desfazer. |
 
 O checador de atualização do `lp:desktop` fica **fora** deste mapa — roda sempre no default.

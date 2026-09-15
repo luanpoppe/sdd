@@ -6,7 +6,7 @@ Um subagente que audita **código recém-escrito** procurando o que está errado
 
 - Campo `code_review` no `.sdd/config.yaml`: `off` (padrão, ausente = `off`) ou `on`.
 - Com `off`, o passo **não existe** — não revise, não comente que está desligado, não sugira ligar.
-- Com `on`, roda **uma vez por feature**, no passo `f-ter`, quando o último chunk dela fecha. Não roda por chunk.
+- Com `on`, roda **uma vez por feature**, no passo `f-ter` — que acontece no **turno de fechamento**: o `/lp-continue` seguinte ao que implementou o último chunk, nunca no mesmo turno dele. Não roda por chunk.
 - Sob demanda, o `lp:code-review` roda independente do toggle: chamar é pedir.
 
 ### Por que uma vez por feature, e não a cada chunk
@@ -113,7 +113,7 @@ Nada encontrado é resultado legítimo e comum. Diga *"Code review: nada a apont
 
 Achado impresso e nunca decidido é o modo mais comum de a revisão falhar: não foi corrigido, não foi descartado, não foi adiado, e ninguém volta nele. Como agora o review roda uma vez por feature, a decisão é um **passo de fluxo**, com lugar fixo:
 
-1. **No mesmo turno em que a feature fecha**, depois de imprimir o plano de revisão, exponha **todos** os achados da feature e pergunte o que fazer.
+1. **No turno de fechamento**, depois de imprimir as fichas, exponha **todos** os achados da feature e pergunte o que fazer.
 2. **No `/lp-continue` seguinte**, antes de começar qualquer coisa: se ainda houver achado `aberto` da feature anterior, exponha de novo e pergunte **antes** de iniciar o próximo chunk. Só depois disso o fluxo segue.
 
 O passo 2 é o que faz disto uma porta. Sem ele, fechar a conversa no meio do turno apagaria a decisão, e a dívida voltaria a morrer em silêncio.
@@ -130,6 +130,36 @@ Use a interface nativa do harness (`AskUserQuestion` no Claude, equivalente nos 
 **Só `menor` na lista → não pergunte.** Os menores ficam abertos, aparecem no plano e não param nada — interromper o fluxo por legibilidade é o caminho mais rápido para o usuário parar de ler a seção inteira.
 
 O usuário sempre pode responder fora das opções (*"corrige A1 e A3"*, *"descarta A2, foi decidido assim no grill"*). Trate isso como a resposta, não como fuga do formulário.
+
+### O enunciado da pergunta não é a ficha
+
+Regra dura: **a pergunta nunca é o primeiro lugar onde o achado aparece.** As fichas vão no corpo da mensagem, e só depois vem a chamada da interface de pergunta.
+
+Isso falha na prática, e falha sempre do mesmo jeito: o agente comprime os achados no enunciado e pula direto para as opções. O usuário recebe algo assim —
+
+```
+O code review encontrou 2 achados graves (A1: mapeamento posicional apos filtro
+REQ-6; A2: melhor esforco REQ-4 retorna ultima rodada) e 2 medios (A3: aviso de
+esgotamento nao garantido; A4: poluicao de thread Redis). O que fazer?
+[ Corrigir todos ] [ So os graves ] [ Adiar ] [ Descartar ]
+```
+
+— e é pedido para decidir sem cenário, sem causa, sem custo. Título de achado não é achado: `A1 — mapeamento posicional após filtro` não diz que entrada quebra, o que sai errado, nem se o conserto é de 3 linhas ou de 3 arquivos. Decidir ali é chutar.
+
+O certo é a mensagem trazer a ficha completa de cada grave e médio, os menores em uma linha cada, **e então** a pergunta, cujo enunciado só precisa do ID e do título curto — o detalhe o usuário acabou de ler logo acima.
+
+Antes de chamar a interface de pergunta, confira: a ficha de todo achado grave e médio está no texto **desta** mensagem? Não está → você pulou o passo. Imprima e pergunte depois.
+
+### A correção também vira registro
+
+Aplicar um achado altera código, e código alterado sem registro quebra a promessa da timeline. Com `mcp: on`, a correção entra em **duas** gravações:
+
+- O **desfecho** vai no chunk de origem do achado (`status` + `resolution` no campo `code_review`) — é o que faz o achado aparecer resolvido onde ele nasceu.
+- O **código** vai num **chunk de correção** novo, numerado como o próximo da feature (`F<n>.C<último+1>`), com título `Code review — correções (A1, A3)` e o relatório por arquivo igual ao de qualquer chunk.
+
+Sem o segundo, o `Faz`/`Conecta` do chunk original passa a descrever um arquivo que não é mais aquele, e a segunda passada fica invisível para quem revisar depois.
+
+Se a suíte rodou de novo, o `sdd_record_tests` também é regravado: o relatório de antes da correção envelhece no instante em que ela é aplicada.
 
 ### Sem MCP, a porta não persiste
 
@@ -225,6 +255,7 @@ Com `mcp_record.code_review: false`, pule o campo — o review continua rodando 
 - ❌ **Apontar ausência de teste como achado.** Isso é trabalho do `tests: on` e do passo f-bis.
 - ❌ **Revisar código que o chunk não tocou.** O escopo é o diff mais o contexto ao redor dele; auditoria geral do repositório é outra tarefa.
 - ❌ **Contar mais achados do que os que você listou.** Número sem ficha é dívida que o usuário sabe que existe e não tem como olhar.
+- ❌ **Perguntar antes de imprimir as fichas**, resumindo os achados dentro do enunciado da pergunta. Decidir sem cenário, causa e custo é chutar — ver "O enunciado da pergunta não é a ficha".
 - ❌ **Imprimir a lista e seguir para o `Próximo:`** com grave ou médio em aberto, sem perguntar nada.
 - ❌ **Iniciar o próximo chunk com achado `aberto` da feature anterior.** A porta existe justamente aí.
 - ❌ **Rodar o review a cada chunk.** Custa um subagente por chunk e produz achado que o chunk seguinte já resolveria.

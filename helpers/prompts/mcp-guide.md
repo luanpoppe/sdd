@@ -49,6 +49,8 @@ Chame a tool **junto** do passo, não num turno separado.
 | `lp:explain`, ao gerar/atualizar um tema | `sdd_record_explain` | o tema **global** (fora de projeto), com `question`, `origin` e o `detail` que a busca precisa alcançar (`mcp_record.explain`) |
 | `lp:explain`, ao dar baixa na fila | `sdd_record_explain` | o mesmo slug com `status: "estudado"` |
 | passo **f-ter**, com `code_review: on` | `sdd_record_chunk` | campo `code_review` — um item por achado, com severidade, arquivo, linha, cenário, causa e sugestão (`mcp_record.code_review`) |
+| passo **g-quater**, achado corrigido | `sdd_record_chunk` (2×) | o desfecho no chunk de origem (`status` + `resolution`) **e** um chunk de correção `F<n>.C<último+1>` com os arquivos alterados |
+| passo **g-quater**, suíte rodou de novo | `sdd_record_tests` | os números novos — o relatório anterior à correção já não vale |
 | passo **g-quater**, achado corrigido/descartado/adiado | `sdd_record_chunk` | o mesmo `code_review`, só com o achado fechado: `status` + `resolution`. Upsert por `path`+`title` |
 | passo **b-ter**, com `data_model: on` | `sdd_record_chunk` | campo `data_model` — um item por entidade, com `shape`, `decisions`, `rejected`, `index_notes` e `migration` (`mcp_record.data_model`) |
 | passo de **tasks**, com `flow_storage: mcp` | `sdd_write_tasks` (`mode: "plan"`) | o esqueleto do fluxo — um item por chunk com `component`, sem apagar o que já foi implementado |
@@ -209,6 +211,7 @@ Sem os pontos abaixo, o SDD grava uma memória que nunca consulta.
 | `lp:ask` / `lp:status`, pergunta sobre trabalho anterior | `sdd_query_history` | Responde "onde paramos" e "o que foi feito" sem reler `.sdd/`. |
 | **início do `implementing`**, com `code_review: on` | `sdd_query_history` → `open_findings` | A porta antes do próximo chunk. Sem isto, achado impresso e não decidido morre no chat. |
 | a mesma chamada, sempre | `sdd_query_history` → `stale_warning` | Servidor MCP em execução mais antigo que o instalado. Diga em uma linha que a sessão precisa reiniciar. |
+| a mesma chamada, sempre | `sdd_query_history` → `stale_files` | Explicação escrita contra outra versão do arquivo. Reexplique até 5 por rodada, sempre abrindo o arquivo antes. |
 | `lp:explain`, antes de criar tema novo | `sdd_read_explain` com `status: "todos"` | Evita `jwt` e `json-web-token` como dois temas. |
 | o usuário pergunta o que tem para estudar | `sdd_read_explain` | A fila do que ficou `aberto`, do mais antigo. |
 
@@ -288,6 +291,33 @@ O servidor MCP sobe junto com a sessão e fica de pé até ela morrer. Um `lp:au
 Isso já custou dado. Uma correção de perda do relatório por arquivo foi publicada, e as sessões abertas seguiram apagando por horas — o servidor delas era anterior ao conserto.
 
 Por isso o `sdd_query_history` devolve `stale_warning`. Havendo aviso: **uma** linha ao usuário dizendo para reiniciar a sessão, uma vez por conversa, sem bloquear nada. Não havendo, silêncio — não anuncie que a versão está em dia.
+
+## O chunk raso — `files_without_depth`
+
+`detail`, `highlights` e `symbols` são opcionais no schema, e a consequência de esquecer deles é invisível na hora: o chunk grava, o plano de revisão sai igual, e só meses depois alguém abre o histórico e encontra duas frases onde deveria haver o arquivo explicado.
+
+Por isso a resposta do `sdd_record_chunk` traz `files_without_depth` — os arquivos de código (teste fora) que não têm nenhum dos três. Vindo lista não vazia, complete numa segunda chamada, ainda no mesmo passo, com o código em contexto. O upsert é por `path` e campo ausente preserva: mandar só `detail` e `highlights` não mexe em mais nada.
+
+A conta é feita sobre o **estado do chunk no banco**, não sobre o payload — o merge é incremental, então o que importa é o que o chunk tem no fim, não o que veio na chamada.
+
+## Explicação que não descreve mais o código
+
+Todo arquivo gravado no `sdd_record_chunk` leva um `content_hash` — sha256 dos bytes daquele momento, calculado pelo servidor, nunca pedido ao agente (o SDD Viewer recalcula o mesmo hash para comparar, e qualquer divergência de método marcaria tudo como desatualizado).
+
+Quando o hash de hoje não bate com o gravado, o `Faz`/`Conecta`/`Revisar` daquele registro descreve outra versão do arquivo. Duas causas, com respostas diferentes:
+
+**Você mesmo alterou o arquivo num chunk posterior.** Resolva no `g-bis`, junto da gravação do chunk novo: uma chamada `sdd_record_chunk` extra com o `chunk_id` **antigo** e só o `files` daquele arquivo, com os textos atualizados. É o momento mais barato — o arquivo já está em contexto.
+
+**O arquivo mudou por fora** (edição à mão, merge, outra branch). Resolva no início do `implementing`, com o `stale_files` que o `sdd_query_history` devolve: até **5** arquivos por rodada, e **sempre abrindo o arquivo antes de reescrever**.
+
+O upsert é por `path` e campo ausente preserva, então a reexplicação não mexe em `operation`, `lines_added`, destaques, símbolos nem na ordem de revisão. O `content_hash` é recalculado a cada gravação, e é isso que apaga a marca.
+
+Duas coisas que **não** se faz aqui:
+
+- **Reescrever de cabeça.** Explicação inventada com hash novo é pior que a marca de desatualizado: ela parece confiável e ninguém mais vai conferir.
+- **Reexplicar arquivo de mudança arquivada.** O `stale_files` já filtra por `archived_at IS NULL` — mudança fechada é registro histórico, não documento vivo.
+
+A consequência aceita de propósito: o registro do chunk antigo passa a descrever o código de agora, não o daquele momento. A timeline ganha em "o texto está certo" e perde em "o texto conta o que aquele chunk fez". Foi uma escolha explícita.
 
 ## Degradação — regra dura
 

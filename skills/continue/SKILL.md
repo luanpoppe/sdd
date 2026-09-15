@@ -17,7 +17,7 @@ Você está avançando 1 passo no SDD. Siga a máquina de estados em `../../help
   - Mais de uma: prefira `state: implementing`; em empate, pergunte qual.
 - Leia `.sdd.yaml`. **Se `kind: bugfix`** → esta é uma mudança de bug-fix: siga `../../helpers/prompts/bugfix-machine.md` (estados `bug-proposing` → `bug-fixing`) em vez da máquina de features abaixo. O resto desta pré-checagem (in_review, memória) continua valendo; pule a leitura de `plan.md`/specs (bug-fix não os tem).
 - (fluxo normal de feature) Leia `plan.md` e os arquivos da **feature ativa atualmente** (se houver `current_feature`): `specs/<current_feature>/spec.md` e `tasks.md` se existirem.
-- **Leia `in_review`**: se preenchido, há um chunk aguardando revisão (pode ser de uma conversa anterior). Uma invocação normal de `/lp-continue` significa que o usuário **aprovou** essa revisão. **Antes de limpar**, se `auto_commit: full` (ver `../../helpers/prompts/git-guide.md`), faça o commit do chunk aprovado agora (git add dos `in_review.files` **mais os arquivos de decisão do `.sdd/` que estiverem sujos** — `spec.md`, `plan.md`, `memory`, `context/`; ver a seção "Os arquivos do `.sdd/`" do guia — + git commit com `in_review.commit_message`), respeitando a exceção de branch protegida do guia. Com `mcp: on`, depois de commitar rechame `sdd_record_chunk` com o `commit` preenchido (`mode: full`, branch e sha). Depois, limpe `in_review` (`null`) e siga para o próximo chunk/onda. Ao mencionar no chat o chunk que acabou de ser aprovado, diga o que ele fez, não só o ID (*"aprovado o chunk que passou a marcar dimensão sem dado como não-avaliada (`C6`)"*) — ver a regra de citação em `../../helpers/prompts/state-machine.md`. Perguntas/ajustes sem `/lp-continue` caem na seção "Durante a revisão de um chunk".
+- **Leia `in_review`**: se preenchido, há um chunk aguardando revisão (pode ser de uma conversa anterior). Uma invocação normal de `/lp-continue` significa que o usuário **aprovou** essa revisão. **Antes de limpar**, se `auto_commit: full` (ver `../../helpers/prompts/git-guide.md`), faça o commit do chunk aprovado agora (git add dos `in_review.files` **mais os arquivos de decisão do `.sdd/` que estiverem sujos** — `spec.md`, `plan.md`, `memory`, `context/`; ver a seção "Os arquivos do `.sdd/`" do guia — + git commit com `in_review.commit_message`), respeitando a exceção de branch protegida do guia. Com `mcp: on`, depois de commitar rechame `sdd_record_chunk` com o `commit` preenchido (`mode: full`, branch e sha). **Se `in_review.pending_commits` estiver preenchido** (é o que o turno de fechamento deixa: testes, correção do code review e artefatos do `.sdd/`), execute esses commits agora, na ordem em que estão na lista, antes de limpar. Depois, limpe `in_review` (`null`) e siga para o próximo chunk/onda. Ao mencionar no chat o chunk que acabou de ser aprovado, diga o que ele fez, não só o ID (*"aprovado o chunk que passou a marcar dimensão sem dado como não-avaliada (`C6`)"*) — ver a regra de citação em `../../helpers/prompts/state-machine.md`. Perguntas/ajustes sem `/lp-continue` caem na seção "Durante a revisão de um chunk".
 - **NÃO leia specs de outras features** — elas podem nem existir ainda.
 - **Carregue a memória**: leia a global `~/.sdd/memory.md` (lições sobre o fluxo `lp:*`, válidas em qualquer projeto — ausente é normal, siga em silêncio) e a do projeto `.sdd/memory.md` (ou `.sdd/memory-map.md` se existir; nesse caso, leia também os arquivos de tema que parecem relevantes pelo título da feature ativa). Siga `../../helpers/prompts/memory-guide.md`.
 - **Carregue o contexto do projeto** (se `context: true`/ausente no config): leia `.sdd/context/index.md`. Se a feature ativa toca uma área listada, leia também o arquivo de contexto dela antes de decidir/implementar. É a 1ª parada para "como isso funciona hoje?". Siga `../../helpers/prompts/context-guide.md`.
@@ -100,6 +100,23 @@ Sem `mcp: on` este passo não existe — não há de onde recobrar, e o achado v
 
 A mesma resposta traz `stale_warning` quando o servidor MCP em execução é anterior à versão instalada no disco (o processo não recarrega sozinho). Havendo aviso, diga em **uma** linha que a sessão precisa ser reiniciada, uma vez por conversa, e siga o fluxo normalmente.
 
+**0-bis) Explicações desatualizadas** — só com **`mcp: on`**. A mesma resposta do `sdd_query_history` traz `stale_files`: arquivos cujo `content_hash` não bate mais com o disco, ou seja, o `Faz`/`Conecta`/`Revisar` gravado descreve outra versão do código.
+
+- **Nada em `stale_files`**: siga em silêncio.
+- **Há arquivos**: pegue **até 5**, os primeiros da lista (ela vem do chunk mais recente para o mais antigo). Para cada um: abra o arquivo, releia, e regrave com `sdd_record_chunk` usando o `change_id` e o `chunk_id` que vieram no item — só o campo `files`, com `path`, `does`, `connects` e `review_note` atualizados. O upsert preserva todo o resto do chunk, e o `content_hash` é recalculado na gravação, então a marca some.
+- Diga em **uma** linha o que foi reexplicado (*"Reexpliquei 3 arquivos cuja explicação estava desatualizada (F1.C6, F1.C8)."*). Sobrando arquivos além dos 5, acrescente a contagem do que ficou — a próxima rodada pega.
+- **Não** reescreva o texto sem abrir o arquivo. Reexplicação de cabeça é pior que a marca de desatualizado: ela parece confiável.
+
+Passo caro em contexto (é leitura de arquivo), então o teto de 5 é rígido. Se o usuário disser para não reexplicar, respeite pelo resto da conversa.
+
+**0-ter) Fechamento da feature — turno próprio.** Se **todos** os chunks da `current_feature` já estão `[~]`/`[x]` e a feature **ainda não está `done`**, este turno é o do fechamento: rode **f → f-bis → f-ter → plano de fechamento → g-quater** e **pare**. Não inicie chunk nenhum, não abra a próxima feature.
+
+O último chunk é implementado como qualquer outro, e o fechamento vem no `/lp-continue` seguinte. O motivo é o volume: implementação + testes + code review no mesmo turno entrega três coisas grandes de uma vez, e a revisão do código acaba competindo com achados de review que acabaram de aparecer. Separado, cada turno tem uma coisa para o usuário decidir.
+
+Nada de novo a persistir para reconhecer o estado: a feature só vira `done` no passo f, então "todos os chunks fechados + feature não `done`" **é** o marcador.
+
+O plano de fechamento é o do passo g, com o que existe neste turno: os blocos `Testes` e `Code review`, a lista dos arquivos de teste criados no f-bis (na ordem de revisão) e a linha `Próximo:`. Sem chunk novo, não há `Faz`/`Conecta` de implementação para imprimir.
+
 **a) Auto-sync** (detectar divergências contra `plan.md` + spec da feature ativa):
 - Liste em buckets se houver: decisão divergente / escopo extra / escopo faltante.
 - Proponha diffs nas docs (plan.md ou specs/<slug>/spec.md ou tasks.md).
@@ -171,31 +188,42 @@ O passo tem **três fases, e a do meio é sua**:
 **d) Marcar + registrar**:
 - tasks.md: marque os checkboxes do chunk (`Faz` e `Validação`) de `[ ]` → `[~]`. Os demais itens do chunk (`Arquivos`, `Depende de`, `Ordem de revisão`) são metadados em bullet simples, não checkboxes — não precisa marcar. Se o chunk tiver outros checkboxes, marque todos.
 - `.sdd.yaml`: `current_chunk: "F<n>.C<m>"`, `updated`.
+- Com **`mcp: on`**, agora que você sabe quais arquivos o chunk toca (campo `Arquivos`), faça **uma** chamada `sdd_recall` com esses caminhos ou com o nome da classe/módulo. Serve para descobrir se aquele código já foi tocado antes, com que decisão e com quais exemplos de entrada e saída — inclusive em conversa que você não viu. Não achou nada: siga em silêncio. Achou algo que muda a decisão: diga em 1 linha o que achou e o que muda. Ver `../../helpers/prompts/mcp-guide.md`.
 
 **e) Atualizar diagrama** — se `flowchart: on` no `.sdd/config.yaml` (default). **Com `flow_storage: mcp` não há arquivo**: o fluxo já foi gravado pelo `component` do `sdd_record_chunk` (g-bis) e pelo esqueleto do passo de tasks — pule este passo em silêncio e não mencione `flow.html`. Com `flow_storage: file` (padrão), **edite pontualmente** `.sdd/changes/<id>/flow.html` seguindo `../../helpers/prompts/flowchart-guide.md`, seção "Atualização incremental": três edições com âncora única (o nó anterior vira `done`, o nó deste chunk vira `current` e clicável, o painel deste chunk entra acima do marcador `<!-- /detail-panel: <slug> -->`), mais a linha de progresso do cabeçalho. **Não reescreva o `<main>`** — o painel de cada chunk fechado é imutável, e reescrevê-los custa mais que o resto do passo inteiro. Marque `deviated` os componentes anotados no auto-sync (também por troca de classe). O nó deste chunk vira clicável com um **mini-walkthrough de código real** — **reuse o relatório do subagente / o diff que você já fez neste turno** para montar o detalhe (não releia os arquivos do zero). Cite no plano de revisão: *"Diagrama atualizado: flow.html"*.
 
-**f) Transição "feature concluída"**:
-- Se todos os chunks da `current_feature` estão `[~]`/`[x]`:
+**f) Transição "feature concluída"** — só no turno de fechamento (0-ter). No turno em que o último chunk foi implementado, este passo **não roda**: a linha `Próximo:` do plano de revisão diz *"Todos os chunks da feature `<X>` implementados. Próximo `/lp-continue` fecha a feature: testes + code review."* e o turno para ali.
+- No turno de fechamento:
   - Marque a feature como `done` no `.sdd.yaml`. Limpe `current_feature` e `current_chunk`.
   - **Contexto do projeto** (se `context: true`/ausente): crie/atualize o arquivo de contexto dessa feature em `.sdd/context/` (o que é / como funciona / decisões e porquês da spec+plan+auto-sync / notas) e atualize o(s) índice(s). Segue `../../helpers/prompts/context-guide.md`. **Entra no pacote do escriba** deste passo (não escreva inline). Cite no plano: *"Contexto: +1 área `<slug>` em .sdd/context/"*.
   - Se há próxima feature `pending`: `state: awaiting-feature-spec`. Imprima: *"Feature `<X>` concluída (em revisão). Próximo `/lp-continue` inicia a feature `<Y>` — <summary dela> (spec)."*
   - Senão: `state: awaiting-archive`. Sugira `/lp-archive`.
   - Com **`mcp: on`**: `sdd_sync_change` com a feature em `done` e o `state` novo.
-  - **Commit dos artefatos de progresso** (se `auto_commit` ≠ `off`): os arquivos que mudam a cada chunk — `tasks.md`, `flow.html`, `.sdd.yaml` — foram deixados de fora dos commits dos chunks de propósito e saem agora num commit só, `chore(sdd): fecha <slug>`. Com `full`, rode; com `suggest-only`, mostre o comando no fim da mensagem. Nada sujo (o caso de quem usa os `*_storage: mcp`) → nenhum commit e nenhuma menção. Ver `../../helpers/prompts/git-guide.md`.
-- Com **`mcp: on`**, agora que você sabe quais arquivos o chunk toca (campo `Arquivos`), faça **uma** chamada `sdd_recall` com esses caminhos ou com o nome da classe/módulo. Serve para descobrir se aquele código já foi tocado antes, com que decisão e com quais exemplos de entrada e saída — inclusive em conversa que você não viu. Não achou nada: siga em silêncio. Achou algo que muda a decisão: diga em 1 linha o que achou e o que muda. Ver `../../helpers/prompts/mcp-guide.md`.
-- O resultado desta transição define a linha "Próximo:" do plano de revisão (passo g).
+  - **Commit dos artefatos do SDD**: rode `git status --porcelain .sdd` e monte um commit com **tudo que estiver sujo ali** — `plan.md` e o espelho `.html`, `spec.md`, `context/**`, `.sdd.yaml`, `tasks.md`, `flow.html`, o que houver —, com mensagem `chore(sdd): fecha <slug>`. Não é uma lista fixa de nomes: com os `*_storage: mcp` os arquivos de progresso somem, mas plano, spec e contexto continuam em disco, e eram justamente eles que ficavam para trás. **Este commit não sai agora**: ele entra em `in_review.pending_commits` e roda quando você aprovar o fechamento, no `/lp-continue` seguinte (ver a regra logo abaixo do g-quater). `.sdd/` limpo → nenhum commit e nenhuma menção. Ver `../../helpers/prompts/git-guide.md`.
+- O resultado desta transição define a linha "Próximo:" do plano de fechamento.
 
-**f-bis) Geração de testes** — só se **`tests: on`** no `.sdd/config.yaml` **E** o passo f acabou de concluir a feature (no bug-fix: foi o último chunk da correção). Nos demais chunks, pule sem mencionar nada. Com `tests: off`/ausente (padrão), este passo **não existe** — não gere testes nem comente que está desligado.
+**f-bis) Geração de testes** — só se **`tests: on`** no `.sdd/config.yaml` **E** este é o turno de fechamento (0-ter). No turno que implementou o último chunk, e em qualquer outro chunk, pule sem mencionar nada. Com `tests: off`/ausente (padrão), este passo **não existe** — não gere testes nem comente que está desligado.
 
 Lance UM **subagente tester** (papel `tester` em `subagents` para modelo/thinking) seguindo `../../helpers/prompts/tester-guide.md`. Passe: os arquivos de código de **todos** os chunks da feature (campos `Arquivos` do `tasks.md`, não só o último chunk), a `spec.md` da feature (Requirements + Edge cases são os casos de teste) — ou, no bug-fix, `diagnosis.md` + `chosen_solution`, com teste de regressão obrigatório para a causa raiz — e as convenções de código do projeto.
 
 O tester **escreve os testes, roda, reporta — e nunca corrige** (nem o teste, nem a implementação). Teste falhando é decisão do usuário: bug real ou teste mal escrito. Leve o retorno dele para o bloco `Testes` do plano de revisão (passo g) e os arquivos criados para `in_review.files` (g-bis). Com **`mcp: on`**, registre o relatório com `sdd_record_tests` (runner, passou/falhou, cobertura, arquivos criados) — hoje ele só existe no chat.
 
-**f-ter) Code review da feature** — só com **`code_review: on`** **E** o passo f acabou de concluir a feature (no bug-fix: foi o último chunk). Nos demais chunks, pule sem mencionar nada. **É a única passada de review do motor** — não existe review por chunk.
+**O relatório tem duas partes, e a segunda é a que some.** Além dos números, o tester devolve a nota de cobertura e a lista do que ele **deixou sem teste de propósito** (aparece como `recommendation`, "lacunas intencionalmente não testadas" ou "não unit-testável"). As duas vão para o bloco `Testes` em uma linha `Sem teste automatizado (N): …`, uma lacuna por item com o motivo, e para o campo `report` do `sdd_record_tests`. Repassar só `573 passing` é entregar metade do que foi apurado: os números dizem o que está coberto, a lista diz o que **não** está — e é essa que vira dívida esquecida se ninguém escrever.
+
+**f-bis-2) Cobertura fraca e triagem das lacunas** — só quando o `f-bis` rodou.
+
+- **Cobertura não medida, ou claramente baixa** nos arquivos da feature: lance **um** segundo tester, sem perguntar, com escopo só no que ficou descoberto. Uma linha dizendo que vai rodar e por quê. **No máximo uma** segunda passada por feature — cobertura ainda baixa depois dela vira linha no relatório, nunca uma terceira rodada.
+- **Classifique cada lacuna** do tester em **cobrível** (dá para testar em unitário agora, com o que o projeto já tem: requisito da spec sem teste, ramo de erro não exercitado) ou **estrutural** (exige banco real, HTTP de verdade, fila; ou é garantia de terceiro, como constraint do banco). A classificação é sua, não do tester — ele diz o que não testou, você decide o que disso ainda dá para testar.
+- As **estruturais** vão para a linha `Sem teste automatizado` do bloco `Testes`, sem pergunta.
+- As **cobríveis** viram pergunta no `g-quater`, junto da decisão dos achados — mesma chamada da interface, duas perguntas. Guarde a lista para lá.
+
+Ver `../../helpers/prompts/tester-guide.md`.
+
+**f-ter) Code review da feature** — só com **`code_review: on`** **E** este é o turno de fechamento (0-ter). No turno que implementou o último chunk, e em qualquer outro chunk, pule sem mencionar nada. **É a única passada de review do motor** — não existe review por chunk.
 
 Lance UM subagente (papel `code-reviewer` em `subagents` para modelo/thinking) seguindo `../../helpers/prompts/code-review-guide.md`. Passe: o **diff da feature inteira**, os **arquivos tocados de todos os chunks dela**, a `spec.md` da feature (ou `diagnosis.md` + `chosen_solution` no bug-fix) e as instruções extras de `~/.sdd/code-review.md` e `.sdd/code-review.md`, quando existirem.
 
-Ele **reporta e nunca corrige** — nem o typo óbvio. Todo achado vem com **ID curto** (`A1`, `A2`…), severidade, arquivo:linha, **cenário concreto de falha**, causa, correção sugerida e **custo** (arquivos/linhas/teste); sem cenário, não é achado. Grave e médio saem com a ficha completa no chat; `menor` sai em uma linha, e **sai sempre** — contar achados que você não listou é o pior formato possível. Leve o resultado para o bloco `Code review` do plano de revisão (passo g) e para o campo `code_review` do `sdd_record_chunk` (g-bis), amarrado ao chunk onde o achado está.
+As fichas dos achados são impressas **neste passo**, assim que o subagente devolve — não guardadas para dentro da pergunta do g-quater. Ele **reporta e nunca corrige** — nem o typo óbvio. Todo achado vem com **ID curto** (`A1`, `A2`…), severidade, arquivo:linha, **cenário concreto de falha**, causa, correção sugerida e **custo** (arquivos/linhas/teste); sem cenário, não é achado. Grave e médio saem com a ficha completa no chat; `menor` sai em uma linha, e **sai sempre** — contar achados que você não listou é o pior formato possível. Leve o resultado para o bloco `Code review` do plano de revisão (passo g) e para o campo `code_review` do `sdd_record_chunk` (g-bis), amarrado ao chunk onde o achado está.
 
 Boa parte do valor está no que não cabe num chunk isolado: contrato que mudou no meio do caminho, duplicação que só aparece com o conjunto na mão, borda que cada chunk achou que o outro tratava.
 
@@ -209,7 +237,7 @@ Cada arquivo que vale revisão leva **3 linhas, nesta ordem: `Faz` → `Conecta`
 
 **Profundidade — 1 a 2 frases por linha** (~15-35 palavras). Nem one-liner raso ("campo `textoAnonimizado`"), nem parágrafo. O teste: o usuário deve entender o arquivo **sem abrir o código**; se a frase só repete o nome do que foi criado, ela está rasa — falta o *como* ou o *porquê*. Arquivos triviais ficam em uma linha só com "pode pular".
 
-**Arquivos de teste** (quando f-bis rodou): entram na lista, no **fim**, mas **nunca** marcados "pode pular" — um teste falhando é o item mais importante do turno. Se algum falhou, diga isso também na linha `Próximo:` (*"há 1 teste falhando — decida se é bug ou teste antes de seguir"*); isso **não bloqueia** o `/lp-continue`.
+**Arquivos de teste** (só no turno de fechamento, quando f-bis rodou): entram na lista, no **fim**, mas **nunca** marcados "pode pular" — um teste falhando é o item mais importante do turno. Se algum falhou, diga isso também na linha `Próximo:` (*"há 1 teste falhando — decida se é bug ou teste antes de seguir"*); isso **não bloqueia** o `/lp-continue`.
 
 **Espaçamento**: cada arquivo é um **bloco separado por linha em branco** — cabeçalho em **negrito** (número + caminho) e `Faz`/`Conecta`/`Revisar` como **bullets**. Não use lista numerada colada (fica ilegível no terminal).
 
@@ -246,7 +274,7 @@ Validação:
 - eslint --fix: ok
 - test: N passing
 
-Testes (feature concluída):        <!-- só no passo que fecha a feature, com tests: on -->
+Testes (feature concluída):        <!-- só no turno de fechamento (0-ter), com tests: on -->
 - test/foo.spec.ts — 12 casos · 11 passing, 1 failing
   ↳ falhou: "rejeita valor negativo" — esperava erro, recebeu null
 - Coverage: 87% nos arquivos da feature.
@@ -279,21 +307,71 @@ in_review:
 ```
 Assim, mesmo que a conversa reinicie, o próximo turno sabe qual chunk está em revisão e consegue re-imprimir a lista. Ao aprovar (próximo `/lp-continue`) ou reverter, limpe `in_review`.
 
+Com **`mcp: on`**, se algum arquivo deste chunk **já tinha explicação num chunk anterior** desta mudança (você acabou de alterá-lo, então o texto de lá descreve o código de antes), regrave aquele registro também: uma chamada `sdd_record_chunk` com o `chunk_id` antigo e só o `files` do arquivo em questão, com `does`/`connects`/`review_note` atualizados. Você já tem o arquivo em contexto — é o momento mais barato de fazer isso, e é o que evita a marca "arquivo mudou desde então" no viewer. Uma linha no fim do plano de revisão dizendo quais registros antigos foram atualizados.
+
 Com **`mcp: on`**, registre o chunk no banco **no mesmo passo**, com `sdd_record_chunk`: um item de `files` por arquivo desta lista, na mesma ordem, com `does`/`connects`/`review_note` recebendo exatamente as linhas `Faz`/`Conecta`/`Revisar` que você acabou de imprimir (`is_test: true` nos arquivos vindos do f-bis), mais `summary`/`reasoning` do chunk e o `commit` sugerido. Este é o ponto certo porque é aqui que você tem tudo junto. Se a spec tem cenários registrados, mande também `scenario_keys` com os que este chunk implementa. Com **`code_review: on`**, mande também `code_review` — um item por achado do `f-ter`, com severidade, arquivo, linha, cenário, causa e sugestão. O upsert é por `path`+`title` e campo ausente preserva, então regravar depois só com o achado fechado (`status` + `resolution`) não mexe nos outros. Com `mcp_record.code_review: false`, pule o campo. Com **`flow_storage: mcp`**, mande também o `component` — o rótulo curto da camada que este chunk implementa, que é o nome do nó no fluxo. Com **`data_model: on`** e um chunk que passou pelo `b-ter`, mande também `data_model` — um item por entidade modelada, com `shape`, `decisions`, `rejected`, `index_notes` e `migration`. `decisions` e `rejected` são o que não existe em nenhum outro lugar: a migração conta o formato, nunca o porquê. Com `mcp_record.data_model: false`, pule o campo.
 
 Mande também, **só para o banco e sem imprimir no chat**: o `detail` (explicação longa de cada arquivo que merece: mecanismo, decisão descartada, armadilha), os `highlights` (0-3 trechos de código decisivos por arquivo), os `symbols` (os métodos que carregam comportamento, cada um com assinatura e **exemplos de entrada e saída com dado plausível do domínio, incluindo ao menos um caso de borda**) e — **só quando `auto_commit` não for `full`** — o `diff` unificado dos arquivos modificados. Com `auto_commit: full` o chunk vira commit e o git já guarda esse diff inteiro; regravá-lo é pagar duas vezes pelo mesmo conteúdo. O resto é o que deixa o plano de revisão curto sem perder profundidade — quem abrir o histórico depois tem o arquivo explicado. Ver `../../helpers/prompts/mcp-guide.md`.
+
+**A tool cobra isso de volta.** A resposta do `sdd_record_chunk` traz `files_without_depth`: os arquivos de código do chunk que ficaram sem `detail`, sem `highlights` e sem `symbols` — nada além das duas frases do plano. Vindo lista não vazia, faça **uma segunda chamada** completando esses arquivos antes de imprimir o plano de revisão, ainda com o código em contexto. Arquivo de teste não entra na conta.
+
+Um chunk sem profundidade não falha nada agora, e é justamente o problema: no viewer ele não tem "Entender melhor" para abrir, e ninguém descobre isso até querer reler o arquivo meses depois — quando o custo de reconstruir a explicação é o de reler o código todo.
 
 **g-ter) Contrato provisório que virou arquivo** — só quando a spec da `current_feature` tem a seção **"Contratos expostos"** com um contrato **escrito** (não referenciado), e um arquivo deste chunk passou a implementá-lo. Nesse caso, troque o bloco escrito pela referência ao arquivo real (`caminho:símbolo`), em uma linha. Nos demais chunks, pule em silêncio.
 
 É a única edição que a spec recebe depois de aprovada, e ela é sempre na mesma direção: cópia vira ponteiro. Se o que foi implementado **divergiu** do que estava escrito, não corrija a spec por conta própria — diga a divergência na linha `Revisar` daquele arquivo (passo g) e deixe a decisão com o usuário. Com `format` ∈ {html, both}, o `spec.html` acompanha — rode o conversor depois que o escriba gravar o `.md`. **A edição do `.md` entra no pacote do escriba** deste passo; a chamada do conversor é sua, como as tools MCP.
 
-**g-quater) Decisão sobre os achados do code review** — só no chunk que acabou de rodar o `f-ter`, e só com **pelo menos um achado `grave` ou `medio`**. Só `menor` na lista, ou nada achado: pule em silêncio.
+**g-quater) Decisões do fechamento** — só no turno de fechamento, e só quando há o que decidir: **pelo menos um achado `grave` ou `medio`** do `f-ter`, ou **pelo menos uma lacuna cobrível** do `f-bis-2`. Nada dos dois: pule em silêncio.
+
+As duas decisões vão na **mesma chamada** da interface de pergunta, como perguntas separadas — fechar uma feature não precisa de dois round-trips. A pergunta das lacunas cobríveis é direta: cobrir agora (lança um tester com escopo só nelas) · cobrir as que você marcar · deixar para depois. Escolhida a cobertura, o tester roda ainda neste turno, e os arquivos novos entram na lista de revisão e no `pending_commits` como o resto.
+
+**Primeiro imprima, depois pergunte.** A ficha completa de cada achado grave e médio — ID, severidade, arquivo:linha, cenário, causa, correção e custo — vai no corpo **desta** mensagem, e os menores em uma linha cada. Só então chame a pergunta. O enunciado dela leva apenas ID e título curto: o detalhe o usuário acabou de ler acima. Resumir os achados dentro da pergunta e pular as fichas é pedir decisão sem cenário nem custo — ver "O enunciado da pergunta não é a ficha" no guia.
 
 Pergunte usando a interface nativa do harness (`AskUserQuestion`), seguindo `../../helpers/prompts/code-review-guide.md`: até 3 achados, um item por achado; 4 ou mais, a pergunta agregada (todos os graves e médios / só os graves / nenhum agora / descartar com motivo).
 
-Se o usuário mandar corrigir: **até 2 achados no mesmo arquivo, corrija inline**; 3 ou mais, ou espalhados, lance **um subagente implementer** com escopo só dos achados. Depois, nos dois casos: rode a validação do projeto nos arquivos tocados + o teste que cobre o achado, **regrave o chunk** (`sdd_record_chunk` com os arquivos que mudaram e o `code_review` dos fechados, com `status` e `resolution`), reimprima só o que mudou do plano e diga em uma linha o que ficou aberto.
+Se o usuário mandar corrigir: **até 2 achados no mesmo arquivo, corrija inline**; 3 ou mais, ou espalhados, lance **um subagente implementer** com escopo só dos achados. Depois, nos dois casos: rode a validação do projeto nos arquivos tocados + o teste que cobre o achado, reimprima só o que mudou do plano e diga em uma linha o que ficou aberto.
 
-Correção não é chunk novo: não ganha ID, não entra no `tasks.md`, não vira commit separado — entra no commit do próprio chunk, que sai depois da aprovação.
+**Grave a correção no banco** (com `mcp: on`), em duas chamadas:
+
+1. `sdd_record_chunk` no chunk **de origem de cada achado**, só com o campo `code_review` dos que fecharam (`status` + `resolution`). É o que faz o desfecho aparecer junto do achado.
+2. `sdd_record_chunk` num **chunk de correção**, que é onde o código alterado fica visível:
+   - `chunk_id`: o próximo número livre da feature (`F<n>.C<último+1>`) — precisa desse formato, senão a timeline não sabe onde ordená-lo.
+   - `title`: `Code review — correções (A1, A3)`, com os IDs que foram aplicados.
+   - `summary`: o que mudou no código. `reasoning`: o achado que motivou cada mudança.
+   - `files`: um item por arquivo alterado na correção, com `does`/`connects`/`review_note` como em qualquer chunk, mais `detail` e `highlights` quando a mudança tem mecanismo que valha explicar.
+   - `component`: `Code review`, com `flow_storage: mcp`.
+   - `status: "done"`, e **sem** `mark` — não há item de `tasks.md` para marcar.
+
+O chunk de correção existe porque o código mudou, e mudança de código sem registro é exatamente o que a timeline promete não deixar acontecer: sem ele, o `Faz`/`Conecta` do chunk original passa a descrever um arquivo que não é mais aquele, e quem revisar depois não tem como saber que houve uma segunda passada.
+
+**Se a suíte rodou de novo depois das correções, regrave `sdd_record_tests`** com os números novos. O relatório gravado antes da correção envelhece na hora em que ela é aplicada, e é ele que o viewer mostra.
+
+**A correção tem commit próprio, e ele fica pendente** — `fix(<slug>): code review A1, A2`, citando os IDs aplicados. O commit do último chunk saiu no **começo deste mesmo turno**, quando ele foi aprovado, então não há mais commit à frente para carregar a correção; sem um próprio, ela ficaria suja no repositório indefinidamente.
+
+Correção não entra no `tasks.md`. O chunk de correção é registro de histórico, não item de plano.
+
+### O turno de fechamento não commita nada
+
+Nenhum commit sai neste turno, **nem com `auto_commit: full`**. Testes do tester, correção do code review e artefatos do `.sdd/` são código e documento que você acabou de escrever e o usuário ainda não viu — commitar ali quebraria a única regra que o `auto_commit: full` tem: **commit acontece na aprovação, nunca antes dela**.
+
+O que fazer em vez disso:
+
+1. Grave a lista em `in_review.pending_commits`, na ordem em que devem sair — testes, correção, artefatos:
+   ```yaml
+   in_review:
+     files: [...]                     # testes + arquivos da correção, na ordem de revisão
+     pending_commits:
+       - message: "test(<slug>): testes da feature"
+         files: ["packages/.../foo.spec.ts"]
+       - message: "fix(<slug>): code review A1, A2"
+         files: ["packages/.../bar.provider.ts"]
+       - message: "chore(sdd): fecha <slug>"
+         files: [".sdd/changes/<id>/plan.md", ".sdd/context/<area>/<slug>.md"]
+   ```
+2. Imprima o bloco de commits no fim da mensagem, como em `suggest-only` — assim quem quiser rodar antes, roda.
+3. O `/lp-continue` seguinte, que é a aprovação, executa a lista na ordem e limpa o `in_review`.
+
+Com `auto_commit: suggest-only` ou `off`, o comportamento não muda: `suggest-only` já só mostrava, e `off` não menciona git.
 
 Achado que sobrar sem decisão fica `aberto`, e o **próximo `/lp-continue` abre por ele** (ver o passo 0 do `implementing`). Achado que o usuário mandou deixar para depois vira `adiado` **com uma linha dizendo para quando** — `adiado` é decisão e não reabre a porta.
 
@@ -313,7 +391,17 @@ Vale enquanto há um chunk **em revisão**. A fonte de verdade é o `in_review` 
 
 1. Responda a pergunta / aplique a alteração normalmente e explique o que fez (delegando a outra skill se fizer sentido).
 2. Se **alterou arquivos**: rode o comando de validação do projeto (não assuma eslint) nos editados e, se o projeto exigir, os testes. A lista pode ter mudado (novos arquivos, novos ±linhas) — reflita isso e atualize `in_review.files` (e o bloco de commit sugerido/`in_review.commit_message`, se `auto_commit` ≠ `off`).
-2-bis. Se **alterou arquivos** e `mcp: on`: **regrave o chunk no banco, neste mesmo turno** — `sdd_record_chunk` com os arquivos como ficaram (`does`/`connects`/`review_note` iguais à lista reimpressa, mais `detail` e `highlights` atualizados). Se o ajuste veio de uma **decisão** do usuário — "põe um CHECK no banco", "troca para hard delete", "esse campo passa a ser nulável" —, some um `sdd_record_event` (`kind: note`) com o porquê, e um `sdd_sync_change` se a decisão mudou um cenário da spec. Se a alteração corrigiu um achado do code review, feche-o no mesmo payload (`code_review` com `status: "corrigido"` + `resolution`). A tool faz upsert parcial: rechamar corrige o registro, não duplica, e campo ausente preserva. Pular isso deixa o banco descrevendo a versão anterior do código — ver `../../helpers/prompts/mcp-guide.md`.
+2-bis. Se **alterou arquivos** e `mcp: on`: **regrave o chunk no banco, neste mesmo turno** — `sdd_record_chunk` com os arquivos como ficaram (`does`/`connects`/`review_note` iguais à lista reimpressa, mais `detail`, `highlights` e `symbols` atualizados). A tool faz upsert parcial: rechamar corrige o registro, não duplica, e campo ausente preserva. Pular isso deixa o banco descrevendo a versão anterior do código — ver `../../helpers/prompts/mcp-guide.md`.
+
+O que entra nessa regravação, além dos três resumos:
+
+- **Arquivo que o ajuste criou** — entra como mais um item de `files`, na posição de revisão que faz sentido. Arquivo fora do banco é arquivo que ninguém revisa depois.
+- **Arquivo que deixou de fazer parte do chunk** (você reverteu a mudança nele) — sai com `drop: true`. Deixá-lo ali é pior que não tê-lo gravado: o registro afirma uma alteração que não existe mais.
+- **`symbols` de método cuja assinatura ou exemplos mudaram** — o exemplo de entrada/saída errado é o campo mais caro de todos, porque quem lê confia nele sem conferir o código.
+- **A resposta da tool traz `files_without_depth`**: se algum arquivo ficou sem `detail`, sem `highlights` e sem `symbols`, complete numa segunda chamada aqui mesmo, com o código ainda em contexto.
+- **Arquivo de outro chunk que este ajuste tocou** — regrave também o registro daquele chunk, com o `chunk_id` dele. O `Faz`/`Conecta` de lá passou a descrever outra versão do arquivo, e é exatamente isso que faz o "arquivo mudou desde então" aparecer no viewer.
+
+Se o ajuste veio de uma **decisão** do usuário — "põe um CHECK no banco", "troca para hard delete", "esse campo passa a ser nulável" —, some um `sdd_record_event` (`kind: note`) com o porquê, e um `sdd_sync_change` se a decisão mudou um cenário da spec. Se a alteração corrigiu um achado do code review, feche-o no mesmo payload (`code_review` com `status: "corrigido"` + `resolution`).
 3. **Sempre, no FIM da resposta — nunca pule este passo, mesmo numa resposta puramente explicativa que não tocou em arquivo nenhum — re-imprima a lista de revisão atualizada** (mesmo formato: bloco por arquivo, cabeçalho em negrito + bullets, separados por linha em branco), para o usuário continuar de onde parou sem precisar perguntar "o que eu tava revisando mesmo?":
 
    ```

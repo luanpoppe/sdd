@@ -52,11 +52,35 @@ Regras de execução:
 
 1. **Só o que está sujo.** Rode `git status --porcelain .sdd` e cruze com as listas acima. Nunca `git add .sdd/` inteiro — arquivo que o usuário deixou de fora fica de fora.
 2. **A classe 1 entra na mesma linha de `git add`** do chunk, depois dos arquivos de código, e no mesmo commit. A mensagem não muda por causa disso.
-3. **A classe 2 vira um commit próprio ao fechar a feature** (transição para a próxima feature ou para `awaiting-archive`), com mensagem `chore(sdd): fecha <slug-da-feature>`. Em bug-fix, o ponto é o fim da correção, com `chore(sdd): fecha <id>`.
-4. **Nada sujo da classe 2 → nenhum commit.** É o caso normal de quem usa `tasks_storage`/`flow_storage`/`state_storage: mcp`: esses arquivos não existem, e a regra inteira degrada para "tudo já foi junto com o chunk", sem sobra.
+3. **Ao fechar a feature, o commit varre o `.sdd/` inteiro** (transição para a próxima feature ou para `awaiting-archive`), com mensagem `chore(sdd): fecha <slug-da-feature>`. Em bug-fix, o ponto é o fim da correção, com `chore(sdd): fecha <id>`. Rode `git status --porcelain .sdd` e leve **tudo que estiver sujo ali**, seja da classe 1 ou da 2 — este commit é a rede de segurança do `.sdd/`, e não uma lista fixa de nomes.
+4. **Nada sujo em `.sdd/` → nenhum commit**, e nenhuma menção. Com `tasks_storage`/`flow_storage`/`state_storage: mcp`, a classe 2 some do disco — mas `plan.md`, `spec.md`, `context/**`, os espelhos `.html` e o `.sdd.yaml` de identidade continuam existindo, e são exatamente os que ficavam para trás quando esta regra olhava só três nomes. A pergunta é sempre "o que está sujo em `.sdd/`?", nunca "quais arquivos da classe 2 existem?".
 5. **`suggest-only` mostra os dois** do mesmo jeito que mostra o do chunk — o do fechamento aparece no fim da mensagem que fecha a feature.
 6. **Branch protegida e falha de commit**: mesmo comportamento do chunk (cai para sugerir, avisa em 1 linha, nunca trava).
 7. Se o `.sdd/` está no `.gitignore` do projeto, o `git add` falha — avise em 1 linha na primeira vez e pare de tentar nos chunks seguintes desta conversa.
+8. **O `plan.md`/`plan.html` recém-criado entra no commit do primeiro chunk da mudança.** Ele nasce no `lp:new-feature`, antes de existir chunk nenhum, e é o arquivo que mais tempo passa sem ser versionado se ninguém o pegar ali.
+
+### O turno de fechamento não commita — ele deixa commits pendentes
+
+`auto_commit: full` tem uma regra só, e ela não admite exceção: **commit acontece na aprovação, nunca antes dela.** O chunk é commitado no `/lp-continue` em que o usuário aprova, não no turno em que foi escrito.
+
+O turno de fechamento produz três coisas commitáveis — os testes do tester, a correção do code review e os artefatos do `.sdd/` —, e todas são código e documento que o usuário ainda não viu. Rodar `git commit` ali contraria a regra tanto quanto commitar o chunk na hora em que ele é escrito.
+
+Por isso o fechamento **monta** os commits e **não executa** nenhum:
+
+```yaml
+in_review:
+  pending_commits:
+    - message: "test(<slug>): testes da feature"
+      files: ["packages/.../foo.spec.ts"]
+    - message: "fix(<slug>): code review A1, A2"
+      files: ["packages/.../bar.provider.ts"]
+    - message: "chore(sdd): fecha <slug>"
+      files: [".sdd/changes/<id>/plan.md", ".sdd/context/<area>/<slug>.md"]
+```
+
+A ordem importa: código primeiro (testes, depois correção), artefatos por último. A mensagem da correção cita os IDs dos achados aplicados — é o que liga o commit à ficha que o motivou.
+
+O bloco também é impresso no fim da mensagem, como em `suggest-only`: quem quiser rodar antes de aprovar, roda. E o `/lp-continue` seguinte — que **é** a aprovação — executa a lista na ordem e limpa o `in_review`.
 
 ### Mensagem de commit sugerida
 
@@ -87,11 +111,11 @@ Commit sugerido deste chunk:
   git commit -m "feat(<slug>): <resumo>"
 ```
 
-E, na mensagem que fecha a feature, quando houver arquivo de progresso sujo:
+E, na mensagem que fecha a feature, quando houver qualquer coisa suja em `.sdd/` (a lista sai do `git status --porcelain .sdd`, não de nomes fixos):
 
 ```
 Commit dos artefatos do SDD (feature fechada):
-  git add .sdd/changes/<id>/.sdd.yaml .sdd/changes/<id>/specs/<slug>/tasks.md .sdd/changes/<id>/flow.html
+  git add .sdd/changes/<id>/plan.md .sdd/changes/<id>/plan.html .sdd/changes/<id>/.sdd.yaml .sdd/context/<area>/<slug>.md .sdd/context/index.md
   git commit -m "chore(sdd): fecha <slug>"
 ```
 

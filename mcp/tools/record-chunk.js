@@ -42,6 +42,7 @@ class RecordChunkTool {
     DataModelWriter.replace(ctx.db, chunkPk, args.data_model);
 
     const totals = RecordChunkTool.countDepth(files ?? []);
+    const semProfundidade = RecordChunkTool.filesWithoutDepth(ctx.db, chunkPk);
 
     Log.info('chunk registrado', {
       change: args.change_id,
@@ -52,10 +53,20 @@ class RecordChunkTool {
       examples: totals.examples,
       commit: Boolean(args.commit),
       findings: Array.isArray(args.code_review) ? args.code_review.length : 0,
-      entities: Array.isArray(args.data_model) ? args.data_model.length : 0
+      entities: Array.isArray(args.data_model) ? args.data_model.length : 0,
+      semProfundidade: semProfundidade.length
     });
 
-    return { change_pk: change.id, chunk_pk: chunkPk, files_recorded: files ? files.length : null };
+    return {
+      change_pk: change.id,
+      chunk_pk: chunkPk,
+      files_recorded: files ? files.length : null,
+      // A tool devolve o que FALTA, em vez de só confirmar o que entrou. `detail`,
+      // `highlights` e `symbols` são opcionais no schema e ficam no fim de um passo
+      // longo da skill: sem esta resposta, esquecer deles não deixa rastro nenhum, e o
+      // histórico nasce raso sem ninguém perceber.
+      files_without_depth: semProfundidade
+    };
   }
 
   /**
@@ -98,6 +109,33 @@ class RecordChunkTool {
     }
 
     return { highlights, symbols, examples };
+  }
+
+  /**
+   * Arquivos de código do chunk que ficaram sem `detail`, sem `highlights` e sem
+   * `symbols` — ou seja, sem nada além das duas frases do plano de revisão.
+   *
+   * Consulta o banco, e não o payload, porque o merge é incremental: o que importa é o
+   * estado final do chunk, não o que veio nesta chamada.
+   *
+   * Teste fica fora: o valor de um `.spec` está na lista de cenários, e exigir
+   * explicação longa de cada arquivo de teste transformaria o aviso em ruído.
+   */
+  static filesWithoutDepth(db, chunkPk) {
+    const rows = SddDb.all(
+      db,
+      `SELECT fc.path
+         FROM file_changes fc
+        WHERE fc.chunk_pk = ?
+          AND fc.is_test = 0
+          AND (fc.detail IS NULL OR fc.detail = '')
+          AND NOT EXISTS (SELECT 1 FROM code_highlights h WHERE h.file_change_pk = fc.id)
+          AND NOT EXISTS (SELECT 1 FROM symbols s WHERE s.file_change_pk = fc.id)
+        ORDER BY fc.review_order ASC`,
+      [chunkPk]
+    );
+
+    return rows.map((row) => row.path);
   }
 
   static upsertChunk(db, changePk, feature, args) {
@@ -188,6 +226,11 @@ class RecordChunkTool {
     const hash = FileHash.of(projectRoot, file.path);
     const isTest = file.is_test === undefined ? (previous ? previous.is_test : 0) : file.is_test ? 1 : 0;
 
+    // A ordem de revisão do arquivo que já existe é preservada. Sem isto, reexplicar UM
+    // arquivo de um chunk de seis o jogaria para a primeira posição — o payload de uma
+    // reexplicação não é a lista completa, então o índice dele não diz nada.
+    const reviewOrder = previous ? previous.review_order : index + 1;
+
     const values = [
       chunkPk,
       file.path,
@@ -200,7 +243,7 @@ class RecordChunkTool {
       keep(file.detail, 'detail'),
       keep(file.diff, 'diff'),
       keep(hash, 'content_hash'),
-      index + 1,
+      reviewOrder,
       isTest
     ];
 

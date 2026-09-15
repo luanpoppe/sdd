@@ -4,6 +4,7 @@ const { SddDb } = require('../db');
 const { SddRepo } = require('../repo');
 const { Log } = require('../log');
 const { ServerVersion } = require('../version');
+const { StaleFiles } = require('../stale-files');
 
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 200;
@@ -18,9 +19,10 @@ class QueryHistoryTool {
     return {
       name: 'sdd_query_history',
       description:
-        'Consulta o histórico do SDD: mudanças, chunks implementados (com duração), eventos e ' +
-        'os achados de code review AINDA ABERTOS, em ordem cronológica decrescente. Use para ' +
-        'retomar contexto de trabalho anterior.',
+        'Consulta o histórico do SDD: mudanças, chunks implementados (com duração), eventos, ' +
+        'os achados de code review AINDA ABERTOS e os arquivos cuja explicação ficou ' +
+        'desatualizada (`stale_files`), em ordem cronológica decrescente. Use para retomar ' +
+        'contexto de trabalho anterior.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -43,7 +45,15 @@ class QueryHistoryTool {
 
     if (!project && !allProjects) {
       Log.info('histórico consultado sem registro para o projeto', { root: ctx.projectRoot });
-      return { ...ServerVersion.status(), project: null, changes: [], chunks: [], events: [], open_findings: [] };
+      return {
+        ...ServerVersion.status(),
+        project: null,
+        changes: [],
+        chunks: [],
+        events: [],
+        open_findings: [],
+        stale_files: []
+      };
     }
 
     const limit = QueryHistoryTool.clampLimit(args.limit);
@@ -58,14 +68,18 @@ class QueryHistoryTool {
       changes: QueryHistoryTool.selectChanges(ctx.db, scope),
       chunks: QueryHistoryTool.selectChunks(ctx.db, scope),
       events: QueryHistoryTool.selectEvents(ctx.db, scope),
-      open_findings: QueryHistoryTool.selectOpenFindings(ctx.db, scope)
+      open_findings: QueryHistoryTool.selectOpenFindings(ctx.db, scope),
+      // Comparação com o disco, então só faz sentido no projeto aberto: o caminho de
+      // outro projeto não existe nesta máquina, e ali tudo pareceria desatualizado.
+      stale_files: project ? StaleFiles.select(ctx.db, project.id, limit) : []
     };
 
     Log.info('histórico consultado', {
       changes: result.changes.length,
       chunks: result.chunks.length,
       events: result.events.length,
-      openFindings: result.open_findings.length
+      openFindings: result.open_findings.length,
+      staleFiles: result.stale_files.length
     });
     return result;
   }

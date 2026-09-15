@@ -11,12 +11,12 @@ Objetivo: gerar testes automatizados para a funcionalidade **depois que ela est�
 
 ## Quando roda
 
-Passo **f-bis** do motor `implementing` (`../../skills/continue/SKILL.md`), entre a transição "feature concluída" (f) e o plano de revisão (g). Só dispara quando as **duas** condições valem:
+Passo **f-bis** do motor `implementing` (`../../skills/continue/SKILL.md`), no **turno de fechamento** da feature — o `/lp-continue` seguinte ao que implementou o último chunk, entre a transição "feature concluída" (f) e o plano de fechamento. Nunca no mesmo turno em que o último chunk foi escrito: implementação e fechamento são turnos separados, cada um com uma coisa para o usuário decidir. Só dispara quando as **duas** condições valem:
 
 1. `tests: on`; **e**
 2. o passo f acabou de concluir a **feature inteira** (ou, no bug-fix, foi o **último chunk** da correção).
 
-Em qualquer chunk que não fecha a feature, f-bis não faz nada. No modo paralelo, vale igual: dispara quando a última onda fecha a feature.
+Em qualquer turno que não seja o de fechamento, f-bis não faz nada. No modo paralelo, vale igual: dispara no turno de fechamento, depois de a última onda ter completado a feature.
 
 > **Nunca por chunk.** Chunk é micro — testar peça isolada produz teste que se reescreve no chunk seguinte, quando a superfície muda. O ganho de testar a funcionalidade integrada é justamente ver o fluxo real ponta a ponta.
 
@@ -58,11 +58,24 @@ Em qualquer chunk que não fecha a feature, f-bis não faz nada. No modo paralel
 1. Detecte o runner pelos **scripts que já existem** (`package.json`, `Makefile`, `pyproject.toml`, etc.) antes de inventar comando. Distinga o framework de fato usado (Jest vs Vitest mudam a API de mock: `jest.fn()` vs `vi.fn()`).
 2. Rode os testes criados.
 3. **Se passarem**, rode coverage **escopado aos arquivos da feature** (não o global do projeto) e tente subir a cobertura com casos que faltam. Sem meta numérica fixa — o critério é qualitativo: o que ficou descoberto merece teste?
+
+   **0% com teste passando não é resultado, é comando errado.** Se os testes que você acabou de escrever exercitam aquele arquivo, a cobertura dele não pode ser zero — o número diz que a ferramenta mediu outra coisa, não que o código está descoberto. Trate como falha de instrumentação e **tente de novo, até duas vezes**, checando nesta ordem:
+
+   1. Existe script pronto (`test:coverage`, `coverage`, `--coverage`)? Use o do projeto antes de montar o seu.
+   2. O caminho que você escopou existe e bate com o arquivo real? Glob que não casa com nada produz 0% sem erro nenhum.
+   3. O provider está instalado e configurado (`v8`/`istanbul` no Vitest, `collectCoverageFrom` no Jest)? Provider ausente costuma medir zero em silêncio.
+   4. O `include`/`exclude` da config do projeto não está deixando o arquivo de fora?
+
+   Não saiu depois disso: reporte **"cobertura não medida"**, com o comando que você tentou e o que observou. Nunca reporte `0%` como se fosse a medida — isso afirma que o teste não exercita o código, que é a conclusão oposta da verdadeira, e manda o usuário investigar o lugar errado.
+
+   O que **não** fazer para conseguir o número: criar script no `package.json`, instalar dependência, mexer na config de coverage do projeto. Isso é mudança de repositório, e mudança de repositório não é sua.
 4. Rode o linter **apenas nos arquivos criados**. Warning insolúvel → diretiva de ignore no topo do arquivo de teste.
 
 ## Regra dura: reportar, nunca corrigir
 
 Se um teste falhar, o tester **não conserta nada** — nem o teste, nem a implementação. Reporta e para.
+
+O que esta regra **não** proíbe: corrigir a **sua própria invocação de ferramenta**. Comando de coverage errado, runner chamado com flag inválida, caminho escopado que não casa — isso é erro seu, não do código, e reexecutar não toca em nenhuma linha do repositório. Persistir num comando quebrado e reportar o resultado dele como se fosse medida é o oposto de reportar.
 
 - **Corrigir o teste** mascara bug real: transforma o teste no que o código faz, não no que deveria fazer.
 - **Corrigir a implementação** mexe em código que o usuário já revisou e aprovou, fora do plano de revisão do chunk.
@@ -74,7 +87,7 @@ Falha é **informação para o usuário decidir**: bug real ou teste mal escrito
 - Arquivos criados: `caminho — N casos`. **Sem** colar o corpo dos arquivos.
 - Execução: `N passing, M failing`.
 - Se houver falha: **uma linha por teste que falhou**, dizendo o que esperava e o que recebeu.
-- Coverage dos arquivos da feature (número + o que ficou descoberto, se relevante).
+- Coverage dos arquivos da feature (número + o que ficou descoberto, se relevante), ou **"cobertura não medida"** com o motivo — nunca um `0%` que veio de comando errado.
 - Cenários da spec que não deram pra cobrir em unitário, se houver.
 
 ## Como o principal usa isso (passo g)
@@ -86,8 +99,40 @@ Testes (feature concluída):
 - test/foo.spec.ts — 12 casos · 11 passing, 1 failing
   ↳ falhou: "rejeita valor negativo" — esperava erro, recebeu null
 - Coverage: 87% nos arquivos da feature.
+- Sem teste automatizado (2): GET /pedidos com Postgres real — exige infra de integração  ||  ORDER BY RANDOM() sem duplicata — garantia do banco, não da aplicação.
 ```
 
+### A segunda passada — automática só por cobertura
+
+Cobertura **não medida** ou **claramente baixa** nos arquivos da feature dispara **um** segundo tester, sem perguntar, focado só no que ficou descoberto. Diga em uma linha que ela vai rodar e por quê.
+
+"Claramente baixa" é qualitativo, como o resto deste guia: arquivo central da feature com metade das linhas descobertas, ramo de erro inteiro sem teste, caminho principal medido abaixo do que os testes escritos deveriam produzir. Não há número mágico — e um número um pouco abaixo do desejado não é motivo.
+
+Duas guardas, porque subagente em laço é caro e some com o turno:
+
+- **No máximo uma** segunda passada por feature. Se a cobertura continuar baixa, isso vira linha no relatório, não uma terceira rodada.
+- Só por **cobertura**. Lacuna que o tester declarou fora do unitário não dispara nada automático — ela vai para a triagem abaixo.
+
+### A triagem das lacunas — quem decide é o usuário
+
+As lacunas não são todas da mesma natureza, e o principal separa em duas antes de falar com o usuário:
+
+- **Cobrível** — dá para testar em unitário agora, com o que o projeto já tem. Requisito da spec sem teste, ramo de erro não exercitado, borda que o tester não chegou a escrever.
+- **Estrutural** — exige infra que não existe no unitário (banco real, HTTP de verdade, fila), ou é garantia de terceiro (constraint do banco, biblioteca). Não vira teste unitário por decisão, não por esquecimento.
+
+**Só as cobríveis viram pergunta**, e ela vai junto da decisão dos achados de code review (`g-quater`) — na mesma chamada da interface, como uma segunda pergunta. Dois round-trips para fechar uma feature é um a mais do que o necessário.
+
+As estruturais saem como linha informativa no bloco `Testes`, sem pergunta. Perguntar sobre o que não tem resposta unitária treina o usuário a ignorar a seção inteira.
+
+Nada cobrível na lista: nenhuma pergunta, só as linhas informativas.
+
+**A linha `Sem teste automatizado` é obrigatória quando o tester listou lacunas.** Ele devolve esse bloco com nomes variados — `recommendation`, "lacunas intencionalmente não testadas", "não unit-testável" —, e ele é a parte do relatório que some com mais facilidade: os números de passing são fáceis de repassar, a lista do que **ficou sem cobertura** exige decidir que ela importa.
+
+Ela importa porque é dívida de teste conhecida. Não impressa, vira dívida esquecida — o mesmo destino que o achado de code review tinha antes de a decisão virar uma porta. Uma linha por lacuna, com o motivo de ela não ser unitária, separando com `  ||  `; acima de 4, resuma as menos relevantes numa linha só e diga quantas foram.
+
+O mesmo vale para a nota de cobertura do tester (`coverage_note`): o que ele diz ter fechado e o que continua descoberto entra no bloco, não só o número.
+
+- **Grave isso no banco junto** (`mcp: on`): no `sdd_record_tests`, o campo `report` leva a nota de cobertura **e** as lacunas, em texto. É o único lugar onde elas sobrevivem à conversa — o SDD Viewer mostra esse campo no chunk que fechou a feature.
 - Os arquivos de teste **entram na lista de revisão e em `in_review.files`** — senão não sobrevivem à compactação nem entram no `git add` do `auto_commit: full`.
 - Ficam no **fim** da lista de revisão, mas **nunca** marcados "pode pular": um teste falhando é o item mais importante do turno.
 - Se algum falhou, a linha `Próximo:` avisa (*"há 1 teste falhando — decida se é bug ou teste antes de seguir"*). **Não bloqueia** o `/lp-continue`.
