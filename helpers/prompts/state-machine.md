@@ -145,6 +145,50 @@ No arquivo, e que ainda não conversamos:
 - <caso de borda que você acrescentou>
 ```
 
+### O teste, item por item
+
+Antes de escrever cada linha, faça **uma** pergunta: *se eu apagar este item, o usuário fica
+sabendo menos do que já sabe?* Se a resposta é não, o item não entra.
+
+O erro que isso corta é sempre o mesmo: o agente mede a novidade contra o **documento
+anterior** (o `plan.md`, a spec de antes) em vez de medir contra a **conversa**. São eixos
+diferentes, e só o segundo importa aqui — o bloco existe para o usuário não precisar reler o
+arquivo à procura do que ele ainda não sabe.
+
+**Nunca entram no delta:**
+
+- O que o usuário respondeu numa pergunta sua, nesta conversa. Inclusive quando a resposta
+  dele **contraria o `plan.md`**: divergir do plano é notícia para o arquivo, não para quem
+  decidiu a divergência. Se a divergência precisa ficar registrada, ela vai numa linha
+  própria (*"Diverge do plan: sidebar sai da Home — decidido no grill"*), fora do delta.
+- O que o usuário disse por conta própria, em qualquer mensagem.
+- Reformulação da resposta dele com outras palavras, ou com um detalhe a mais que é
+  consequência direta do que ele disse.
+
+**Entram:**
+
+- Decisão que você tomou sem perguntar — um default, uma ordem, um formato.
+- Requisito técnico que você deduziu do código em vez de perguntar.
+- Caso de borda que ninguém levantou e você decidiu tratar.
+- Um item que **nasceu** de uma resposta dele mas carrega escolha sua: aí a linha é a escolha,
+  não a resposta (*"você pediu redirect no 404; escolhi `/conversations` em vez de `/`, porque
+  a listagem é o contexto de onde a pessoa veio"*).
+
+Exemplo do que acontece quando o teste não é feito — as três primeiras linhas foram
+respondidas pelo usuário minutos antes, e só as duas últimas eram delta de verdade:
+
+```
+Delta:
+- Home sem sidebar — diverge do plan.md original       <- ele respondeu isso
+- Criação na primeira mensagem                          <- ele respondeu isso
+- Placeholder de título em inglês                       <- ele respondeu isso
+- 404 em conversa redireciona para /conversations       <- delta: inferido
+- REQ-9 deduzido do Chat existente                      <- delta: deduzido do código
+```
+
+Três de cinco linhas mandaram o usuário reler decisões que ele mesmo tomou. Duas linhas
+honestas valem mais que cinco onde ele precisa garimpar as duas.
+
 Regras:
 
 - **É delta, não resumo.** O que já foi combinado no grill fica de fora — repetir o que o
