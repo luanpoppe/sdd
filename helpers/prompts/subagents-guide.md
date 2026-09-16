@@ -51,6 +51,19 @@ Mapa fixo — use-o para saber qual entrada da config se aplica ao subagente que
 | `code-reviewer` | passo **f-ter** do motor `implementing`, no turno de fechamento da feature — uma passada por feature, não por chunk, e nunca no mesmo turno do último chunk —, só com `code_review: on` · toda invocação de `lp:code-review` (ver `./code-review-guide.md`). É o papel em que subir o modelo mais se paga: revisor fraco produz achado genérico. |
 | `data-modeler` | passo **b-ter** do motor `implementing`, só com `data_model: on` e chunk que toca dados · toda invocação de `lp:data-model` (ver `./data-model-guide.md`). Como o `code-reviewer`, é papel em que subir o modelo se paga: o erro de schema é o mais caro de desfazer. |
 
+### Todo subagente recebe o contexto da área
+
+Com `context: true` (padrão), o payload de **qualquer** subagente inclui o arquivo de `.sdd/context/` das áreas que o trabalho toca — não o índice inteiro, só as áreas.
+
+O principal carrega esse contexto na pré-checagem e decide com ele; o subagente nasce sem nada disso. É a assimetria que produz os erros mais caros de cada papel:
+
+- **implementer** — reimplementa o que já existe, ou contraria o padrão da área sem saber que há um.
+- **code-reviewer** — aponta como defeito a decisão que a área tomou de propósito. O achado consome a decisão do `g-quater` para o usuário responder "isso está escrito em `.sdd/context/`".
+- **data-modeler** — propõe schema que ignora o porquê do schema atual.
+- **tester** — mocka a borda errada, por não saber onde a área termina.
+
+Área sem arquivo de contexto, ou `context: false`: siga sem, em silêncio. O contexto encurta o payload mais do que aumenta — ele substitui a leitura exploratória que o subagente faria de qualquer jeito.
+
 O checador de atualização do `lp:desktop` fica **fora** deste mapa — roda sempre no default.
 
 ## Resolução (ao lançar um subagente)

@@ -48,6 +48,8 @@ Em qualquer turno que não seja o de fechamento, f-bis não faz nada. No modo pa
 - **Asserts específicos**: compare o valor esperado. Nada de `toBeTruthy()` num objeto, `assert result` solto, ou verificar só que "não lançou".
 - **Determinismo**: nada de teste flaky. Data/hora e aleatoriedade fixas (fake timer, seed, injeção); nada de depender de rede real, ordem de execução ou de estado deixado por outro teste.
 
+**Contexto da área** (`.sdd/context/**`, com `context: true`): entra no payload junto da spec. Ele diz onde a área termina — e é isso que decide qual borda mockar. Sem ele, o tester mocka pelo formato do código, não pelo desenho do sistema.
+
 **O que evitar**
 - Testar **implementação interna** em vez de comportamento observável — teste que quebra em todo refactor sem bug é custo, não rede de segurança.
 - **Mock demais**: mockar tudo faz o teste provar só que os mocks foram chamados. Mocke a borda (I/O, rede, relógio), não a lógica sob teste.

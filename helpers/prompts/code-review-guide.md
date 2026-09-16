@@ -72,6 +72,14 @@ Ignore: concorrência — este serviço roda single-threaded, por design.
 
 Desligue apenas o que o arquivo pedir, e nunca por conta própria. Se um item desligado produziria um achado grave, mencione em **uma** linha que ele foi suprimido por configuração — e não descreva o achado.
 
+## O que o revisor recebe
+
+O diff da feature inteira, os arquivos tocados de todos os chunks dela, a `spec.md` (ou `diagnosis.md` + `chosen_solution`, no bug-fix), **o arquivo de `.sdd/context/` das áreas tocadas** e as instruções extras de `~/.sdd/code-review.md` e `.sdd/code-review.md`.
+
+O contexto não é opcional por conveniência: é o que separa achado de ruído neste papel. Sem ele, o revisor aponta como defeito a decisão que a área tomou de propósito, e o usuário gasta a decisão do `g-quater` explicando de novo o que já está escrito em `.sdd/context/`. Com ele, o revisor ganha o oposto: consegue apontar quando o código **contradiz** o contexto registrado, que é um achado caro de encontrar de qualquer outra forma.
+
+Área sem arquivo de contexto, ou `context: false`: siga sem, sem comentar.
+
 ## Formato de cada achado
 
 Cada achado tem **um identificador curto** (`A1`, `A2`, …) na ordem em que sai. Ele não é enfeite: é o que permite ao usuário responder *"corrige A1 e A3"* sem redescrever o problema.
